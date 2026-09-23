@@ -63,7 +63,7 @@ function defaultState(){return {schemaVersion:SCHEMA_VERSION,
   strongText:true,
   showLogo:false,
   footer:'Obrigado pela preferência!',
-  agent:{enabled:true,url:'http://127.0.0.1:17871',token:'',pairedAt:'',fallbackBrowser:false,lastSeen:'',lastVersion:''},
+  agent:{enabled:true,url:'',token:'',pairedAt:'',fallbackBrowser:false,lastSeen:'',lastVersion:''},
   profiles:[
    {id:'print-counter',name:'Balcão / Caixa',purpose:'receipt',paper:'80mm',copies:1,enabled:true,station:'all',autoEvents:[],deviceName:''},
    {id:'print-kitchen',name:'Cozinha',purpose:'kitchen',paper:'80mm',copies:1,enabled:true,station:'all',autoEvents:[],deviceName:''},
