@@ -5,8 +5,9 @@ let pdvSplitDraft=1;
 
 function pdvBaseSubtotalV22(){return pdvCart.reduce((s,i)=>s+(Number(i.q)||0)*(Number(i.price)||0),0)}
 function pdvFeeV22(type,subtotal){
- if(type==='Delivery')return {label:'Taxa de entrega',value:Math.max(0,Number(state.settings.deliveryFee)||0)};
- if(type==='Mesa')return {label:'Serviço ('+Number(state.settings.serviceFee||0)+'%)',value:subtotal*Math.max(0,Number(state.settings.serviceFee)||0)/100};
+ const existing=state.orders.find(o=>o.id===pdvEditingId&&o.type===type);
+ if(type==='Delivery')return {label:'Taxa de entrega',value:Math.max(0,Number(existing?.deliveryFee??state.settings.deliveryFee)||0)};
+ if(type==='Mesa'){const pct=Math.max(0,Number(existing?.serviceFeePct??state.settings.serviceFee)||0);return {label:'Serviço ('+pct+'%)',value:subtotal*pct/100}}
  return {label:'Taxas',value:0};
 }
 function pdvGrandV22(){
@@ -81,11 +82,11 @@ function renderPdv(editOrder=null){
     </div>
    </div>
    <div class="pdv-balance-box">
-    <div class="pdv-balance-head"><span>Valor da conta</span><b>${money(total)}</b></div>
-    <div class="pdv-split-row"><span>Dividir por</span><div class="pdv-stepper"><button onclick="changePdvSplitV22(-1)">−</button><b>${pdvSplitDraft}</b><button onclick="changePdvSplitV22(1)">+</button></div><strong>${money(remainingPerPerson)} / pessoa</strong></div>
+    <div class="pdv-balance-head"><span>Valor da conta</span><b id="pdvBalanceTotal">${money(total)}</b></div>
+    <div class="pdv-split-row"><span>Dividir por</span><div class="pdv-stepper"><button onclick="changePdvSplitV22(-1)">−</button><b>${pdvSplitDraft}</b><button onclick="changePdvSplitV22(1)">+</button></div><strong id="pdvPerPerson">${money(remainingPerPerson)} / pessoa</strong></div>
    </div>
    <button class="btn btn-primary btn-block pdv-save-main" ${pdvCart.length?'':'disabled'} onclick="finishPdv('${editOrder?.id||''}')">${editOrder?'Salvar alterações':'Criar pedido'}</button>
-   ${editOrder?'<button class="btn btn-green btn-block" onclick="openOrderCheckoutV22(\''+editOrder.id+'\')">'+icon('check2-circle')+'<span>Fechar conta</span></button>':''}
+   ${editOrder?.status==='ready'&&editOrder.type!=='Delivery'?'<button class="btn btn-green btn-block" onclick="finishPdv(\''+editOrder.id+'\',true)">'+icon('check2-circle')+'<span>Salvar e fechar conta</span></button>':''}
   </aside>
  </div>`;
  updatePdvTotals();
@@ -96,6 +97,8 @@ function updatePdvTotals(){
  const fee=pdvFeeV22(type,subtotal),total=Math.max(0,subtotal+fee.value+pdvSurchargeDraft-pdvDiscountDraft);
  const labelEl=document.getElementById('pdvFeeLabel'),feeEl=document.getElementById('pdvFeeValue'),totalEl=document.getElementById('pdvGrandTotal'),line=document.getElementById('pdvFeeLine');
  if(labelEl)labelEl.textContent=fee.label;if(feeEl)feeEl.textContent=money(fee.value);if(totalEl)totalEl.textContent=money(total);if(line)line.hidden=fee.value<=0;
+ const balance=document.getElementById('pdvBalanceTotal'),person=document.getElementById('pdvPerPerson');
+ if(balance)balance.textContent=money(total);if(person)person.textContent=money(total/Math.max(1,pdvSplitDraft))+' / pessoa';
 }
 function setPdvPaymentV22(value){pdvPayDraft=value;renderPdv(state.orders.find(o=>o.id===pdvEditingId)||null)}
 async function setPdvAdjustmentV22(kind){
@@ -122,10 +125,11 @@ function cartQty(n,d){
  line.q+=d;if(line.q<=0)pdvCart.splice(n,1);
  renderPdv(state.orders.find(o=>o.id===pdvEditingId)||null);
 }
-async function finishPdv(editId=''){
+async function finishPdv(editId='',checkoutAfter=false){
  if(!pdvCart.length){toast('Adicione pelo menos um item.','warning');return}
  const type=document.getElementById('pdvType')?.value||pdvType||'Balcão',customer=(document.getElementById('pdvCustomer')?.value||pdvCustomerDraft).trim()||'Não identificado',pay=pdvPayDraft||'Não registrado';
  const existing=editId?state.orders.find(o=>o.id===editId):null;
+ if(editId&&(!existing||['done','cancelled'].includes(existing.status))){toast('Este pedido não pode mais ser editado.','warning');return}
  let table=existing?.table||'',address=existing?.address||'',phone=existing?.phone||'';
  if(type==='Mesa'){
   address='';if(pdvDraftTable)table=pdvDraftTable;
@@ -141,7 +145,9 @@ async function finishPdv(editId=''){
  if(existing){
   const newQty=new Map(pdvCart.map(i=>[i.p,Number(i.q)||0])),ids=new Set([...oldQty.keys(),...newQty.keys()]);
   ids.forEach(pid=>{const p=product(pid);if(!p)return;const before=oldQty.get(pid)||0,after=newQty.get(pid)||0,delta=before-after;p.stock=Math.max(0,(Number(p.stock)||0)+delta);p.sold=Boolean(p.manualSold||p.stock<=0);if(delta)recordStockMovement(pid,delta,'Edição de pedido',existing.id)});
-  Object.assign(existing,{items:pdvCart.map(x=>({...x,cost:Number(product(x.p)?.cost)||0})),customer,customerId,payment:pay,type,table,address,phone,discount:pdvDiscountDraft,surcharge:pdvSurchargeDraft,splitCount:pdvSplitDraft,deliveryFee:type==='Delivery'?Math.max(0,Number(state.settings.deliveryFee)||0):0,serviceFeePct:type==='Mesa'?Math.max(0,Number(state.settings.serviceFee)||0):0});
+  const deliveryFee=type==='Delivery'?Math.max(0,Number(existing.type===type?existing.deliveryFee??state.settings.deliveryFee:state.settings.deliveryFee)||0):0;
+  const serviceFeePct=type==='Mesa'?Math.max(0,Number(existing.type===type?existing.serviceFeePct??state.settings.serviceFee:state.settings.serviceFee)||0):0;
+  Object.assign(existing,{items:pdvCart.map(x=>({...x,cost:Number(product(x.p)?.cost)||0})),customer,customerId,payment:pay,type,table,address,phone,discount:pdvDiscountDraft,surcharge:pdvSurchargeDraft,splitCount:pdvSplitDraft,deliveryFee,serviceFeePct});
  }else{
   const id=String(Math.max(...state.orders.map(o=>Number(o.id)||0),77500)+1);
   createdOrder={id,type,table,customer,customerId,phone,address,payment:pay,status:state.settings.autoAccept?'production':'analysis',createdAt:new Date().toISOString(),discount:pdvDiscountDraft,surcharge:pdvSurchargeDraft,splitCount:pdvSplitDraft,deliveryFee:type==='Delivery'?Math.max(0,Number(state.settings.deliveryFee)||0):0,serviceFeePct:type==='Mesa'?Math.max(0,Number(state.settings.serviceFee)||0):0,items:pdvCart.map(x=>({...x,cost:Number(product(x.p)?.cost)||0})),notes:'',courier:'',scheduled:false};
@@ -151,6 +157,7 @@ async function finishPdv(editId=''){
  resetPdvDraftV22();syncTables();save();
  if(createdOrder){globalThis.dispatchAutoPrintEvent?.('created',createdOrder);if(createdOrder.status==='production')globalThis.dispatchAutoPrintEvent?.('production',createdOrder)}
  go('pedidos');toast('Pedido salvo com sucesso.','success');
+ if(checkoutAfter&&existing)openOrderCheckoutV22(existing.id);
 }
 function resetPdvDraftV22(){pdvCart=[];pdvDraftTable='';pdvEditingId='';pdvCustomerDraft='';pdvPayDraft='PIX';pdvDiscountDraft=0;pdvSurchargeDraft=0;pdvSplitDraft=1}
 function checkoutSummaryV22(orders){
@@ -161,7 +168,7 @@ function checkoutOrderListV22(orders){
  return orders.map(o=>`<article class="checkout-order-card"><div class="checkout-order-head"><div><b>Pedido #${esc(o.id)}</b><span class="badge ${orderStatusMetaV21?.(o.status)?.badge||'b-gray'}">${esc(orderStatusMetaV21?.(o.status)?.label||o.status)}</span></div><span>${orderTime(o)}</span></div><div class="checkout-order-items">${o.items.map(i=>`<div><span>${Number(i.q)||0}x ${esc(product(i.p)?.name||'Item')}</span><b>${money((Number(i.q)||0)*(Number(i.price)||0))}</b></div>`).join('')}</div><div class="checkout-order-foot"><span>${esc(o.payment||'Não registrado')}</span><b>${money(orderTotal(o))}</b></div></article>`).join('');
 }
 function openOrderCheckoutV22(id){
- const o=state.orders.find(x=>x.id===id);if(!o)return;
+ const o=editableCheckoutOrderV22(id);if(!o)return;
  openCheckoutV22([o],{title:'Fechar pedido #'+id,orderId:id,tableId:''});
 }
 function openTableCheckoutV22(id){
@@ -175,35 +182,54 @@ function openCheckoutV22(orders,context){
  openModal(`<div class="checkout-shell-v22"><section class="checkout-main-v22"><div class="checkout-toolbar"><div><h2>${esc(context.title)}</h2><p>${orders.length} pedido(s) • conferência antes do recebimento</p></div><div><button class="btn btn-outline" onclick="printOrderMenu('${orders[0].id}')">${icon('printer')}<span>Imprimir conferência</span></button><button class="icon-btn" onclick="closeModal()" aria-label="Fechar">${icon('x-lg')}</button></div></div><div class="checkout-customer">${icon('person')}<b>${esc(orders[0].customer||'Cliente não identificado')}</b></div><div class="checkout-orders-list">${checkoutOrderListV22(orders)}</div></section><aside class="checkout-side-v22"><div class="checkout-adjust-grid"><button onclick="${context.tableId?`checkoutAdjustTableV22('${context.tableId}','discount')`:`checkoutAdjustOrderV22('${context.orderId}','discount')`}">Desconto</button><button onclick="${context.tableId?`checkoutAdjustTableV22('${context.tableId}','surcharge')`:`checkoutAdjustOrderV22('${context.orderId}','surcharge')`}">Acréscimo</button></div><div class="checkout-summary-v22"><div><span>Subtotal</span><b>${money(summary.subtotal)}</b></div><div><span>Taxas</span><b>${money(summary.fees)}</b></div>${summary.discount?'<div><span>Desconto</span><b>− '+money(summary.discount)+'</b></div>':''}${summary.surcharge?'<div><span>Acréscimo</span><b>+ '+money(summary.surcharge)+'</b></div>':''}<div class="grand"><span>Valor total</span><b>${money(summary.total)}</b></div></div><div class="checkout-payment-v22"><b>Forma de pagamento</b><div class="checkout-payment-grid">${['Dinheiro','PIX','Cartão (Débito)','Cartão (Crédito)'].map(v=>`<button class="${payment===v?'active':''}" onclick="${context.tableId?`checkoutSetTablePaymentV22('${context.tableId}','${v}')`:`checkoutSetOrderPaymentV22('${context.orderId}','${v}')`}">${esc(v)}</button>`).join('')}</div></div><div class="checkout-balance-v22"><div><span>Falta</span><b>${money(summary.total)}</b></div><div class="checkout-split-v22"><span>Dividir por</span><button onclick="${context.tableId?`checkoutSplitTableV22('${context.tableId}',-1)`:`checkoutSplitOrderV22('${context.orderId}',-1)`}">−</button><b>${split}</b><button onclick="${context.tableId?`checkoutSplitTableV22('${context.tableId}',1)`:`checkoutSplitOrderV22('${context.orderId}',1)`}">+</button><strong>${money(summary.total/split)}</strong></div></div><button class="btn btn-green btn-block checkout-close-btn" onclick="${context.tableId?`closeTableCheckoutV22('${context.tableId}')`:`closeOrderCheckoutV22('${context.orderId}')`}">${icon('check2-circle')}<span>Fechar conta</span></button></aside></div>`);
 }
 async function checkoutAdjustOrderV22(id,kind){
- const o=state.orders.find(x=>x.id===id);if(!o)return;
+ const o=editableCheckoutOrderV22(id);if(!o)return;
  const v=await formDialog({title:kind==='discount'?'Desconto':'Acréscimo',fields:[{key:'value',label:'Valor',type:'number',value:Number(o[kind])||0,min:0,step:'0.01',required:true}]});if(!v)return;
- o[kind]=Math.max(0,Number(v.value)||0);save({render:false});openOrderCheckoutV22(id);
+ if(!editableCheckoutOrderV22(id))return;
+ const value=Math.max(0,Number(v.value)||0);
+ o[kind]=kind==='discount'?Math.min(value,orderSubtotal(o)+orderFeeTotal(o)+Math.max(0,Number(o.surcharge)||0)):value;save({render:false});openOrderCheckoutV22(id);
 }
 async function checkoutAdjustTableV22(id,kind){
  const t=state.tables.find(x=>x.id===id);if(!t)return;
  const orders=state.orders.filter(o=>o.table===t.name&&!['done','cancelled'].includes(o.status));if(!orders.length)return;
  const current=orders.reduce((s,o)=>s+Math.max(0,Number(o[kind])||0),0);
  const v=await formDialog({title:kind==='discount'?'Desconto da conta':'Acréscimo da conta',fields:[{key:'value',label:'Valor total',type:'number',value:current,min:0,step:'0.01',required:true}]});if(!v)return;
- const value=Math.max(0,Number(v.value)||0),bases=orders.map(o=>orderSubtotal(o)+orderFeeTotal(o)),sum=bases.reduce((a,b)=>a+b,0)||1;
- orders.forEach((o,i)=>o[kind]=Number((value*(bases[i]/sum)).toFixed(2)));
- const diff=Number((value-orders.reduce((s,o)=>s+o[kind],0)).toFixed(2));if(orders[0])orders[0][kind]=Math.max(0,orders[0][kind]+diff);
+ if(orders.some(o=>!editableCheckoutOrderV22(o.id)))return;
+ const bases=orders.map(o=>Math.round((orderSubtotal(o)+orderFeeTotal(o)+(kind==='discount'?Math.max(0,Number(o.surcharge)||0):0))*100)),sum=bases.reduce((a,b)=>a+b,0);
+ const requested=Math.round(Math.max(0,Number(v.value)||0)*100),cents=kind==='discount'?Math.min(requested,sum):requested;
+ let cumulative=0,allocated=0;
+ orders.forEach((o,i)=>{cumulative+=sum?bases[i]:1;const next=Math.round(cents*cumulative/(sum||orders.length));o[kind]=(next-allocated)/100;allocated=next});
  save({render:false});openTableCheckoutV22(id);
 }
-function checkoutSetOrderPaymentV22(id,payment){const o=state.orders.find(x=>x.id===id);if(!o)return;o.payment=payment;save({render:false});openOrderCheckoutV22(id)}
+function checkoutSetOrderPaymentV22(id,payment){const o=editableCheckoutOrderV22(id);if(!o)return;o.payment=payment;save({render:false});openOrderCheckoutV22(id)}
 function checkoutSetTablePaymentV22(id,payment){const t=state.tables.find(x=>x.id===id);if(!t)return;state.orders.filter(o=>o.table===t.name&&!['done','cancelled'].includes(o.status)).forEach(o=>o.payment=payment);save({render:false});openTableCheckoutV22(id)}
-function checkoutSplitOrderV22(id,delta){const o=state.orders.find(x=>x.id===id);if(!o)return;o.splitCount=Math.min(20,Math.max(1,(Number(o.splitCount)||1)+delta));save({render:false});openOrderCheckoutV22(id)}
+function checkoutSplitOrderV22(id,delta){const o=editableCheckoutOrderV22(id);if(!o)return;o.splitCount=Math.min(20,Math.max(1,(Number(o.splitCount)||1)+delta));save({render:false});openOrderCheckoutV22(id)}
 function checkoutSplitTableV22(id,delta){const t=state.tables.find(x=>x.id===id);if(!t)return;const orders=state.orders.filter(o=>o.table===t.name&&!['done','cancelled'].includes(o.status)),next=Math.min(20,Math.max(1,(Number(orders[0]?.splitCount)||1)+delta));orders.forEach(o=>o.splitCount=next);save({render:false});openTableCheckoutV22(id)}
 async function closeOrderCheckoutV22(id){
  const o=state.orders.find(x=>x.id===id);if(!o)return;
  if(o.type==='Delivery'){toast('Pedidos delivery devem ser finalizados pelo fluxo de Entregas.','warning');return}
- if(['analysis','production'].includes(o.status)){toast('O pedido ainda está em análise ou produção. Avance-o antes de fechar a conta.','warning');return}
+ if(o.status!=='ready'){toast('Somente pedidos prontos podem ser recebidos.','warning');return}
+ if(!checkoutHasPaymentV22([o]))return;
  const ok=await confirmDialog('Fechar conta','Confirmar recebimento de '+money(orderTotal(o))+' e concluir o pedido #'+id+'?',{confirmLabel:'Fechar conta'});if(!ok)return;
- o.status='done';o.completedAt=new Date().toISOString();closeModal();syncTables();save();toast('Conta fechada com sucesso.','success');
+ if(o.status!=='ready')return;
+ o.status='done';o.completedAt=new Date().toISOString();closeModal();syncTables();
+ const t=state.tables.find(t=>t.name===o.table);
+ if(t&&!state.orders.some(x=>x.table===t.name&&!['done','cancelled'].includes(x.status))){t.status='free';t.guests=0;t.server=''}
+ save();toast('Conta fechada com sucesso.','success');
 }
 async function closeTableCheckoutV22(id){
  const t=state.tables.find(x=>x.id===id);if(!t)return;
  const orders=state.orders.filter(o=>o.table===t.name&&!['done','cancelled'].includes(o.status));
- if(orders.some(o=>['analysis','production'].includes(o.status))){toast('Ainda existem pedidos em análise ou produção nesta mesa.','warning');return}
+ if(!orders.length){toast('Esta mesa não possui pedidos abertos.','warning');return}
+ if(orders.some(o=>o.status!=='ready'||o.type==='Delivery')){toast('Todos os pedidos da mesa precisam estar prontos para recebimento.','warning');return}
+ if(!checkoutHasPaymentV22(orders))return;
  const total=orders.reduce((s,o)=>s+orderTotal(o),0),ok=await confirmDialog('Fechar conta','Confirmar recebimento de '+money(total)+' e liberar '+t.name+'?',{confirmLabel:'Fechar conta'});if(!ok)return;
  orders.forEach(o=>{o.status='done';o.completedAt=new Date().toISOString()});t.status='free';t.guests=0;t.server='';closeModal();save();toast('Conta fechada e mesa liberada.','success');
+}
+function editableCheckoutOrderV22(id){
+ const o=state.orders.find(x=>x.id===id);
+ return o&&!['done','cancelled'].includes(o.status)?o:null;
+}
+function checkoutHasPaymentV22(orders){
+ if(orders.some(o=>!o.payment||o.payment==='Não registrado')){toast('Selecione a forma de pagamento de todos os pedidos antes de receber.','warning');return false}
+ return true;
 }

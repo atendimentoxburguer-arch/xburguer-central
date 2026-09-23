@@ -1,12 +1,15 @@
 /* X Burguer Central V22 — relatórios operacionais */
 let reportTabV22='caixas';
 let reportRangeV22=30;
+function reportInRangeV22(value,now=Date.now()){
+ const ts=new Date(value).getTime();
+ return Number.isFinite(ts)&&ts<=now&&now-ts<=Number(reportRangeV22)*86400000;
+}
 
 function reportOrdersV22({includeCancelled=false}={}){
- const now=Date.now(),ms=Number(reportRangeV22)*86400000;
+ const now=Date.now();
  return state.orders.filter(function(o){
-  const ts=new Date(o.completedAt||o.cancelledAt||o.createdAt).getTime();
-  if(!Number.isFinite(ts)||now-ts>ms)return false;
+  if(!reportInRangeV22(o.completedAt||o.cancelledAt||o.createdAt,now))return false;
   return includeCancelled||o.status!=='cancelled';
  });
 }
@@ -28,7 +31,7 @@ function reportTableV22(headers,rows,empty='Nenhum registro no período.'){
 }
 function renderReportCaixasV22(){
  const orders=reportOrdersV22(),done=orders.filter(o=>o.status==='done'),sales=done.reduce((s,o)=>s+orderTotal(o),0),cash=done.filter(o=>o.payment==='Dinheiro').reduce((s,o)=>s+orderTotal(o),0);
- const rows=(state.cash.history||[]).slice().reverse().map(function(h){return ['<b>'+reportDateV22(h.closedAt||h.at)+'</b>',money(Number(h.opening)||0),String(Number(h.sales)||0),money(Number(h.salesTotal)||0),money(Number(h.cashSales)||0),money(Number(h.drawerBalance??h.balance)||0)]});
+ const rows=(state.cash.history||[]).filter(h=>reportInRangeV22(h.closedAt||h.at)).slice().reverse().map(function(h){return ['<b>'+reportDateV22(h.closedAt||h.at)+'</b>',money(Number(h.opening)||0),String(Number(h.sales)||0),money(Number(h.salesTotal)||0),money(Number(h.cashSales)||0),money(Number(h.drawerBalance??h.balance)||0)]});
  return reportKpisV22([['Vendas no período',money(sales)],['Em dinheiro',money(cash)],['Caixa atual',state.cash.open?'Aberto':'Fechado'],['Saldo gaveta',money(cashDrawerBalance())]])+
  reportTableV22(['Fechamento','Abertura','Pedidos','Vendas','Dinheiro','Saldo físico'],rows,'Ainda não há fechamentos de caixa registrados.');
 }

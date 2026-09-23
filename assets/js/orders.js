@@ -23,6 +23,7 @@ function advanceOrder(id){
  if(o.status==='analysis'){o.status='production';printEvent='production'}
  else if(o.status==='production'){o.status='ready';printEvent='ready'}
  else if(o.status==='ready'){
+  if(o.type!=='Delivery'){openOrderCheckoutV22(id);return}
   if(o.type==='Delivery'&&!o.courier){toast('Atribua um entregador antes de finalizar a entrega.','warning');return}
   o.status='done';o.completedAt=new Date().toISOString();printEvent='completed';
   if(o.courier&&!o.deliveryCounted){const d=state.couriers.find(d=>d.id===o.courier);if(d)d.deliveries=(Number(d.deliveries)||0)+1;o.deliveryCounted=true}
