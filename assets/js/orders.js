@@ -1,4 +1,4 @@
-/* X Burguer Central V21 — gestão completa de pedidos */
+/* X Burguer Central V22 — gestão completa de pedidos */
 let orderViewV21='active';
 
 function orderStatusMetaV21(status){
@@ -94,11 +94,11 @@ function detailsOrder(id){
  const active=!['done','cancelled'].includes(o.status);
  openModal(`<div class="modal-head"><div><h2>Pedido #${esc(o.id)}</h2><div class="muted order-meta"><span class="type-badge sm">${typeIcon(o.type)}<span>${esc(o.type)}</span></span><span class="badge ${status.badge}">${status.label}</span><span class="meta-sep">•</span><span>${icon('clock')} ${orderTime(o)}</span></div></div><button class="icon-btn" onclick="closeModal()" aria-label="Fechar">${icon('x-lg')}</button></div>
  ${ended}
- <div class="form2"><div class="card"><b>Cliente</b><p>${esc(o.customer)}<br><span class="muted">${esc(o.phone||'Sem telefone')}</span></p><b>Entrega/Mesa</b><p>${esc(o.address||o.table||'Balcão')}</p><b>Pagamento</b><p>${esc(o.payment||'Não registrado')}</p></div><div class="card"><b>Itens</b><p>${orderItemsText(o)}</p><div class="order-summary"><div><span>Subtotal</span><b>${money(subtotal)}</b></div>${fees?'<div><span>'+esc(feeLabel)+'</span><b>'+money(fees)+'</b></div>':''}<div class="order-summary-total"><span>Total</span><b>${money(orderTotal(o))}</b></div></div></div></div>
+ <div class="form2"><div class="card"><b>Cliente</b><p>${esc(o.customer)}<br><span class="muted">${esc(o.phone||'Sem telefone')}</span></p><b>Entrega/Mesa</b><p>${esc(o.address||o.table||'Balcão')}</p><b>Pagamento</b><p>${esc(o.payment||'Não registrado')}</p></div><div class="card"><b>Itens</b><p>${orderItemsText(o)}</p><div class="order-summary"><div><span>Subtotal</span><b>${money(subtotal)}</b></div>${fees?'<div><span>'+esc(feeLabel)+'</span><b>'+money(fees)+'</b></div>':''}${Number(o.discount)>0?'<div><span>Desconto</span><b>− '+money(o.discount)+'</b></div>':''}${Number(o.surcharge)>0?'<div><span>Acréscimo</span><b>+ '+money(o.surcharge)+'</b></div>':''}<div class="order-summary-total"><span>Total</span><b>${money(orderTotal(o))}</b></div></div></div></div>
  <div class="field"><label>Observações</label><textarea id="detailNotes" ${active?'':'readonly'}>${esc(o.notes||'')}</textarea></div>
  <div class="modal-foot order-detail-actions">
   <button class="btn btn-outline" onclick="printOrderMenu('${o.id}')">${icon('printer')}<span>Imprimir</span></button>
-  ${active?'<button class="btn btn-danger" onclick="cancelOrder(\''+o.id+'\')">'+icon('x-circle')+'<span>Cancelar</span></button><button class="btn btn-outline" onclick="oEdit(\''+o.id+'\')">'+icon('pencil')+'<span>Editar pedido</span></button><button class="btn btn-primary" onclick="saveOrderNotesV21(\''+o.id+'\')">Salvar</button>':''}
+  ${active?'<button class="btn btn-danger" onclick="cancelOrder(\''+o.id+'\')">'+icon('x-circle')+'<span>Cancelar</span></button><button class="btn btn-outline" onclick="oEdit(\''+o.id+'\')">'+icon('pencil')+'<span>Editar pedido</span></button>'+(o.status==='ready'?'<button class="btn btn-green" onclick="closeModal();openOrderCheckoutV22(\''+o.id+'\')">'+icon('cash-coin')+'<span>Fechar conta</span></button>':'')+'<button class="btn btn-primary" onclick="saveOrderNotesV21(\''+o.id+'\')">Salvar</button>':''}
   ${o.status==='cancelled'?'<button class="btn btn-danger" onclick="deleteOrderV21(\''+o.id+'\')">'+icon('trash')+'<span>Excluir definitivamente</span></button>':''}
   ${o.status==='done'?'<button class="btn btn-primary" onclick="closeModal()">Fechar</button>':''}
  </div>`);
