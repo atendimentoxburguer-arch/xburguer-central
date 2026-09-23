@@ -69,7 +69,7 @@ export function renderEscPosJob(job){
   if(doc.table)parts.push(line(pairLine('MESA',doc.table,width)));
   parts.push(separator(width));
 
-  if(doc.customer&&doc.customer!=='Nao identificado'){
+  if(doc.customer&&sanitizeText(doc.customer)!=='Nao identificado'){
     parts.push(CMD.boldOn,line(doc.customer));
     if(doc.phone)parts.push(line(doc.phone));
     if(doc.address)wrapText(doc.address,width).forEach(x=>parts.push(line(x)));
