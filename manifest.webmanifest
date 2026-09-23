@@ -1,12 +1,12 @@
 {
   "name": "X Burguer Central",
   "short_name": "X Burguer",
-  "description": "Central operacional premium da X Burguer",
+  "description": "Central operacional da X Burguer",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#0b1118",
-  "theme_color": "#1f5b78",
+  "background_color": "#f5f7fa",
+  "theme_color": "#2563eb",
   "lang": "pt-BR",
   "orientation": "any",
   "icons": [
