@@ -1,4 +1,4 @@
-/* X Burguer Central V22 — relatórios operacionais */
+/* X Burguer Central V23 — relatórios operacionais */
 let reportTabV22='caixas';
 let reportRangeV22=30;
 function reportInRangeV22(value,now=Date.now()){
@@ -30,7 +30,7 @@ function reportTableV22(headers,rows,empty='Nenhum registro no período.'){
  return '<div class="report-table-shell-v22"><table class="table"><thead><tr>'+headers.map(h=>'<th>'+esc(h)+'</th>').join('')+'</tr></thead><tbody>'+(rows.length?rows.map(row=>'<tr>'+row.map(cell=>'<td>'+cell+'</td>').join('')+'</tr>').join(''):'<tr><td colspan="'+headers.length+'"><div class="empty">'+esc(empty)+'</div></td></tr>')+'</tbody></table></div>';
 }
 function renderReportCaixasV22(){
- const orders=reportOrdersV22(),done=orders.filter(o=>o.status==='done'),sales=done.reduce((s,o)=>s+orderTotal(o),0),cash=done.filter(o=>o.payment==='Dinheiro').reduce((s,o)=>s+orderTotal(o),0);
+ const orders=reportOrdersV22(),done=orders.filter(o=>o.status==='done'),sales=done.reduce((s,o)=>s+orderTotal(o),0),cash=done.reduce((s,o)=>s+orderCashAmount(o),0);
  const rows=(state.cash.history||[]).filter(h=>reportInRangeV22(h.closedAt||h.at)).slice().reverse().map(function(h){return ['<b>'+reportDateV22(h.closedAt||h.at)+'</b>',money(Number(h.opening)||0),String(Number(h.sales)||0),money(Number(h.salesTotal)||0),money(Number(h.cashSales)||0),money(Number(h.drawerBalance??h.balance)||0)]});
  return reportKpisV22([['Vendas no período',money(sales)],['Em dinheiro',money(cash)],['Caixa atual',state.cash.open?'Aberto':'Fechado'],['Saldo gaveta',money(cashDrawerBalance())]])+
  reportTableV22(['Fechamento','Abertura','Pedidos','Vendas','Dinheiro','Saldo físico'],rows,'Ainda não há fechamentos de caixa registrados.');
@@ -45,15 +45,17 @@ function renderReportClientesV22(){
  reportTableV22(['Cliente','Telefone','Pedidos','Total comprado','Última compra'],rows);
 }
 function renderReportEntradasV22(){
- const orders=reportOrdersV22().filter(o=>o.status==='done').sort((a,b)=>new Date(b.completedAt||b.createdAt)-new Date(a.completedAt||a.createdAt));
- const rows=orders.map(o=>[reportDateV22(o.completedAt||o.createdAt),'<b>Pedido #'+esc(o.id)+'</b>',esc(o.payment||'Não registrado'),esc(o.type),money(orderTotal(o))]);
- return reportKpisV22([['Entradas de vendas',String(orders.length)],['Total',money(orders.reduce((s,o)=>s+orderTotal(o),0))],['PIX',money(orders.filter(o=>o.payment==='PIX').reduce((s,o)=>s+orderTotal(o),0))],['Cartões',money(orders.filter(o=>String(o.payment).startsWith('Cartão')).reduce((s,o)=>s+orderTotal(o),0))]])+
+ const orders=reportOrdersV22().filter(o=>o.status==='done').sort((a,b)=>new Date(b.completedAt||b.createdAt)-new Date(a.completedAt||a.createdAt)),by={};
+ orders.forEach(o=>Object.entries(orderPaymentBreakdown(o)).forEach(([key,value])=>{by[key]=(by[key]||0)+(Number(value)||0)}));
+ const rows=orders.map(o=>[reportDateV22(o.completedAt||o.createdAt),'<b>Pedido #'+esc(o.id)+'</b>',esc(orderPaymentLabel(o)),esc(o.type),money(orderTotal(o))]);
+ const cards=Object.entries(by).filter(([key])=>String(key).startsWith('Cartão')).reduce((sum,[,value])=>sum+(Number(value)||0),0);
+ return reportKpisV22([['Entradas de vendas',String(orders.length)],['Total',money(orders.reduce((s,o)=>s+orderTotal(o),0))],['PIX',money(by.PIX||0)],['Cartões',money(cards)]])+
  reportTableV22(['Data','Origem','Pagamento','Tipo','Valor'],rows);
 }
 function renderReportPedidosV22(){
  const orders=reportOrdersV22({includeCancelled:true}).slice().sort((a,b)=>new Date(b.completedAt||b.cancelledAt||b.createdAt)-new Date(a.completedAt||a.cancelledAt||a.createdAt));
  const done=orders.filter(o=>o.status==='done'),cancelled=orders.filter(o=>o.status==='cancelled');
- const rows=orders.map(o=>{const meta=orderStatusMetaV21(o.status);return ['<b>#'+esc(o.id)+'</b>',esc(o.customer||'Não identificado'),esc(o.type),'<span class="badge '+meta.badge+'">'+esc(meta.label)+'</span>',esc(o.payment||'—'),money(orderTotal(o)),reportDateV22(o.completedAt||o.cancelledAt||o.createdAt)]});
+ const rows=orders.map(o=>{const meta=orderStatusMetaV21(o.status);return ['<b>#'+esc(o.id)+'</b>',esc(o.customer||'Não identificado'),esc(o.type),'<span class="badge '+meta.badge+'">'+esc(meta.label)+'</span>',esc(orderPaymentLabel(o)),money(orderTotal(o)),reportDateV22(o.completedAt||o.cancelledAt||o.createdAt)]});
  return reportKpisV22([['Pedidos',String(orders.length)],['Concluídos',String(done.length)],['Cancelados',String(cancelled.length)],['Ticket médio',money(done.length?done.reduce((s,o)=>s+orderTotal(o),0)/done.length:0)]])+
  reportTableV22(['Pedido','Cliente','Tipo','Status','Pagamento','Total','Data'],rows);
 }
