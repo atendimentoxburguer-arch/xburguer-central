@@ -1,4 +1,4 @@
-/* X Burguer Central V22 — operação de salão, fechamento e relatórios */
+/* Núcleo — estado, persistência e regras compartilhadas */
 function icon(name,extra=''){
   return `<i class="bi bi-${name} ${extra}" aria-hidden="true"></i>`;
 }
