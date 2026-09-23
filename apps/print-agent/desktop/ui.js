@@ -26,7 +26,7 @@ async function loadSnapshot(){
     $('statusCard').classList.toggle('online',Boolean(s.ok));
     text($('statusText'),s.ok?'Agente online':'Agente com problema');
     text($('uptimeText'),duration(s.startedAt));
-    text($('pairingCode'),s.pairingCode||'------');
+    text($('pairingCode'),s.pairingCode||'------');const pair=$('pairState');pair.textContent=s.pairedOnce?'Já pareado':'Aguardando pareamento';pair.className='pill '+(s.pairedOnce?'success':'');text($('lastJobText'),s.lastJob?'Último: #'+(s.lastJob.orderId||s.lastJob.id)+' • '+s.lastJob.status:'Nenhum job ainda');
     text($('queuedMetric'),s.queue?.queued||0);text($('printingMetric'),s.queue?.printing||0);
     text($('failedMetric'),s.queue?.failed||0);text($('printedMetric'),s.queue?.printed||0);
   }catch(error){
