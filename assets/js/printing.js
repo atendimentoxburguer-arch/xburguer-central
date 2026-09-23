@@ -124,6 +124,20 @@
     openPrintWindow({title:'Teste — '+p.name,body:renderPrintBody(sample),paper:p.paper,copies:1});
   }
 
+  function printOrderMenu(id){
+    const order=state.orders.find(o=>o.id===id);if(!order){toast('Pedido não encontrado.','error');return}
+    const kitchenStations=[...new Set(order.items.map(i=>stationForItem(i)))];
+    openModal(`<div class="modal-head"><div><h2>Imprimir pedido #${esc(order.id)}</h2><p class="dialog-subtitle">Escolha o documento que será enviado ao diálogo de impressão do sistema.</p></div><button class="icon-btn" onclick="closeModal()" aria-label="Fechar">${icon('x-lg')}</button></div>
+    <div class="print-choice-grid">
+      <button class="print-choice" onclick="printReceipt('${order.id}')"><span>${icon('receipt')}</span><div><b>Comprovante</b><small>Cliente, itens, valores e pagamento.</small></div></button>
+      <button class="print-choice" onclick="printKitchen('${order.id}')"><span>${icon('printer')}</span><div><b>Cozinha</b><small>Itens, mesa e observações sem preços.</small></div></button>
+      ${order.type==='Delivery'?`<button class="print-choice" onclick="printDelivery('${order.id}')"><span>${icon('truck')}</span><div><b>Expedição</b><small>Endereço, telefone e itens do delivery.</small></div></button>`:''}
+    </div>
+    ${kitchenStations.length>1?`<div class="print-stations"><b>Imprimir setor específico</b><div>${kitchenStations.map(st=>`<button class="btn btn-outline btn-sm" data-station="${esc(st)}" onclick="printKitchenFromButton('${order.id}',this)">${esc(st)}</button>`).join('')}</div></div>`:''}
+    <div class="modal-foot"><button class="btn btn-outline" onclick="printerCenter()">${icon('gear')}<span>Configurar impressoras</span></button><button class="btn btn-primary" onclick="closeModal()">Fechar</button></div>`);
+  }
+  function printKitchenFromButton(id,btn){return printOrderWithProfile(id,'kitchen','',btn?.dataset?.station||'all')}
+
   function printerCenter(){
     const cfg=printSettings(),profiles=cfg.profiles||[];
     openModal(`<div class="modal-head"><div><h2>Central de impressão</h2><p class="dialog-subtitle">Configure comprovantes, cozinha e expedição. A impressora física é escolhida no diálogo de impressão do sistema.</p></div><button class="icon-btn" onclick="closeModal()" aria-label="Fechar">${icon('x-lg')}</button></div>
@@ -181,6 +195,8 @@
   globalThis.printKitchen=(id,station='all')=>printOrderWithProfile(id,'kitchen','',station);
   globalThis.printDelivery=id=>printOrderWithProfile(id,'delivery');
   globalThis.printTestProfile=printTestProfile;
+  globalThis.printOrderMenu=printOrderMenu;
+  globalThis.printKitchenFromButton=printKitchenFromButton;
   globalThis.printerCenter=printerCenter;
   globalThis.togglePrintingEnabled=togglePrintingEnabled;
   globalThis.togglePrinterProfile=togglePrinterProfile;
