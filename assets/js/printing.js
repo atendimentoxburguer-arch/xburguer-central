@@ -134,8 +134,8 @@
       if(managed||!agent.fallbackBrowser)return managed;
     }
     if(event!=='manual')return false;
-    if(agent?.enabled&&!agent.fallbackBrowser&&profile.paper!=='a4'){
-      toast('Impressão silenciosa não enviada. Verifique o agente e o mapeamento da impressora.','warning');
+    if(agent?.enabled&&!agent.fallbackBrowser){
+      toast(profile.paper==='a4'?'A4 ainda não é enviado silenciosamente na ETAPA 1. Use uma térmica 58/80 mm para impressão automática.':'Impressão silenciosa não enviada. Verifique o agente e o mapeamento da impressora.','warning');
       return false;
     }
     return openPrintWindow({
