@@ -9,6 +9,7 @@
 - [x] Documentação técnica inicial.
 
 ## Fase 2 — Refinamento do protótipo
+- [x] Auditoria de engenharia V15: migração de estado, segurança de renderização, regras críticas e testes automatizados.
 - [x] Gestão avançada de salão por áreas, capacidade, responsáveis e mesas.
 - [x] Gestão avançada de cardápio com filtros, estoque, custos, estações e ações em massa.
 - [ ] Revisar visual de cada tela com screenshots.

@@ -1,15 +1,15 @@
-/* X Burguer Central V11 — orders */
+/* X Burguer Central V15 — pedidos */
 function advanceOrder(id){
  const o=state.orders.find(o=>o.id===id);if(!o)return;
  if(o.status==='analysis')o.status='production';
  else if(o.status==='production')o.status='ready';
- else if(o.status==='ready'){o.status='done';o.completedAt=new Date().toISOString();if(o.courier&&!o.deliveryCounted){const d=state.couriers.find(d=>d.id===o.courier);if(d)d.deliveries=(Number(d.deliveries)||0)+1;o.deliveryCounted=true}}
+ else if(o.status==='ready'){if(o.type==='Delivery'&&!o.courier){toast('Atribua um entregador antes de finalizar a entrega.','warning');return}o.status='done';o.completedAt=new Date().toISOString();if(o.courier&&!o.deliveryCounted){const d=state.couriers.find(d=>d.id===o.courier);if(d)d.deliveries=(Number(d.deliveries)||0)+1;o.deliveryCounted=true}}
  syncTables();save();toast('Pedido atualizado.','success');
 }
 async function cancelOrder(id){
  const o=state.orders.find(o=>o.id===id);if(!o)return;
  const ok=await confirmDialog('Cancelar pedido',`Cancelar o pedido #${id}?`,{confirmLabel:'Cancelar pedido',danger:true});if(!ok)return;
- if(!o.stockRestored){o.items.forEach(i=>{const p=product(i.p);if(p&&Number.isFinite(p.stock))p.stock+=Number(i.q)||0});o.stockRestored=true}
+ if(!o.stockRestored){o.items.forEach(i=>{const p=product(i.p);if(p&&Number.isFinite(p.stock)){p.stock+=Number(i.q)||0;p.sold=Boolean(p.manualSold||p.stock<=0)}});o.stockRestored=true}
  o.status='cancelled';o.cancelledAt=new Date().toISOString();syncTables();save();toast('Pedido cancelado.','warning');
 }
 function detailsOrder(id){const o=state.orders.find(o=>o.id===id);openModal(`<div class="modal-head"><div><h2>Pedido #${o.id}</h2><div class="muted order-meta"><span class="type-badge sm">${typeIcon(o.type)}<span>${esc(o.type)}</span></span> <span class="meta-sep">•</span> <span><i class="bi bi-clock" aria-hidden="true"></i> ${orderTime(o)}</span></div></div><button class="icon-btn" onclick="closeModal()"><i class="bi bi-x-lg" aria-hidden="true"></i></button></div><div class="form2"><div class="card"><b>Cliente</b><p>${esc(o.customer)}<br><span class="muted">${esc(o.phone||'Sem telefone')}</span></p><b>Entrega/Mesa</b><p>${esc(o.address||o.table||'Balcão')}</p></div><div class="card"><b>Itens</b><p>${orderItemsText(o)}</p><b>Total</b><p class="order-total-highlight">${money(orderTotal(o))}</p></div></div><div class="field"><label>Observações</label><textarea id="detailNotes">${esc(o.notes||'')}</textarea></div><div class="modal-foot"><button class="btn btn-danger" onclick="closeModal();cancelOrder('${o.id}')">Cancelar pedido</button><button class="btn btn-outline" onclick="oEdit('${o.id}')">Editar</button><button class="btn btn-primary" onclick="document.querySelector('#detailNotes')&&(state.orders.find(o=>o.id==='${o.id}').notes=document.querySelector('#detailNotes').value);closeModal();save()">Salvar</button></div>`)}

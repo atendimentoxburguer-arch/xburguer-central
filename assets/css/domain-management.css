@@ -1,4 +1,4 @@
-/* X Burguer Central V14 — Gestão de salão e cardápio */
+/* X Burguer Central V15 — estilos de gestão por domínio */
 .page-head-actions{display:flex;align-items:center;justify-content:flex-end;gap:8px;flex-wrap:wrap}
 .salon-kpis,.menu-kpis{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin-bottom:14px}
 .salon-kpis>div,.menu-kpis>div{min-width:0;padding:12px 14px;border:1px solid var(--border);border-radius:14px;background:var(--surface);box-shadow:var(--shadow-sm)}

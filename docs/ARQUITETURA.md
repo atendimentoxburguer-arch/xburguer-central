@@ -49,3 +49,13 @@ Quando os fluxos estiverem aprovados:
 - Não misturar regra de negócio com código puramente visual quando houver refatoração.
 - Mudanças grandes devem entrar por branch e pull request.
 - `main` deve representar a versão estável.
+
+## Módulos V15
+
+- `assets/js/salon-management.js`: áreas, mesas, comandas e organização do salão.
+- `assets/js/menu-management.js`: categorias, produtos, disponibilidade e ações em massa.
+- `assets/css/domain-management.css`: estilos específicos das áreas de gestão.
+- `scripts/state-contracts.mjs`: contratos de esquema e migração.
+- `scripts/business-contracts.mjs`: regras críticas de pedido e estoque.
+
+O estado persistido usa esquema local versão 4. Migrações e normalização pertencem exclusivamente ao núcleo, evitando overrides de persistência em módulos de interface.
