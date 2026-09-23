@@ -19,6 +19,8 @@ Pedidos, PDV, salão/comandas, cardápio, cozinha/KDS, entregas, desempenho, cli
 - `assets/js/management.js`: caixa, estoque, financeiro, equipe e configurações.
 - `assets/js/app.js`: inicialização, roteamento e melhorias progressivas.
 - `assets/js/pwa.js`: instalação como app e service worker.
+- `assets/js/print-agent-client.js`: comunicação com o agente local de impressão.
+- `apps/print-agent/`: agente Windows de impressão silenciosa.
 - `manifest.webmanifest` e `service-worker.js`: PWA/offline.
 
 ## Dados
@@ -62,3 +64,7 @@ O sistema agora possui impressão de comprovantes, cozinha e delivery com layout
 ## Impressão V18
 
 A impressão passou a usar layout vertical compacto, texto de alto contraste e roteamento automático configurável por destino, etapa do pedido e estação de preparo. É possível criar destinos como Caixa, Chapa, Fritadeira, Bebidas, Bar e Expedição. Consulte `docs/IMPRESSAO.md`.
+
+## Impressão gerenciada V19
+
+A ETAPA 1 adiciona um agente local Windows para impressão silenciosa em térmicas ESC/POS, com pareamento, descoberta de impressoras, mapeamento por destino, fila persistente, retry e logs. O navegador mantém uma outbox quando o agente está temporariamente indisponível. Consulte `docs/PRINT_AGENT.md`.

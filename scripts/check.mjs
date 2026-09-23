@@ -16,6 +16,12 @@ const required=[
   'assets/img/icon-maskable.svg',
   'manifest.webmanifest',
   'service-worker.js',
+  'apps/print-agent/server.mjs',
+  'apps/print-agent/lib/agent-core.mjs',
+  'apps/print-agent/scripts/raw-print.ps1',
+  'apps/print-agent/install-windows.ps1',
+  'apps/print-agent/package.json',
+  'apps/print-agent/INSTALAR-AGENTE.cmd',
   ...js.map(f=>path.relative(root,f))
 ];
 
@@ -74,14 +80,14 @@ for(const match of html.matchAll(/(?:src|href)="([^"]+)"/g)){
 }
 
 const scripts=[...html.matchAll(/<script[^>]+src="([^"]+)"/g)].map(m=>m[1]);
-for(const requiredScript of ['assets/js/core.js','assets/js/ui.js','assets/js/printing.js','assets/js/salon-management.js','assets/js/menu-management.js','assets/js/app.js']){
+for(const requiredScript of ['assets/js/core.js','assets/js/ui.js','assets/js/print-agent-client.js','assets/js/printing.js','assets/js/salon-management.js','assets/js/menu-management.js','assets/js/app.js']){
   if(!scripts.includes(requiredScript)){
     console.error('Script essencial ausente do HTML:',requiredScript);
     process.exitCode=1;
   }
 }
-if(!(scripts.indexOf('assets/js/core.js')<scripts.indexOf('assets/js/ui.js')&&scripts.indexOf('assets/js/ui.js')<scripts.indexOf('assets/js/printing.js')&&scripts.indexOf('assets/js/printing.js')<scripts.indexOf('assets/js/salon-management.js')&&scripts.indexOf('assets/js/salon-management.js')<scripts.indexOf('assets/js/menu-management.js')&&scripts.indexOf('assets/js/menu-management.js')<scripts.indexOf('assets/js/app.js'))){
-  console.error('Ordem de carregamento inválida: core -> ui -> printing -> salon-management -> menu-management -> app.');
+if(!(scripts.indexOf('assets/js/core.js')<scripts.indexOf('assets/js/ui.js')&&scripts.indexOf('assets/js/ui.js')<scripts.indexOf('assets/js/print-agent-client.js')&&scripts.indexOf('assets/js/print-agent-client.js')<scripts.indexOf('assets/js/printing.js')&&scripts.indexOf('assets/js/printing.js')<scripts.indexOf('assets/js/salon-management.js')&&scripts.indexOf('assets/js/salon-management.js')<scripts.indexOf('assets/js/menu-management.js')&&scripts.indexOf('assets/js/menu-management.js')<scripts.indexOf('assets/js/app.js'))){
+  console.error('Ordem de carregamento inválida: core -> ui -> print-agent-client -> printing -> salon-management -> menu-management -> app.');
   process.exitCode=1;
 }
 
@@ -100,5 +106,6 @@ if(duplicates.length){
 }
 
 JSON.parse(fs.readFileSync(path.join(root,'manifest.webmanifest'),'utf8'));
+JSON.parse(fs.readFileSync(path.join(root,'apps/print-agent/package.json'),'utf8'));
 
 if(!process.exitCode)console.log('Static checks OK');

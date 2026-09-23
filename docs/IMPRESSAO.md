@@ -1,4 +1,4 @@
-# Impressão — X Burguer Central V18
+# Impressão — X Burguer Central V19
 
 ## Padrão de impressão
 
@@ -53,22 +53,21 @@ Exemplos:
 - **Expedição** → delivery → automático ao ficar pronto;
 - **Caixa** → comprovante → automático ao criar ou concluir.
 
-Se vários destinos corresponderem ao mesmo evento, o sistema tenta abrir uma impressão para cada destino.
+Se vários destinos corresponderem ao mesmo evento, o sistema cria um job separado para cada impressora física mapeada.
 
-## Impressão física
+## Impressão física gerenciada
 
-A aplicação publicada no GitHub Pages usa a impressão nativa do navegador. O X Burguer Central controla:
+A ETAPA 1 adiciona o **X Burguer Print Agent**, uma ponte local para Windows. Com o agente pareado e o destino mapeado, impressões térmicas 58/80 mm são enviadas diretamente ao spooler do Windows em RAW/ESC-POS, sem abrir a aba de impressão do navegador.
 
-- conteúdo;
-- layout;
-- papel;
-- cópias;
-- estação/setor;
-- momento em que a impressão é aberta.
+Cada destino lógico pode ser vinculado a uma impressora física instalada no computador. Exemplo:
+- Caixa → EPSON TM-T20;
+- Chapa → ELGIN i9 Chapa;
+- Bebidas → ELGIN i9 Bar;
+- Expedição → EPSON Expedição.
 
-A **impressora física** ainda é escolhida no diálogo do Windows/navegador. Browsers não permitem que uma página comum selecione silenciosamente qualquer impressora instalada.
+O agente mantém fila local, retry e histórico recente de jobs. Consulte `docs/PRINT_AGENT.md`.
 
-Para impressão realmente silenciosa e roteamento direto para dispositivos físicos diferentes, será necessária uma ponte local/desktop autorizada no computador do restaurante.
+A4 continua fora do modo silencioso nesta etapa.
 
 ## Pontos manuais de impressão
 

@@ -1,4 +1,4 @@
-/* X Burguer Central V18 — core, estado, persistência e roteamento de impressão */
+/* X Burguer Central V19 — core, estado e impressão gerenciada */
 function icon(name,extra=''){
   return `<i class="bi bi-${name} ${extra}" aria-hidden="true"></i>`;
 }
@@ -25,8 +25,8 @@ function initThemeUI(){
   applyTheme(document.documentElement.getAttribute('data-bs-theme')||'light');
 }
 
-const APP_VERSION='18.0.0';
-const SCHEMA_VERSION=7;
+const APP_VERSION='19.0.0';
+const SCHEMA_VERSION=8;
 const LOGO='assets/img/logo.png';
 const STORAGE='xburguer_gestor_pro_v3';
 const BACKUP_PREFIX='xburguer_backup_';
@@ -49,10 +49,11 @@ function defaultState(){return {schemaVersion:SCHEMA_VERSION,
   strongText:true,
   showLogo:false,
   footer:'Obrigado pela preferência!',
+  agent:{enabled:true,url:'http://127.0.0.1:17871',token:'',pairedAt:'',fallbackBrowser:false,lastSeen:'',lastVersion:''},
   profiles:[
-   {id:'print-counter',name:'Balcão / Caixa',purpose:'receipt',paper:'80mm',copies:1,enabled:true,station:'all',autoEvents:[]},
-   {id:'print-kitchen',name:'Cozinha',purpose:'kitchen',paper:'80mm',copies:1,enabled:true,station:'all',autoEvents:[]},
-   {id:'print-delivery',name:'Expedição / Delivery',purpose:'delivery',paper:'80mm',copies:1,enabled:true,station:'all',autoEvents:[]}
+   {id:'print-counter',name:'Balcão / Caixa',purpose:'receipt',paper:'80mm',copies:1,enabled:true,station:'all',autoEvents:[],deviceName:''},
+   {id:'print-kitchen',name:'Cozinha',purpose:'kitchen',paper:'80mm',copies:1,enabled:true,station:'all',autoEvents:[],deviceName:''},
+   {id:'print-delivery',name:'Expedição / Delivery',purpose:'delivery',paper:'80mm',copies:1,enabled:true,station:'all',autoEvents:[],deviceName:''}
   ]
  }},
  categories:[
@@ -94,7 +95,8 @@ function defaultState(){return {schemaVersion:SCHEMA_VERSION,
  finance:[{id:'f1',kind:'pay',desc:'Fornecedor de bebidas',value:720,due:'2026-09-25',paid:false},{id:'f2',kind:'pay',desc:'Fornecedor de carnes',value:1280,due:'2026-09-27',paid:false},{id:'f3',kind:'receive',desc:'Vendas cartão D+1',value:1860,due:'2026-09-23',paid:false}],
  team:[{id:'u1',name:'Administrador',role:'Administrador',active:true},{id:'u2',name:'Caixa 01',role:'Caixa',active:true},{id:'u3',name:'Garçom João',role:'Garçom',active:true},{id:'u4',name:'Cozinha',role:'KDS',active:true}],
  chats:[{id:'w1',name:'Patrícia',phone:'(62) 99444-1212',messages:[['c','Oi, gostaria de ver o cardápio'],['b','Olá! 👋 Aqui está o cardápio digital da X Burguer. Posso te ajudar com seu pedido?']],unread:1}],
- inventoryMovements:[]
+ inventoryMovements:[],
+ printOutbox:[]
 }}
 let state;
 let currentPage='pedidos';
@@ -124,9 +126,9 @@ function snapshotLocal(label='manual'){
 }
 function validateState(candidate){
  if(!candidate||typeof candidate!=='object')return 'Estado inválido.';
- const required=['orders','products','categories','tables','couriers','promos','finance','team','chats','customers','diningAreas','inventoryMovements'];
+ const required=['orders','products','categories','tables','couriers','promos','finance','team','chats','customers','diningAreas','inventoryMovements','printOutbox'];
  for(const key of required)if(!Array.isArray(candidate[key]))return 'Coleção inválida: '+key+'.';
- const idGroups=[candidate.orders,candidate.products,candidate.categories,candidate.tables,candidate.couriers,candidate.promos,candidate.finance,candidate.team,candidate.chats,candidate.customers,candidate.diningAreas,candidate.inventoryMovements];
+ const idGroups=[candidate.orders,candidate.products,candidate.categories,candidate.tables,candidate.couriers,candidate.promos,candidate.finance,candidate.team,candidate.chats,candidate.customers,candidate.diningAreas,candidate.inventoryMovements,candidate.printOutbox];
  for(const group of idGroups){
   const seen=new Set();
   for(const item of group){
@@ -156,13 +158,14 @@ function validateState(candidate){
 function normalize(){
  const d=defaultState();
  state=mergeDefaults(d,state||{});
- ['orders','products','categories','tables','couriers','promos','finance','team','chats','customers','diningAreas','inventoryMovements'].forEach(k=>{if(!Array.isArray(state[k]))state[k]=[]});
+ ['orders','products','categories','tables','couriers','promos','finance','team','chats','customers','diningAreas','inventoryMovements','printOutbox'].forEach(k=>{if(!Array.isArray(state[k]))state[k]=[]});
  if(!state.diningAreas.length)state.diningAreas=d.diningAreas.map(x=>({...x}));
  if(!state.cash||typeof state.cash!=='object')state.cash=d.cash;
  if(!Array.isArray(state.cash.movements))state.cash.movements=[];
  if(!Array.isArray(state.cash.history))state.cash.history=[];
  const printDefaults=d.settings.printing;
  const migratingPrintV18=Number(state.schemaVersion||0)<7;
+ const migratingPrintV19=Number(state.schemaVersion||0)<8;
  if(!state.settings.printing||typeof state.settings.printing!=='object'||Array.isArray(state.settings.printing))state.settings.printing={...printDefaults,profiles:printDefaults.profiles.map(p=>({...p,autoEvents:[...(p.autoEvents||[])]}))};
  const legacyKitchenAuto=Boolean(state.settings.printing.openKitchenOnAccept);
  const legacyReceiptAuto=Boolean(state.settings.printing.openReceiptOnSave);
@@ -173,6 +176,14 @@ function normalize(){
  state.settings.printing.strongText=state.settings.printing.strongText!==false;
  state.settings.printing.showLogo=migratingPrintV18?false:Boolean(state.settings.printing.showLogo);
  state.settings.printing.footer=String(state.settings.printing.footer??printDefaults.footer).slice(0,180);
+ if(!state.settings.printing.agent||typeof state.settings.printing.agent!=='object'||Array.isArray(state.settings.printing.agent))state.settings.printing.agent={...printDefaults.agent};
+ state.settings.printing.agent.enabled=state.settings.printing.agent.enabled!==false;
+ const candidateAgentUrl=String(state.settings.printing.agent.url||printDefaults.agent.url).trim().slice(0,180);state.settings.printing.agent.url=/^http:\/\/(?:127\.0\.0\.1|localhost)(?::\d{1,5})?$/.test(candidateAgentUrl)?candidateAgentUrl:printDefaults.agent.url;
+ state.settings.printing.agent.token=String(state.settings.printing.agent.token||'').trim().slice(0,160);
+ state.settings.printing.agent.pairedAt=String(state.settings.printing.agent.pairedAt||'').slice(0,40);
+ state.settings.printing.agent.fallbackBrowser=Boolean(state.settings.printing.agent.fallbackBrowser);
+ state.settings.printing.agent.lastSeen=String(state.settings.printing.agent.lastSeen||'').slice(0,40);
+ state.settings.printing.agent.lastVersion=String(state.settings.printing.agent.lastVersion||'').slice(0,40);
  if(!Array.isArray(state.settings.printing.profiles)||!state.settings.printing.profiles.length)state.settings.printing.profiles=printDefaults.profiles.map(p=>({...p,autoEvents:[...(p.autoEvents||[])]}));
  const allowedPurpose=new Set(['receipt','kitchen','delivery']),allowedPaper=new Set(['58mm','80mm','a4']),allowedEvents=new Set(['created','production','ready','completed']);
  state.settings.printing.profiles=state.settings.printing.profiles.slice(0,16).map((p,i)=>{
@@ -188,7 +199,8 @@ function normalize(){
    copies:Math.min(3,Math.max(1,Number(p?.copies)||1)),
    enabled:p?.enabled!==false,
    station:String(p?.station||'all').trim().slice(0,80)||'all',
-   autoEvents:[...new Set(autoEvents)]
+   autoEvents:[...new Set(autoEvents)],
+   deviceName:String(p?.deviceName||'').trim().slice(0,180)
   };
  });
  delete state.settings.printing.openKitchenOnAccept;
@@ -242,6 +254,28 @@ function normalize(){
   at:m?.at||new Date().toISOString(),
   balance:Math.max(0,Number(m?.balance)||0)
  })).filter(m=>m.productId&&state.products.some(p=>p.id===m.productId));
+ state.printOutbox=state.printOutbox.slice(-100).map(j=>({
+  id:SAFE_ID.test(String(j?.id||''))?String(j.id):uid('pj'),
+  profileId:SAFE_ID.test(String(j?.profileId||''))?String(j.profileId):'',
+  printerName:String(j?.printerName||'').trim().slice(0,180),
+  purpose:['receipt','kitchen','delivery'].includes(j?.purpose)?j.purpose:'receipt',
+  station:String(j?.station||'all').slice(0,80),
+  event:String(j?.event||'manual').slice(0,40),
+  paper:['58mm','80mm'].includes(j?.paper)?j.paper:'80mm',
+  copies:Math.min(3,Math.max(1,Number(j?.copies)||1)),
+  profile:{
+   paper:['58mm','80mm'].includes(j?.profile?.paper)?j.profile.paper:(['58mm','80mm'].includes(j?.paper)?j.paper:'80mm'),
+   copies:Math.min(3,Math.max(1,Number(j?.profile?.copies??j?.copies)||1)),
+   strongText:j?.profile?.strongText!==false
+  },
+  document:j?.document&&typeof j.document==='object'?j.document:{},
+  attempts:Math.max(0,Number(j?.attempts)||0),
+  createdAt:j?.createdAt||new Date().toISOString(),
+  lastError:String(j?.lastError||'').slice(0,300)
+ })).filter(j=>j.profileId&&j.printerName&&j.document?.id);
+ if(migratingPrintV19){
+  state.settings.printing.profiles.forEach(p=>{if(p.paper==='a4')p.deviceName=''});
+ }
  state.schemaVersion=SCHEMA_VERSION;
 }
 function load(){
@@ -285,7 +319,10 @@ function save(options={}){
 }
 function getStorageBytes(){try{return new Blob([localStorage.getItem(STORAGE)||'']).size}catch(e){return 0}}
 function exportBackup(){
- const payload={app:'X Burguer Central',version:APP_VERSION,schemaVersion:SCHEMA_VERSION,exportedAt:new Date().toISOString(),state};
+ const safeState=JSON.parse(JSON.stringify(state));
+ if(safeState.settings?.printing?.agent){safeState.settings.printing.agent.token='';safeState.settings.printing.agent.pairedAt='';safeState.settings.printing.agent.lastSeen=''}
+ safeState.printOutbox=[];
+ const payload={app:'X Burguer Central',version:APP_VERSION,schemaVersion:SCHEMA_VERSION,exportedAt:new Date().toISOString(),state:safeState};
  const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');
  a.href=url;a.download=`xburguer-central-backup-${new Date().toISOString().slice(0,10)}.json`;document.body.appendChild(a);a.click();a.remove();
  setTimeout(()=>URL.revokeObjectURL(url),1000);toast('Backup exportado.','success');
@@ -300,8 +337,12 @@ function importBackup(){
    const parsed=JSON.parse(await file.text()),candidate=parsed?.state||parsed;
    if(parsed?.schemaVersion&&Number(parsed.schemaVersion)>SCHEMA_VERSION)throw new Error('Backup criado por uma versão mais nova.');
    if(!candidate||typeof candidate!=='object'||!Array.isArray(candidate.orders)||!Array.isArray(candidate.products))throw new Error('Formato inválido');
+   const localAgent={...(state.settings?.printing?.agent||{})};
    const next=mergeDefaults(defaultState(),candidate);
    state=next;normalize();
+   if(localAgent.token){
+    state.settings.printing.agent={...state.settings.printing.agent,token:localAgent.token,pairedAt:localAgent.pairedAt||'',lastSeen:localAgent.lastSeen||'',lastVersion:localAgent.lastVersion||''};
+   }
    const issue=validateState(state);if(issue)throw new Error(issue);
    snapshotLocal('antes_importacao');
    save();
