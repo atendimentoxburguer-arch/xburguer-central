@@ -25,7 +25,7 @@ function initThemeUI(){
   applyTheme(document.documentElement.getAttribute('data-bs-theme')||'light');
 }
 
-const APP_VERSION='27.0.0';
+const APP_VERSION='28.0.0';
 const SCHEMA_VERSION=11;
 const LOGO='assets/img/logo.png';
 const STORAGE='xburguer_gestor_pro_v3';
@@ -367,6 +367,13 @@ function load(){
  }else if(migrated){
   try{localStorage.setItem(STORAGE,JSON.stringify(state))}catch(e){console.warn('Falha ao persistir migração local',e)}
  }
+}
+function replaceState(nextState,options={}){
+ state=nextState;
+ normalize();
+ try{localStorage.setItem(STORAGE,JSON.stringify(state))}catch(e){console.warn('Falha ao persistir estado substituído',e)}
+ if(options.render!==false)renderAll();
+ return state;
 }
 function save(options={}){
  try{
