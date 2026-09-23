@@ -1684,3 +1684,139 @@ button:disabled,.btn:disabled{
   .print-routing-example{align-items:flex-start;flex-direction:column}
   .print-routing-example span{text-align:left}
 }
+
+
+/* ======================================================================
+   V19 — agente local e impressão silenciosa
+   ====================================================================== */
+.print-agent-card{
+  display:grid;
+  grid-template-columns:44px minmax(0,1fr) auto auto;
+  gap:10px;
+  align-items:center;
+  min-height:70px;
+  margin-bottom:12px;
+  padding:11px 12px;
+  border:1px solid color-mix(in srgb,var(--primary) 30%,var(--border));
+  border-radius:15px;
+  background:linear-gradient(180deg,color-mix(in srgb,var(--primary-soft) 52%,var(--surface)),var(--surface));
+}
+.print-agent-icon{
+  width:44px;height:44px;
+  display:grid;place-items:center;
+  border-radius:13px;
+  background:var(--primary-soft);
+  color:var(--primary);
+  font-size:1.15rem;
+}
+.print-agent-card>div:nth-child(2){min-width:0}
+.print-agent-card b,.print-agent-card span{display:block}
+.print-agent-card>div:nth-child(2)>span{
+  margin-top:3px;
+  color:var(--muted);
+  font-size:.72rem;
+  line-height:1.35;
+}
+.print-agent-actions{
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  gap:5px;
+  flex-wrap:wrap;
+}
+.print-agent-help{
+  display:grid;
+  grid-template-columns:28px minmax(0,1fr);
+  gap:9px 10px;
+  padding:12px;
+  border:1px solid var(--border);
+  border-radius:13px;
+  background:var(--surface-2);
+}
+.print-agent-help b{
+  width:28px;height:28px;
+  display:grid;place-items:center;
+  border-radius:999px;
+  background:var(--primary-soft);
+  color:var(--primary);
+}
+.print-agent-help span{align-self:center;line-height:1.4}
+.device-mapped{color:var(--success)!important}
+.device-unmapped{color:var(--warning)!important}
+.print-queue-summary{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:8px;
+  margin-bottom:12px;
+}
+.print-queue-summary>div{
+  padding:10px 11px;
+  border:1px solid var(--border);
+  border-radius:12px;
+  background:var(--surface-2);
+}
+.print-queue-summary span,.print-queue-summary b{display:block}
+.print-queue-summary span{
+  color:var(--muted);
+  font-size:.67rem;
+  font-weight:800;
+  text-transform:uppercase;
+}
+.print-queue-summary b{
+  margin-top:3px;
+  font-size:1.25rem;
+}
+.managed-print-jobs{
+  display:grid;
+  gap:7px;
+  max-height:54vh;
+  overflow:auto;
+}
+.managed-print-job{
+  display:grid;
+  grid-template-columns:72px minmax(0,1fr) auto;
+  align-items:center;
+  gap:9px;
+  padding:9px 10px;
+  border:1px solid var(--border);
+  border-radius:12px;
+  background:var(--surface);
+}
+.managed-print-job>div{min-width:0}
+.managed-print-job b,.managed-print-job span{display:block}
+.managed-print-job>div>span{
+  margin-top:2px;
+  color:var(--muted);
+  font-size:.68rem;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.print-job-state{
+  display:inline-flex!important;
+  align-items:center;
+  justify-content:center;
+  min-height:26px;
+  padding:3px 7px;
+  border-radius:999px;
+  background:var(--surface-3);
+  color:var(--muted);
+  font-size:.64rem;
+  font-weight:850;
+  text-transform:uppercase;
+}
+.print-job-state.printed{background:var(--success-soft);color:var(--success)}
+.print-job-state.failed{background:var(--danger-soft);color:var(--danger)}
+.print-job-state.printing,.print-job-state.queued,.print-job-state.retry{background:var(--warning-soft);color:var(--warning)}
+@media(max-width:760px){
+  .print-agent-card{grid-template-columns:40px minmax(0,1fr) auto}
+  .print-agent-actions{grid-column:2/4;justify-content:flex-start}
+}
+@media(max-width:560px){
+  .print-agent-card{grid-template-columns:38px minmax(0,1fr)}
+  .print-agent-card>.badge{grid-column:2;justify-self:start}
+  .print-agent-actions{grid-column:2}
+  .print-queue-summary{grid-template-columns:1fr}
+  .managed-print-job{grid-template-columns:64px minmax(0,1fr)}
+  .managed-print-job>.btn{grid-column:2;justify-self:start}
+}
