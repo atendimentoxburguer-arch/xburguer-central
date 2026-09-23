@@ -1,69 +1,102 @@
 # Design System — X Burguer Central
 
-## Direção visual V27
+## Direção visual atual
 
-A interface deve parecer um sistema operacional de restaurante profissional: rápida de ler, compacta sem ficar apertada e consistente entre módulos. A paleta operacional usa **azul petróleo/azul profundo como ação principal**, **dourado/mostarda como acento**, branco e neutros frios. O vermelho fica reservado para erro, cancelamento e ações destrutivas.
+A interface é **desktop-first** e deve funcionar como software operacional de retaguarda: rápida, limpa, estável e confortável para uso prolongado.
+
+A identidade visual usa somente:
+
+- **Azul** para ação, seleção, links, foco e indicadores ativos.
+- **Branco** para cartões e superfícies principais.
+- **Cinza** para fundos secundários, divisórias, textos auxiliares e estados neutros.
+
+Estados operacionais são diferenciados por texto, ícone, peso e variações de azul/cinza, evitando depender de múltiplas cores.
 
 ## Tipografia
 
-- **Manrope**: títulos, navegação, botões, métricas e destaques.
-- **Inter**: textos, formulários, tabelas e informações operacionais.
-- Base desktop: 16 px no HTML, com corpo visual próximo de 15 px.
-- Títulos de página: aproximadamente 23 px; títulos internos ficam entre 14 e 18 px conforme hierarquia.
-- Textos auxiliares não devem ficar menores que o necessário para leitura operacional.
-- Evitar excesso de caixa alta. Usar caixa alta apenas em labels curtas e cabeçalhos de tabela.
+A fonte oficial é **Inter**, com fallback para Segoe UI, Roboto, Arial e sans-serif do sistema.
 
-## Iconografia
+Escala principal:
 
-- Biblioteca principal: Bootstrap Icons.
-- Ícone aparece antes do texto em botões.
-- Ícones de ação usam tamanho e caixa consistentes.
-- Dourado pode destacar navegação/identidade; vermelho bordô identifica ações primárias.
-- Cores de estado nunca dependem apenas do ícone: sempre combinar com texto.
+- título de página: 20–22 px;
+- títulos internos: 14–16 px;
+- texto operacional: 12–15 px;
+- labels e metadados: 10–12 px;
+- valores financeiros: 16–24 px conforme prioridade.
 
-## Escala e densidade
+A interface deve evitar textos pequenos demais e não deve usar mais de uma família tipográfica sem necessidade funcional.
 
-- Espaçamentos seguem múltiplos previsíveis de 4 px.
-- Cards padrão: raio entre 10 e 14 px.
-- Botões padrão: altura aproximada de 40 px; compactos, 32 px.
-- Campos: altura aproximada de 40 px.
-- Sombras são sutis; borda e hierarquia devem fazer a maior parte do trabalho visual.
-- Evitar animações que movam componentes no hover. Mudanças de borda, fundo e sombra são preferíveis.
+## Layout desktop
+
+- Sidebar fixa entre 228 e 248 px.
+- Topbar próxima de 64 px.
+- Conteúdo com largura fluida até 1920 px.
+- Espaçamentos principais entre 8 e 24 px.
+- Pedidos usam Kanban em três colunas no desktop.
+- PDV prioriza grade de produtos + resumo da venda.
+- Mesas e KDS priorizam leitura simultânea sem excesso de rolagem.
 
 ## Componentes
 
-- **Sidebar:** azul-grafite escuro, ícones dourados e estado ativo em azul petróleo.
-- **Topbar:** clara, compacta, com logo circular preservada.
-- **Page head:** superfície neutra com filete lateral dourado → azul petróleo.
-- **Botões primários:** azul petróleo; sucesso usa verde; exclusão/erro usa vermelho semântico.
-- **Cards:** branco/neutro com borda discreta.
-- **Métricas:** filete superior dourado → azul petróleo.
-- **Tabelas:** cabeçalho neutro e linhas simples, sem blocos visuais excessivos.
-- **Formulários:** labels mais legíveis, foco visível e campos consistentes.
-- **Modais:** hierarquia clara, ações no rodapé.
-- **Checkout:** mantém o layout V24, mas recebe a tipografia, cores e densidade V26.
+### Sidebar
+- Azul-marinho muito escuro.
+- Ícones em azul claro.
+- Item ativo em azul principal.
+- Hover discreto, sem deslocamento.
+
+### Cards
+- Fundo branco.
+- Borda cinza clara.
+- Raio entre 8 e 10 px.
+- Sombra mínima; hover usa principalmente mudança de borda.
+
+### Botões
+- Primário: azul.
+- Secundário: branco com borda cinza.
+- Ações destrutivas: cinza escuro + confirmação explícita.
+- Altura padrão próxima de 40 px.
+
+### Formulários
+- Fundo branco.
+- Bordas cinza.
+- Foco azul visível.
+- Labels curtos e legíveis.
+
+### Tabelas
+- Cabeçalho cinza muito claro.
+- Linhas brancas.
+- Hover cinza suave.
+- Sem cartões individuais por célula.
+
+### Kanban de pedidos
+- Fundo das colunas em cinza muito claro.
+- Cards brancos.
+- Azul indica ação/seleção.
+- Atraso ou atenção usa texto e ícone, não uma paleta paralela.
+
+### Modais
+- Fundo branco.
+- Overlay azul-grafite translúcido.
+- Ações alinhadas e previsíveis.
+
+## Feedback
+
+Hover e active devem ser claros, mas discretos:
+
+- azul mais escuro em ações primárias;
+- fundo azul muito claro em seleções;
+- borda azul em elementos interativos;
+- sem animações de salto ou movimento constante.
 
 ## Responsividade
 
-Desktop prioriza leitura simultânea e densidade operacional. Em tablet e celular:
-- grids reduzem colunas progressivamente;
-- ações podem ocupar largura maior;
-- tabelas usam rolagem horizontal;
-- sidebar vira painel móvel;
-- texto mantém legibilidade sem reduzir excessivamente.
+Desktop é o alvo principal. Tablet e celular são fallback operacional, mantendo as funções essenciais sem redefinir a experiência inteira.
 
 ## Regras de engenharia visual
 
-- Novos estilos globais devem ficar em blocos de versão no nível raiz do CSS, nunca aninhados acidentalmente em media queries.
-- Regras específicas do checkout devem permanecer isoladas.
-- Estilos de domínio carregados depois de `app.css` precisam manter a mesma escala visual.
-- Mudanças visuais devem preservar foco de teclado, contraste e `prefers-reduced-motion`.
-- O workflow Quality executa contratos de estabilidade visual para impedir regressões de cascata.
-
-## Gestão operacional
-
-- Pedidos, mesas, PDV e KDS compartilham a mesma escala de espaçamento, tipografia e ícones.
-- Status operacionais usam texto + cor.
-- Valores financeiros devem destacar total e saldo sem competir visualmente com ações.
-- Cardápio prioriza leitura do produto, foto, preço e disponibilidade.
-- Salão prioriza mesa, responsável, ocupação e consumo.
+- Não criar blocos CSS por número de versão.
+- Não adicionar uma segunda biblioteca visual paralela.
+- Não reintroduzir dourado, verde, laranja ou vermelho como cores da interface.
+- Não adicionar outra fonte ao sistema sem justificativa.
+- Preferir variáveis e componentes existentes.
+- O Quality valida tokens, tipografia, seletores estruturais e cores proibidas.
