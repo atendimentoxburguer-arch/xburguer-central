@@ -143,3 +143,132 @@
   .menu-item-main .item-thumb{width:40px;height:40px}
   .bulk-bar>div .btn:nth-child(n+3){display:none}
 }
+
+/* ======================================================================
+   V21 — mesas operacionais e cardápio com fotos
+   ====================================================================== */
+.menu-item-main .item-thumb{
+  overflow:hidden;
+  display:grid;
+  place-items:center;
+  border:1px solid var(--border);
+  border-radius:12px;
+  background:var(--surface-2);
+}
+.menu-item-photo{
+  width:100%;
+  height:100%;
+  display:block;
+  object-fit:cover;
+}
+.product-emoji{
+  width:100%;
+  height:100%;
+  display:grid!important;
+  place-items:center;
+  font-size:1.45rem;
+}
+.product-photo-editor{
+  display:grid;
+  grid-template-columns:210px minmax(0,1fr);
+  gap:14px;
+  align-items:start;
+}
+.product-photo-preview{
+  width:210px;
+  aspect-ratio:1/1;
+  overflow:hidden;
+  display:grid;
+  place-items:center;
+  border:1px solid var(--border);
+  border-radius:16px;
+  background:var(--surface-2);
+}
+.product-photo-preview-media{
+  width:100%;
+  height:100%;
+  display:block;
+  object-fit:cover;
+}
+.product-photo-fields{min-width:0}
+.field-help{
+  display:block;
+  margin-top:2px;
+  color:var(--muted);
+  font-size:.67rem;
+  line-height:1.4;
+}
+.table-orders-section{
+  margin-top:12px;
+  padding:12px;
+  border:1px solid var(--border);
+  border-radius:14px;
+  background:var(--surface-2);
+}
+.table-orders-section.history{background:var(--surface)}
+.table-orders-head{
+  display:flex;
+  align-items:flex-end;
+  justify-content:space-between;
+  gap:10px;
+  margin-bottom:9px;
+}
+.table-orders-head>div{min-width:0}
+.table-orders-head b,.table-orders-head span{display:block}
+.table-orders-head b{font-size:.83rem}
+.table-orders-head span{
+  margin-top:2px;
+  color:var(--muted);
+  font-size:.69rem;
+  line-height:1.35;
+}
+.table-orders-list{display:grid;gap:7px}
+.table-order-row{
+  display:grid;
+  grid-template-columns:125px minmax(0,1fr) auto;
+  gap:9px;
+  align-items:center;
+  padding:9px 10px;
+  border:1px solid var(--border);
+  border-radius:11px;
+  background:var(--surface);
+}
+.table-order-id{
+  display:flex;
+  align-items:center;
+  gap:7px;
+  flex-wrap:wrap;
+}
+.table-order-id b{font-size:.78rem}
+.table-order-copy{min-width:0}
+.table-order-copy b,.table-order-copy span,.table-order-copy small{display:block}
+.table-order-copy b{font-size:.76rem}
+.table-order-copy span{
+  margin-top:2px;
+  color:var(--muted);
+  font-size:.68rem;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.table-order-copy small{
+  margin-top:3px;
+  color:var(--danger);
+  font-size:.65rem;
+}
+.compact-empty{padding:10px!important}
+@media(max-width:760px){
+  .product-photo-editor{grid-template-columns:1fr}
+  .product-photo-preview{width:min(100%,280px);justify-self:center}
+  .table-orders-head{align-items:stretch;flex-direction:column}
+  .table-orders-head .btn{align-self:flex-start}
+  .table-order-row{grid-template-columns:1fr auto}
+  .table-order-copy{grid-column:1/-1;grid-row:2}
+}
+@media(max-width:560px){
+  .menu-item-actions{flex-wrap:wrap}
+  .menu-item-actions .icon-btn:first-child{display:grid}
+  .table-order-row{grid-template-columns:1fr}
+  .table-order-copy{grid-column:auto;grid-row:auto}
+  .table-order-row .btn{justify-self:start}
+}
