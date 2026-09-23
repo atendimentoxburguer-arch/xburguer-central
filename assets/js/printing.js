@@ -137,6 +137,10 @@
     <div class="modal-foot"><button class="btn btn-outline" onclick="printerCenter()">${icon('gear')}<span>Configurar impressoras</span></button><button class="btn btn-primary" onclick="closeModal()">Fechar</button></div>`);
   }
   function printKitchenFromButton(id,btn){return printOrderWithProfile(id,'kitchen','',btn?.dataset?.station||'all')}
+  function printKitchenTicketFromButton(btn){
+    const id=btn?.dataset?.order||'',station=btn?.dataset?.station||'all';
+    return printOrderWithProfile(id,'kitchen','',station);
+  }
 
   function printerCenter(){
     const cfg=printSettings(),profiles=cfg.profiles||[];
@@ -197,6 +201,7 @@
   globalThis.printTestProfile=printTestProfile;
   globalThis.printOrderMenu=printOrderMenu;
   globalThis.printKitchenFromButton=printKitchenFromButton;
+  globalThis.printKitchenTicketFromButton=printKitchenTicketFromButton;
   globalThis.printerCenter=printerCenter;
   globalThis.togglePrintingEnabled=togglePrintingEnabled;
   globalThis.togglePrinterProfile=togglePrinterProfile;
