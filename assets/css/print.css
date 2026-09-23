@@ -1,0 +1,47 @@
+/* X Burguer Central V17 — impressão */
+:root{--print-width:80mm}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:#fff;color:#000;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:1.32}
+body{display:flex;justify-content:center}
+.print-sheet{width:var(--print-width);padding:4mm 3.2mm;background:#fff}
+.print-sheet.paper-58mm{--print-width:58mm;padding:3mm 2.4mm;font-size:10.5px}
+.print-sheet.paper-80mm{--print-width:80mm}
+.print-sheet.paper-a4{--print-width:210mm;padding:12mm 16mm;font-size:12px}
+.print-header{text-align:center;padding-bottom:8px;border-bottom:1px dashed #000}
+.print-header img{display:block;width:48px;height:48px;object-fit:contain;margin:0 auto 5px}
+.print-header h1{margin:0;font-size:17px;line-height:1.1}
+.print-header p{margin:4px 0 1px;font-size:11px;font-weight:700;letter-spacing:.06em}
+.print-header small{font-size:9px}
+.print-meta{display:grid;grid-template-columns:1fr 1fr;gap:4px 8px;padding:8px 0;border-bottom:1px dashed #000}
+.print-meta div{display:grid}
+.print-meta span,.print-payment span{font-size:9px;text-transform:uppercase}
+.print-meta b{font-size:11px}
+.print-customer{display:grid;gap:2px;padding:8px 0;border-bottom:1px dashed #000}
+.print-customer.strong b{font-size:15px}
+.print-customer span{overflow-wrap:anywhere}
+.print-items{padding:5px 0;border-bottom:1px dashed #000}
+.print-item{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:start;padding:4px 0}
+.print-item b{display:block;font-size:11.5px}
+.print-item small{display:block;margin-top:1px;font-size:9px;text-transform:uppercase}
+.print-item strong{font-size:11px;white-space:nowrap}
+.print-empty{text-align:center;font-style:italic}
+.print-totals{display:grid;gap:3px;padding:7px 0;border-bottom:1px dashed #000}
+.print-totals div,.print-payment{display:flex;justify-content:space-between;gap:8px}
+.print-totals .grand{margin-top:3px;padding-top:5px;border-top:1px solid #000;font-size:14px}
+.print-payment{padding:7px 0;border-bottom:1px dashed #000}
+.print-notes{margin:7px 0;padding:6px;border:1px solid #000}
+.print-notes p{margin:3px 0 0;white-space:pre-wrap;overflow-wrap:anywhere}
+.print-notes.emphasis{border-width:2px;font-size:13px}
+.print-notes.emphasis b{font-size:14px}
+footer{padding-top:8px;text-align:center;font-size:9px}
+.print-copy-break{page-break-after:always}
+@page{margin:0}
+@media print{
+  body{display:block}
+  .print-sheet{margin:0 auto}
+  .print-copy-break{break-after:page}
+}
+@page thermal58{size:58mm auto;margin:0}
+@page thermal80{size:80mm auto;margin:0}
+.paper-58mm{page:thermal58}
+.paper-80mm{page:thermal80}
