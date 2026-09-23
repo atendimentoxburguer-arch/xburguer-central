@@ -84,7 +84,7 @@ function defaultState(){return {schemaVersion:SCHEMA_VERSION,
 }}
 let state;
 let currentPage='pedidos';
-let orderFilter='all';let orderSearch='';let selectedCat='cat1';let pdvCat='all';let pdvCart=[];let pdvType='Balcão';let pdvDraftTable='';let pdvEditingId='';let salaoTab='mesas';let chatId='w1';let performanceRange='today';let kdsStation='all';
+let orderFilter='all';let orderSearch='';let selectedCat='cat1';let pdvCat='all';let pdvCart=[];let pdvType='Balcão';let pdvDraftTable='';let pdvEditingId='';let pdvCustomerDraft='';let pdvPayDraft='PIX';let salaoTab='mesas';let chatId='w1';let performanceRange='today';let kdsStation='all';
 function mergeDefaults(base,value){
  if(Array.isArray(base)) return Array.isArray(value)?value:base;
  if(base&&typeof base==='object'){const out={...base};if(value&&typeof value==='object'&&!Array.isArray(value))Object.keys(value).forEach(k=>out[k]=k in base?mergeDefaults(base[k],value[k]):value[k]);return out}
