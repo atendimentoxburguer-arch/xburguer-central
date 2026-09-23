@@ -1,0 +1,52 @@
+{
+  "name": "X Burguer Central",
+  "short_name": "X Burguer",
+  "description": "Central operacional da X Burguer",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0a1325",
+  "theme_color": "#2563eb",
+  "lang": "pt-BR",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "assets/img/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "assets/img/icon-maskable.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Pedidos",
+      "short_name": "Pedidos",
+      "url": "./#pedidos",
+      "icons": [
+        {
+          "src": "assets/img/icon.svg",
+          "sizes": "any",
+          "type": "image/svg+xml"
+        }
+      ]
+    },
+    {
+      "name": "PDV",
+      "short_name": "PDV",
+      "url": "./#pdv",
+      "icons": [
+        {
+          "src": "assets/img/icon.svg",
+          "sizes": "any",
+          "type": "image/svg+xml"
+        }
+      ]
+    }
+  ]
+}
