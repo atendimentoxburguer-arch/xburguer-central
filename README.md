@@ -50,3 +50,7 @@ A área de salão ganhou gestão por áreas/seções, capacidade, pessoas sentad
 ## Engenharia V15
 
 A V15 consolidou migração de dados no núcleo, separou os módulos de salão e cardápio, adicionou validação de backup/importação, endureceu regras de estoque e delivery e incluiu testes automatizados de estado e regras críticas. Consulte `docs/AUDITORIA_V15.md`.
+
+## Revisão V16
+
+A V16 passou por revisão ponta a ponta de engenharia e QA: fluxo de pedidos e PDV, taxas históricas, caixa físico, estoque auditável, delivery, KDS por estação, clientes, equipe, acessibilidade, tratamento de falhas e testes automatizados. Consulte `docs/AUDITORIA_V16.md`.
