@@ -139,6 +139,7 @@ const server=http.createServer(async(req,res)=>{
     res.writeHead(origin?204:403,{
       ...(origin?{'Access-Control-Allow-Origin':origin,'Vary':'Origin'}:{}),
       'Access-Control-Allow-Headers':'Content-Type, X-XB-Print-Token',
+      'Access-Control-Allow-Private-Network':'true',
       'Access-Control-Allow-Methods':'GET, POST, OPTIONS',
       'Access-Control-Max-Age':'600'
     });res.end();return;
