@@ -28,7 +28,7 @@
     </div>
     <div class="status-card" id="statusCard">
       <span class="status-dot"></span>
-      <div><small>STATUS</small><strong id="statusText">Carregando...</strong><span id="uptimeText"></span></div>
+      <div><small>STATUS</small><strong id="statusText">Carregando...</strong><span id="uptimeText"></span><span id="lastJobText"></span></div>
     </div>
   </section>
 
@@ -42,7 +42,7 @@
   <section class="grid">
     <article class="panel pairing">
       <div class="panel-head"><div><h2>Pareamento</h2><p>Use este código no X Burguer Central.</p></div><span class="pill success">Local</span></div>
-      <div class="pair-code" id="pairingCode">------</div>
+      <div class="pair-state"><div class="pair-code" id="pairingCode">------</div><span id="pairState" class="pill">Aguardando pareamento</span></div>
       <p class="hint">O código é alterado depois que um navegador é autorizado.</p>
     </article>
 
