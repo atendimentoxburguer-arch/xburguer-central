@@ -47,6 +47,14 @@ for(const file of js){
     console.error('Handler V14 global implícito encontrado:',path.relative(root,file));
     process.exitCode=1;
   }
+  if(/(?:onclick|onchange)="[^"]*(?:menuSelectedV14|menuStatusV14|menuSortV14)/.test(text)){
+    console.error('Handler HTML referencia estado privado do módulo de cardápio:',path.relative(root,file));
+    process.exitCode=1;
+  }
+  if(/onclick="[^"]*esc\(/.test(text)){
+    console.error('Valor escapado para HTML usado dentro de JavaScript inline:',path.relative(root,file));
+    process.exitCode=1;
+  }
 }
 
 const localRefs=[];
