@@ -34,6 +34,7 @@ assert.equal(cfg.showLogo,false);
 assert.equal(cfg.profiles.length,3);
 assert.deepEqual([...cfg.profiles.map(p=>p.purpose)],['receipt','kitchen','delivery']);
 assert.ok(cfg.profiles.every(p=>Array.isArray(p.autoEvents)));
+assert.ok(cfg.profiles.every(p=>typeof p.deviceName==='string'));
 
 vm.runInContext("product('p12').station='Bebidas'",context);
 const receipt=vm.runInContext("buildPrintPayload(state.orders.find(o=>o.id==='77552'),'receipt')",context);
@@ -42,6 +43,7 @@ assert.equal(receipt.type,'Mesa');
 assert.equal(receipt.items.length,2);
 assert.ok(receipt.total>receipt.subtotal);
 assert.match(receipt.feeLabel,/Serviço/);
+assert.equal(receipt.footer,'Obrigado pela preferência!');
 
 const beverages=vm.runInContext("buildPrintPayload(state.orders.find(o=>o.id==='77552'),'kitchen','Bebidas')",context);
 assert.equal(beverages.purpose,'kitchen');
@@ -74,7 +76,7 @@ vm.runInContext(`
   enabled:true,orientation:'landscape',density:'invalid',fontScale:'giant',strongText:true,showLogo:true,footer:'Teste',
   profiles:[{id:'print-test',name:'Teste',purpose:'invalid',paper:'invalid',copies:99,enabled:true,station:'all',autoEvents:['production','hack']}]
  };
- state.schemaVersion=7;
+ state.schemaVersion=8;
  normalize();
 `,context);
 const normalized=vm.runInContext('state.settings.printing',context);
