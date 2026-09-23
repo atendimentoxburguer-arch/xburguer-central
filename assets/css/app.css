@@ -1107,7 +1107,7 @@ button:disabled,.btn:disabled{cursor:not-allowed;opacity:.58;box-shadow:none!imp
   .reports-nav-v22{grid-template-columns:repeat(2,minmax(130px,1fr))}
 
 }
-/* Checkout V24 — referência visual de fechamento de mesa */
+/* Checkout de mesa — referência visual aprovada */
 .modal:has(.checkout-shell-v24){padding:12px;background:rgba(15,23,42,.34);backdrop-filter:blur(3px)}
 .modal-card:has(.checkout-shell-v24){width:min(1540px,calc(100vw - 24px));height:min(920px,calc(100vh - 24px));max-height:calc(100vh - 24px);padding:0;overflow:hidden;background:var(--surface-2)}
 .checkout-shell-v24{width:100%;height:100%;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) 380px;grid-template-rows:64px minmax(0,1fr);gap:0}
@@ -1236,7 +1236,7 @@ button:disabled,.btn:disabled{cursor:not-allowed;opacity:.58;box-shadow:none!imp
 
 }
 /* ======================================================================
-   V26 — sistema visual unificado X Burguer
+   Sistema visual atual — X Burguer
    Tipografia, iconografia, escala, identidade e consistência ponta a ponta
    ====================================================================== */
 :root,[data-bs-theme="light"]{--bg:#f4f7fa;--surface:#ffffff;--surface-2:#f8fafc;--surface-3:#eef3f7;--text:#17212b;--muted:#667586;--border:#dce4eb;--border-strong:#c7d3de;--primary:#1f5b78;--primary-strong:#17465e;--primary-soft:#eaf4f8;--accent:#d2a53a;--accent-strong:#ad8120;--accent-soft:#fff8e7;--success:#238447;--success-soft:#edf8f0;--warning:#b86f12;--warning-soft:#fff6e7;--danger:#d12b2b;--danger-soft:#fff0f0;--orange:#cf6b2e;--purple:#7551a8;--sidebar:#111b27;--sidebar-2:#182737;--sidebar-text:#dbe5ed;--focus:rgba(31,91,120,.24);--shadow-sm:0 3px 12px rgba(15,35,52,.06);--shadow:0 14px 34px rgba(15,35,52,.09);--shadow-lg:0 30px 80px rgba(10,25,38,.18);--r-sm:10px;--r:14px;--r-lg:18px;--r-xl:22px}
