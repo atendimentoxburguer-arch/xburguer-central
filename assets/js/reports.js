@@ -28,9 +28,9 @@ function reportTableV22(headers,rows,empty='Nenhum registro no período.'){
 }
 function renderReportCaixasV22(){
  const orders=reportOrdersV22(),done=orders.filter(o=>o.status==='done'),sales=done.reduce((s,o)=>s+orderTotal(o),0),cash=done.filter(o=>o.payment==='Dinheiro').reduce((s,o)=>s+orderTotal(o),0);
- const rows=(state.cash.history||[]).slice().reverse().map(function(h){return ['<b>'+reportDateV22(h.closedAt||h.at)+'</b>',money(Number(h.opening)||0),money(Number(h.sales)||0),money(Number(h.expected)||0),money(Number(h.counted)||0),h.diff===undefined?'—':money(Number(h.diff)||0)]});
+ const rows=(state.cash.history||[]).slice().reverse().map(function(h){return ['<b>'+reportDateV22(h.closedAt||h.at)+'</b>',money(Number(h.opening)||0),String(Number(h.sales)||0),money(Number(h.salesTotal)||0),money(Number(h.cashSales)||0),money(Number(h.drawerBalance??h.balance)||0)]});
  return reportKpisV22([['Vendas no período',money(sales)],['Em dinheiro',money(cash)],['Caixa atual',state.cash.open?'Aberto':'Fechado'],['Saldo gaveta',money(cashDrawerBalance())]])+
- reportTableV22(['Fechamento','Abertura','Vendas','Esperado','Contado','Diferença'],rows,'Ainda não há fechamentos de caixa registrados.');
+ reportTableV22(['Fechamento','Abertura','Pedidos','Vendas','Dinheiro','Saldo físico'],rows,'Ainda não há fechamentos de caixa registrados.');
 }
 function renderReportClientesV22(){
  const orders=reportOrdersV22().filter(o=>o.status==='done');
