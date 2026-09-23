@@ -1,4 +1,4 @@
-/* X Burguer Central V19 — gestão */
+/* Gestão — caixa, estoque, financeiro e equipe */
 function cashSessionOrders(){
  const opened=state.cash.openedAt?new Date(state.cash.openedAt).getTime():0;
  const closed=!state.cash.open&&state.cash.closedAt?new Date(state.cash.closedAt).getTime():Infinity;
