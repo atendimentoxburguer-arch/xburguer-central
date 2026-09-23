@@ -1,4 +1,4 @@
-/* X Burguer Central V11 — UI */
+/* X Burguer Central V15 — interface */
 let modalReturnFocus=null,modalResolver=null;
 function toast(msg,type='info'){const el=document.getElementById('toast');if(!el)return;el.textContent=msg;el.className=`toast ${type}`;el.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(()=>el.classList.remove('show'),2600)}
 function getFocusable(container){return [...container.querySelectorAll('button:not([disabled]),a[href],input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])')].filter(el=>!el.hidden&&el.offsetParent!==null)}
