@@ -1,4 +1,4 @@
-/* X Burguer Central V17 — operações e impressão */
+/* Operações — delivery, desempenho e KDS */
 function renderEntregas(){
  const del=state.orders.filter(o=>o.type==='Delivery'&&['production','ready'].includes(o.status));
  const preparing=del.filter(o=>o.status==='production').length;
