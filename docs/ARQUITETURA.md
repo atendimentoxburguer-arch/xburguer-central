@@ -75,3 +75,7 @@ A camada de impressão possui roteamento automático por perfil. Cada perfil def
 ## Print Agent V19
 
 A impressão silenciosa usa uma arquitetura de ponte local. O front-end envia jobs estruturados para `http://127.0.0.1:17871`; o agente valida, persiste em fila e envia RAW/ESC-POS ao spooler do Windows. O agente só aceita loopback, usa pareamento/token local e não contém segredos no repositório. A fila centralizada em backend continua como etapa futura.
+
+## Aplicativo de impressão V20
+
+A camada local agora é empacotada em Electron/NSIS. A janela Electron não possui acesso Node direto no renderer: usa preload restrito, `contextIsolation`, sandbox e IPC. O serviço HTTP continua em loopback para compatibilidade com o painel web. A fila local possui deduplicação de eventos automáticos, retry e histórico. O workflow Windows gera o instalador `.exe`; tags de versão podem publicar o artifact em Releases.
