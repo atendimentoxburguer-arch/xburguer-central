@@ -56,7 +56,8 @@ function menuStatsV14(){
       total:state.products.length,
       visible:state.products.filter(function(p){return p.active&&!p.sold}).length,
       sold:state.products.filter(function(p){return p.sold||Number(p.stock)<=0}).length,
-      low:state.products.filter(function(p){return Number(p.stock)>0&&Number(p.stock)<=Number(p.min||0)}).length
+      low:state.products.filter(function(p){return Number(p.stock)>0&&Number(p.stock)<=Number(p.min||0)}).length,
+      photos:state.products.filter(function(p){return Boolean(p.image)}).length
     };
   }
   function menuItemsV14(){
@@ -97,8 +98,8 @@ function menuStatsV14(){
     const stats=menuStatsV14();
     const items=menuItemsV14();
     root.innerHTML=
-      '<div class="page-head"><div><h1>Gestor de cardápio</h1><p>Controle categorias, disponibilidade, estoque, custos, preços e estação de preparo com rapidez.</p></div><div class="page-head-actions"><button class="btn btn-outline" onclick="go(\'pdv\')">'+icon('eye')+'<span>Visualizar no PDV</span></button><button class="btn btn-outline" onclick="manageCategoriesV14()">'+icon('folder2')+'<span>Categorias</span></button><button class="btn btn-primary" onclick="addProductV14()">'+icon('plus-lg')+'<span>Novo item</span></button></div></div>'+
-      '<div class="menu-kpis"><div><span>Itens</span><b>'+stats.total+'</b></div><div><span>Disponíveis</span><b>'+stats.visible+'</b></div><div><span>Esgotados</span><b>'+stats.sold+'</b></div><div><span>Estoque baixo</span><b>'+stats.low+'</b></div></div>'+
+      '<div class="page-head"><div><h1>Gestor de cardápio</h1><p>Organize categorias, fotos, disponibilidade, estoque, custos, preços e estação de preparo em um só lugar.</p></div><div class="page-head-actions"><button class="btn btn-outline" onclick="go(\'pdv\')">'+icon('eye')+'<span>Visualizar no PDV</span></button><button class="btn btn-outline" onclick="manageCategoriesV14()">'+icon('folder2')+'<span>Categorias</span></button><button class="btn btn-primary" onclick="addProductV14()">'+icon('plus-lg')+'<span>Novo item</span></button></div></div>'+
+      '<div class="menu-kpis"><div><span>Itens</span><b>'+stats.total+'</b></div><div><span>Disponíveis</span><b>'+stats.visible+'</b></div><div><span>Com foto</span><b>'+stats.photos+'</b></div><div><span>Esgotados</span><b>'+stats.sold+'</b></div><div><span>Estoque baixo</span><b>'+stats.low+'</b></div></div>'+
       '<div class="menu-manager">'+
         '<aside class="cat-panel"><div class="panel-section-head"><div><span>Categorias</span><b>'+state.categories.length+'</b></div><button class="icon-btn" onclick="addCategoryV14()" title="Nova categoria">'+icon('plus-lg')+'</button></div>'+
         '<div class="searchbox compact"><span class="search-icon">'+icon('search')+'</span><input placeholder="Buscar categoria" oninput="filterCats(this.value)"></div>'+
