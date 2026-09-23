@@ -10,11 +10,13 @@
 
 ## Fase 2 — Refinamento do protótipo
 - [ ] Revisar visual de cada tela com screenshots.
-- [ ] Substituir prompts por modais e formulários próprios.
-- [ ] Melhorar estados vazios, carregamento e erros.
-- [ ] Padronizar ícones e ações.
-- [ ] Revisar acessibilidade por teclado e contraste.
-- [ ] Criar testes básicos das regras de pedidos e caixa.
+- [x] Substituir prompts por modais e formulários próprios.
+- [x] Melhorar estados vazios e tratamento de erros do front-end.
+- [x] Padronizar ícones e ações principais.
+- [x] Melhorar acessibilidade por teclado, foco e redução de movimento.
+- [ ] Criar testes automatizados das regras de pedidos e caixa.
+- [x] Tornar a aplicação instalável como PWA com cache offline.
+- [x] Adicionar exportação/importação de backup local.
 
 ## Fase 3 — Backend
 - [ ] Autenticação.
@@ -31,8 +33,8 @@
 - [ ] QR Code por mesa.
 
 ## Fase 5 — Produção
-- [ ] CI/CD.
+- [ ] CI/CD completo.
 - [ ] Monitoramento.
-- [ ] Backups.
-- [ ] Política de segurança.
+- [ ] Backups no servidor.
+- [ ] Política de segurança operacional.
 - [ ] Ambiente de homologação.

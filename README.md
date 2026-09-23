@@ -1,26 +1,36 @@
 # X Burguer Central
 
-Central operacional da X Burguer para pedidos, PDV, salão, cardápio, cozinha/KDS, entregas, clientes, marketing, caixa, estoque, financeiro, equipe e configurações.
+Central operacional da X Burguer publicada como aplicação web estática no GitHub Pages.
+
+## Módulos
+
+Pedidos, PDV, salão/comandas, cardápio, cozinha/KDS, entregas, desempenho, clientes, campanhas, atendimento, caixa, estoque, financeiro, equipe e configurações.
 
 ## Estrutura
 
 - `index.html`: shell da aplicação e navegação.
 - `assets/css/app.css`: design system e responsividade.
-- `assets/js/core.js`: estado, persistência e utilitários.
-- `assets/js/ui.js`: navegação, modal, toast e helpers de interface.
+- `assets/js/core.js`: estado, persistência, backup e utilitários.
+- `assets/js/ui.js`: navegação, modais acessíveis, diálogos e toasts.
 - `assets/js/orders.js`: fluxo de pedidos.
 - `assets/js/sales.js`: PDV, salão e cardápio.
 - `assets/js/operations.js`: entregas, desempenho e KDS.
 - `assets/js/crm.js`: clientes, promoções e atendimento.
 - `assets/js/management.js`: caixa, estoque, financeiro, equipe e configurações.
-- `assets/js/app.js`: bootstrap da aplicação.
+- `assets/js/app.js`: inicialização, roteamento e melhorias progressivas.
+- `assets/js/pwa.js`: instalação como app e service worker.
+- `manifest.webmanifest` e `service-worker.js`: PWA/offline.
 
-## Execução local
+## Dados
 
-Abra `index.html` no navegador. O protótipo usa `localStorage` e não exige backend.
+A versão atual continua sendo um protótipo: os dados ficam no `localStorage` do navegador. Use **Configurações → Exportar backup** para salvar uma cópia. Limpar os dados do navegador pode apagar alterações locais.
 
-## Estado atual
+## Atalhos
 
-Esta é uma base de protótipo operacional. Dados sensíveis, autenticação, pagamentos, WhatsApp, fiscal e persistência real devem ser implementados em backend antes de uso em produção.
+- `Ctrl/Cmd + K`: buscar módulo.
+- `/`: focar a busca lateral.
+- `Esc`: fechar modal/menu.
 
-Consulte `docs/ARQUITETURA.md` e `docs/ROADMAP.md`.
+## Produção real
+
+Antes de usar como sistema transacional real, implementar backend, autenticação, autorização, PostgreSQL, logs, backup no servidor e integrações oficiais. Consulte `docs/ARQUITETURA.md`, `docs/AUDITORIA.md`, `docs/ROADMAP.md` e `SECURITY.md`.
