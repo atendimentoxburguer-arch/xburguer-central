@@ -78,13 +78,13 @@ for(const selector of [
 }
 
 const visualV26=app.slice(v26Index);
-for(const token of ['--primary:#991f25','--accent:#d2a53a','--sidebar:#271013','font-size:16px','font-family:"Manrope"']){
+for(const token of ['--primary:#1f5b78','--accent:#d2a53a','--sidebar:#111b27','font-size:16px','font-family:"Manrope"']){
   if(!visualV26.includes(token))throw new Error('Token visual V26 ausente: '+token);
 }
 for(const selector of ['.nav button.active{','.page-head{','.btn-primary,.btn-blue{','.metric::before{','.table-shell{','.product-tile{','.checkout-primary-payments-v24 button{']){
   if(!visualV26.includes(selector))throw new Error('Componente V26 não padronizado: '+selector);
 }
-if(!domain.includes('V26 — acabamento visual dos módulos de gestão'))throw new Error('Acabamento V26 dos módulos de gestão ausente.');
+if(!domain.includes('V26 — acabamento visual dos módulos de gestão'))throw new Error('Acabamento dos módulos de gestão ausente.');
 if(!html.includes('family=Inter:wght@400;500;600;700;800;900&family=Manrope:wght@500;600;700;800'))throw new Error('Famílias tipográficas esperadas não estão carregadas.');
 
 const combined=app+'\n'+domain;
