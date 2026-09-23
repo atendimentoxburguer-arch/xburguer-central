@@ -120,7 +120,7 @@
   }
 
   filterTables=function(){filterTablesV14()};
-  filterTablesV14=function(){
+  globalThis.filterTablesV14=function(){
     tableSearchV14=(document.getElementById('mesaSearch')?.value||'').trim().toLowerCase();
     tableStatusV14=document.getElementById('mesaStatus')?.value||'all';
     tableAreaV14=document.getElementById('mesaArea')?.value||'all';
@@ -136,7 +136,7 @@
   };
 
   newTableOrder=function(name){newTableOrderV14(name)};
-  newTableOrderV14=function(name){
+  globalThis.newTableOrderV14=function(name){
     pdvType='Mesa';
     pdvDraftTable=name;
     go('pdv');
@@ -145,7 +145,7 @@
   };
 
   tableMenu=function(id){tableMenuV14(id)};
-  tableMenuV14=function(id){
+  globalThis.tableMenuV14=function(id){
     const t=state.tables.find(function(x){return x.id===id});
     if(!t)return;
     const os=openOrdersV14(t);
@@ -168,7 +168,7 @@
   };
 
   transferTable=function(id){return transferTableV14(id)};
-  transferTableV14=async function(id){
+  globalThis.transferTableV14=async function(id){
     const t=state.tables.find(function(x){return x.id===id});
     if(!t)return;
     const options=orderedTablesV14().filter(function(x){return x.id!==id}).map(function(x){return {value:x.name,label:x.name+' — '+tableAreaNameV14(x)+' ('+tableStatusLabelV14(x.status)+')'}});
@@ -185,14 +185,14 @@
   };
 
   tSet=function(id,s){tSetV14(id,s)};
-  tSetV14=function(id,s){
+  globalThis.tSetV14=function(id,s){
     const t=state.tables.find(function(x){return x.id===id});
     if(!t)return;
     t.status=s;closeModal();save();
   };
 
   tFinish=function(id){tFinishV14(id)};
-  tFinishV14=async function(id){
+  globalThis.tFinishV14=async function(id){
     const t=state.tables.find(function(x){return x.id===id});
     if(!t)return;
     const open=openOrdersV14(t);
@@ -206,7 +206,7 @@
   };
 
   createTable=function(){return createTableV14()};
-  createTableV14=async function(){
+  globalThis.createTableV14=async function(){
     const areas=(state.diningAreas||[]).map(function(a){return {value:a.id,label:a.name}});
     const v=await formDialog({title:'Nova mesa',subtitle:'Cadastre a mesa na área correta para manter o salão organizado.',fields:[
       {key:'name',label:'Nome da mesa',value:'Mesa '+(state.tables.length+1),required:true},
@@ -221,7 +221,7 @@
     save();toast('Mesa criada.','success');
   };
 
-  bulkCreateTablesV14=async function(){
+  globalThis.bulkCreateTablesV14=async function(){
     const areas=(state.diningAreas||[]).map(function(a){return {value:a.id,label:a.name}});
     const v=await formDialog({title:'Criar várias mesas',subtitle:'Crie uma sequência rapidamente, por exemplo Mesa 1 até Mesa 10.',fields:[
       {key:'prefix',label:'Prefixo',value:'Mesa',required:true},
@@ -245,7 +245,7 @@
     save();toast(created+' mesa(s) criada(s).',created?'success':'warning');
   };
 
-  editTableV14=async function(id){
+  globalThis.editTableV14=async function(id){
     const t=state.tables.find(function(x){return x.id===id});
     if(!t)return;
     const areas=(state.diningAreas||[]).map(function(a){return {value:a.id,label:a.name}});
@@ -265,7 +265,7 @@
     closeModal();save();toast('Mesa atualizada.','success');
   };
 
-  deleteTableV14=async function(id){
+  globalThis.deleteTableV14=async function(id){
     const t=state.tables.find(function(x){return x.id===id});
     if(!t)return;
     if(openOrdersV14(t).length||t.status!=='free'){toast('Libere a mesa antes de excluí-la.','warning');return}
@@ -275,7 +275,7 @@
     save();toast('Mesa excluída.','success');manageTablesV14();
   };
 
-  moveTableV14=function(id,dir){
+  globalThis.moveTableV14=function(id,dir){
     const t=state.tables.find(function(x){return x.id===id});if(!t)return;
     const list=orderedTablesV14().filter(function(x){return x.area===t.area});
     const index=list.findIndex(function(x){return x.id===id});
@@ -284,7 +284,7 @@
     t.order=b;other.order=a;save();manageTablesV14();
   };
 
-  manageTablesV14=function(){
+  globalThis.manageTablesV14=function(){
     const areas=state.diningAreas||[];
     const tables=orderedTablesV14();
     openModal(
@@ -301,7 +301,7 @@
     );
   };
 
-  addDiningAreaV14=async function(){
+  globalThis.addDiningAreaV14=async function(){
     const v=await formDialog({title:'Nova área',fields:[{key:'name',label:'Nome da área',value:'Nova área',required:true}]});
     if(!v?.name)return;
     const name=v.name.trim();
@@ -309,14 +309,14 @@
     state.diningAreas.push({id:uid('area-'),name:name});save();manageTablesV14();
   };
 
-  renameDiningAreaV14=async function(id){
+  globalThis.renameDiningAreaV14=async function(id){
     const a=diningAreaV14(id);if(!a)return;
     const v=await formDialog({title:'Renomear área',fields:[{key:'name',label:'Nome',value:a.name,required:true}]});
     if(!v?.name)return;
     a.name=v.name.trim();save();manageTablesV14();
   };
 
-  deleteDiningAreaV14=async function(id){
+  globalThis.deleteDiningAreaV14=async function(id){
     const a=diningAreaV14(id);if(!a)return;
     if(state.diningAreas.length<=1){toast('Mantenha pelo menos uma área.','warning');return}
     if(state.tables.some(function(t){return t.area===id})){toast('Mova as mesas desta área antes de excluí-la.','warning');return}
@@ -405,12 +405,12 @@
   }
 
   filterProductRows=function(){filterProductRowsV14(document.getElementById('productSearch')?.value||'')};
-  filterProductRowsV14=function(q){
+  globalThis.filterProductRowsV14=function(q){
     q=String(q||'').trim().toLowerCase();
     document.querySelectorAll('#itemRows .menu-item-row').forEach(function(row){row.hidden=Boolean(q&&!row.dataset.search.includes(q))});
   };
 
-  toggleMenuSelectedV14=function(id,checked){
+  globalThis.toggleMenuSelectedV14=function(id,checked){
     checked?menuSelectedV14.add(id):menuSelectedV14.delete(id);
     updateMenuBulkV14();
   };
@@ -419,7 +419,7 @@
     const bar=document.getElementById('menuBulkBar');if(bar)bar.classList.toggle('has-selection',menuSelectedV14.size>0);
   }
 
-  bulkMenuV14=function(action){
+  globalThis.bulkMenuV14=function(action){
     if(!menuSelectedV14.size){toast('Selecione pelo menos um item.','warning');return}
     state.products.filter(function(p){return menuSelectedV14.has(p.id)}).forEach(function(p){
       if(action==='available'){p.active=true;p.manualSold=false;p.sold=p.stock<=0}
@@ -429,7 +429,7 @@
     menuSelectedV14.clear();save();toast('Itens atualizados.','success');
   };
 
-  bulkMoveMenuV14=async function(){
+  globalThis.bulkMoveMenuV14=async function(){
     if(!menuSelectedV14.size){toast('Selecione pelo menos um item.','warning');return}
     const options=state.categories.map(function(c){return {value:c.id,label:c.name}});
     const v=await formDialog({title:'Mover itens',fields:[{key:'cat',label:'Categoria de destino',type:'select',value:selectedCat,options:options,required:true}]});
@@ -439,7 +439,7 @@
   };
 
   addProduct=function(){return addProductV14()};
-  addProductV14=async function(){
+  globalThis.addProductV14=async function(){
     const cats=state.categories.map(function(c){return {value:c.id,label:c.name}});
     const v=await formDialog({title:'Novo item',subtitle:'Cadastre preço, custo, estoque e estação de preparo.',fields:[
       {key:'name',label:'Nome',required:true},
@@ -459,7 +459,7 @@
   };
 
   editProduct=function(id){return editProductV14(id)};
-  editProductV14=async function(id){
+  globalThis.editProductV14=async function(id){
     const p=product(id);if(!p)return;
     const cats=state.categories.map(function(c){return {value:c.id,label:c.name}});
     const v=await formDialog({title:'Editar item',subtitle:p.name,fields:[
@@ -482,7 +482,7 @@
   };
 
   addCategory=function(){return addCategoryV14()};
-  addCategoryV14=async function(){
+  globalThis.addCategoryV14=async function(){
     const v=await formDialog({title:'Nova categoria',fields:[{key:'name',label:'Nome',value:'Nova categoria',required:true}]});
     if(!v?.name)return;
     const name=v.name.trim();
@@ -490,18 +490,18 @@
     const id=uid('cat');state.categories.push({id:id,name:name});selectedCat=id;save();toast('Categoria criada.','success');
   };
 
-  editCategoryV14=async function(id){
+  globalThis.editCategoryV14=async function(id){
     const c=state.categories.find(function(x){return x.id===id});if(!c)return;
     const v=await formDialog({title:'Editar categoria',fields:[{key:'name',label:'Nome',value:c.name,required:true}]});
     if(!v?.name)return;c.name=v.name.trim();save();toast('Categoria atualizada.','success');
   };
 
-  moveCategoryV14=function(id,dir){
+  globalThis.moveCategoryV14=function(id,dir){
     const i=state.categories.findIndex(function(c){return c.id===id}),j=i+dir;if(i<0||j<0||j>=state.categories.length)return;
     const temp=state.categories[i];state.categories[i]=state.categories[j];state.categories[j]=temp;save();manageCategoriesV14();
   };
 
-  deleteCategoryV14=async function(id){
+  globalThis.deleteCategoryV14=async function(id){
     const c=state.categories.find(function(x){return x.id===id});if(!c)return;
     const count=state.products.filter(function(p){return p.cat===id}).length;
     if(count){toast('Mova ou exclua os '+count+' item(ns) antes de excluir a categoria.','warning');return}
@@ -510,7 +510,7 @@
     state.categories=state.categories.filter(function(x){return x.id!==id});if(selectedCat===id)selectedCat=state.categories[0]?.id||'';save();manageCategoriesV14();
   };
 
-  manageCategoriesV14=function(){
+  globalThis.manageCategoriesV14=function(){
     openModal(
       '<div class="modal-head"><div><h2>Organizar categorias</h2><p class="dialog-subtitle">Reordene, renomeie e mantenha o cardápio simples de navegar.</p></div><button class="icon-btn" onclick="closeModal()">'+icon('x-lg')+'</button></div>'+
       '<div class="table-manager-toolbar"><button class="btn btn-primary" onclick="addCategoryV14()">'+icon('plus-lg')+'<span>Nova categoria</span></button></div>'+
