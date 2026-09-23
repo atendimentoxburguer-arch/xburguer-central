@@ -278,8 +278,8 @@
   background:var(--surface);
   box-shadow:none;
 }
-.salon-kpis span,.menu-kpis span{font-size:.57rem;font-weight:750;letter-spacing:.05em;color:var(--muted)}
-.salon-kpis b,.menu-kpis b{margin-top:3px;font-size:.98rem;font-weight:800;letter-spacing:-.025em}
+.salon-kpis span,.menu-kpis span{font-size:.63rem;font-weight:750;letter-spacing:.05em;color:#475569}
+.salon-kpis b,.menu-kpis b{margin-top:3px;font-size:1.05rem;font-weight:800;letter-spacing:-.025em}
 .mesas-tabs{
   gap:3px;
   margin-bottom:9px;
@@ -293,17 +293,17 @@
   min-height:33px;
   padding:6px 10px;
   border-radius:6px;
-  font-size:.67rem;
+  font-size:.73rem;
   font-weight:700;
 }
-.mesas-tabs button span{font-size:.58rem}
+.mesas-tabs button span{font-size:.64rem}
 .mesas-tabs button.active{background:var(--primary);color:#fff}
 .salon-toolbar{margin-bottom:9px}
 .table-zones{gap:9px}
 .table-zone{padding:9px;border:1px solid var(--border);border-radius:8px;background:var(--surface);box-shadow:none}
 .table-zone-head{margin-bottom:7px;padding-bottom:7px}
-.table-zone-head h3{font-size:.78rem}
-.table-zone-head p{font-size:.62rem}
+.table-zone-head h3{font-size:.85rem}
+.table-zone-head p{font-size:.68rem}
 .zone-icon{
   width:31px;height:31px;flex-basis:31px;
   border-radius:7px;
@@ -312,33 +312,33 @@
 }
 .table-detail-grid{gap:6px}
 .table-detail-grid>div{padding:7px;border-radius:7px;background:var(--surface-2)}
-.table-detail-grid span{font-size:.6rem}
-.table-detail-grid b{margin-top:2px;font-size:.74rem}
+.table-detail-grid span{font-size:.66rem}
+.table-detail-grid b{margin-top:2px;font-size:.81rem}
 .table-consumption{padding:9px 10px;border-radius:8px}
-.table-consumption span{font-size:.68rem}
-.table-consumption strong{font-size:.96rem}
+.table-consumption span{font-size:.74rem}
+.table-consumption strong{font-size:1.02rem}
 .table-modal-actions{gap:6px}
 .area-manager-row,.table-manager-row,.category-manager-row{
   gap:8px;
   padding:8px 9px;
   border-radius:7px;
 }
-.area-manager-row span,.table-manager-main span,.category-manager-row span{font-size:.63rem}
+.area-manager-row span,.table-manager-main span,.category-manager-row span{font-size:.69rem}
 .table-manager-icon{width:30px;height:30px;flex-basis:30px;border-radius:7px}
 .panel-section-head{margin-bottom:8px}
-.panel-section-head>div{font-size:.72rem}
+.panel-section-head>div{font-size:.79rem}
 .cat-row{grid-template-columns:28px minmax(0,1fr) auto;gap:6px}
 .cat-row-icon{width:28px;height:28px;border-radius:6px}
-.cat-count{font-size:.59rem}
+.cat-count{font-size:.65rem}
 .menu-title-row{margin-bottom:9px}
-.menu-title-row p{margin-top:3px;font-size:.65rem}
+.menu-title-row p{margin-top:3px;font-size:.71rem}
 .menu-toolbar-v14{grid-template-columns:minmax(240px,1fr) 160px 150px;gap:6px;margin-bottom:8px}
-.bulk-bar{min-height:39px;margin-bottom:7px;padding:6px 8px;border-radius:7px;font-size:.67rem}
+.bulk-bar{min-height:39px;margin-bottom:7px;padding:6px 8px;border-radius:7px;font-size:.73rem}
 .menu-items-head{
   grid-template-columns:32px minmax(210px,1.5fr) minmax(105px,.75fr) 78px 102px 96px 110px;
   gap:7px;
   padding:5px 8px;
-  font-size:.55rem;
+  font-size:.62rem;
 }
 .menu-item-row{
   grid-template-columns:32px minmax(210px,1.5fr) minmax(105px,.75fr) 78px 102px 96px 78px;
@@ -352,8 +352,8 @@
 }
 .menu-item-row:hover{background:var(--surface-2);border-color:#bfdbfe}
 .menu-item-photo{border-radius:7px}
-.menu-item-name b{font-size:.7rem}
-.menu-item-name span{font-size:.6rem}
+.menu-item-name b{font-size:.77rem}
+.menu-item-name span{font-size:.66rem}
 .menu-item-actions .icon-btn{width:31px;height:31px}
 .item-thumb,.menu-item-photo{background:var(--surface-3);border-color:var(--border)}
 .cat-row.active{color:var(--primary);background:var(--primary-soft);box-shadow:inset 3px 0 0 var(--primary)}
@@ -361,12 +361,12 @@
 .product-photo-preview{border-radius:8px}
 .table-orders-section{border-radius:8px}
 .table-orders-head{padding:8px 9px}
-.table-orders-head b{font-size:.71rem}
-.table-orders-head span{font-size:.61rem}
+.table-orders-head b{font-size:.78rem}
+.table-orders-head span{font-size:.67rem}
 .table-order-row{gap:8px;padding:8px 9px}
-.table-order-id b{font-size:.71rem}
-.table-order-copy b{font-size:.68rem}
-.table-order-copy span{font-size:.61rem}
+.table-order-id b{font-size:.78rem}
+.table-order-copy b{font-size:.74rem}
+.table-order-copy span{font-size:.67rem}
 .salon-section-tabs{gap:5px;margin-bottom:9px}
 .salon-section-tabs button{
   min-height:40px;
@@ -374,7 +374,7 @@
   gap:6px;
   padding:7px 9px;
   border-radius:7px;
-  font-size:.66rem;
+  font-size:.72rem;
 }
 .salon-section-tabs button.active{
   border-color:#bfdbfe;
@@ -382,11 +382,11 @@
   color:var(--primary);
 }
 .salon-subhead{margin-bottom:8px}
-.salon-subhead h2{font-size:.8rem}
-.salon-subhead p{font-size:.63rem}
+.salon-subhead h2{font-size:.88rem}
+.salon-subhead p{font-size:.69rem}
 .waiters-table-wrap{border-radius:8px}
 .waiter-table-card{padding:8px 9px;border-radius:7px}
-.waiter-table-card span{font-size:.61rem}
+.waiter-table-card span{font-size:.67rem}
 .waiter-toggle.on{background:var(--primary)}
 .qr-manager-actions{gap:6px;margin-bottom:8px}
 .table-qr-grid{gap:7px}
@@ -398,23 +398,23 @@
   background:var(--surface);
 }
 .table-qr-card img{width:78px;height:78px;border-radius:6px}
-.table-qr-card span{font-size:.61rem}
-.table-qr-card small{font-size:.57rem}
+.table-qr-card span{font-size:.67rem}
+.table-qr-card small{font-size:.63rem}
 .salon-settings-v22{gap:8px}
 .salon-settings-card{padding:10px;border-radius:8px}
 .salon-settings-title{margin-bottom:8px}
-.salon-settings-title span{font-size:.57rem}
-.salon-settings-title h2{font-size:.77rem}
+.salon-settings-title span{font-size:.63rem}
+.salon-settings-title h2{font-size:.84rem}
 .salon-settings-grid,.salon-model-grid,.salon-mode-grid{gap:6px}
 .salon-number-box,.salon-model-card,.salon-mode-card{padding:8px;border-radius:7px}
-.salon-number-box>span{font-size:.6rem}
-.salon-number-box>b{font-size:.92rem}
-.salon-number-box>small,.salon-model-card small,.salon-mode-card>div>span{font-size:.58rem}
-.salon-model-card b{font-size:.68rem}
+.salon-number-box>span{font-size:.66rem}
+.salon-number-box>b{font-size:1rem}
+.salon-number-box>small,.salon-model-card small,.salon-mode-card>div>span{font-size:.64rem}
+.salon-model-card b{font-size:.74rem}
 .commands-summary-v22{gap:6px;margin-bottom:8px}
 .commands-summary-v22>div{padding:8px 9px;border-radius:7px}
-.commands-summary-v22 span{font-size:.56rem}
-.commands-summary-v22 b{font-size:.84rem}
+.commands-summary-v22 span{font-size:.62rem}
+.commands-summary-v22 b{font-size:.92rem}
 @media(max-width:1120px){
   .menu-toolbar-v14{grid-template-columns:1fr 150px 140px}
 }
