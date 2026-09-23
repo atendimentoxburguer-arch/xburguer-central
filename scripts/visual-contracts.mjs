@@ -82,7 +82,7 @@ const visualCurrent=app.slice(v26Index);
 for(const token of ['--primary:#2563eb','--accent:#3b82f6','--sidebar:#0f172a','font-size:16px','font-family:"Inter"']){
   if(!visualCurrent.includes(token))throw new Error('Token do sistema visual atual ausente: '+token);
 }
-for(const selector of ['.nav button.active{','.page-head{','.btn-primary,.btn-blue{','.metric::before{','.table-shell{','.product-tile{','.checkout-primary-payments-v24 button{']){
+for(const selector of ['.nav button.active{','.page-head{','.btn-primary,.btn-blue,.btn-green{','.metric::before{','.table-shell{','.product-tile{','.checkout-primary-payments-v24 button{']){
   if(!visualCurrent.includes(selector))throw new Error('Componente visual não padronizado: '+selector);
 }
 if(!domain.includes('Acabamento visual dos módulos de gestão'))throw new Error('Acabamento dos módulos de gestão ausente.');
