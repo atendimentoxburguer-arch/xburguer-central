@@ -132,8 +132,11 @@ function validateState(candidate){
  if(candidate.products.some(p=>!cats.has(p.cat)))return 'Existe produto ligado a uma categoria inexistente.';
  const productIds=new Set(candidate.products.map(p=>p.id));
  if(candidate.inventoryMovements.some(m=>!productIds.has(m.productId)))return 'Existe movimentação ligada a produto inexistente.';
+ const customerIds=new Set(candidate.customers.map(c=>c.id));
+ if(candidate.orders.some(o=>o.customerId&&!customerIds.has(o.customerId)))return 'Existe pedido ligado a cliente inexistente.';
  if(candidate.orders.some(o=>!ORDER_STATUSES.has(o.status)))return 'Existe pedido com status inválido.';
  if(candidate.orders.some(o=>!ORDER_TYPES.has(o.type)))return 'Existe pedido com tipo inválido.';
+ if(candidate.tables.some(t=>String(t.name||'').length>120)||candidate.products.some(p=>String(p.name||'').length>180)||candidate.categories.some(cat=>String(cat.name||'').length>120))return 'Há textos estruturais acima do limite permitido.';
  return '';
 }
 function normalize(){
@@ -194,7 +197,11 @@ function load(){
  const defaults=defaultState();
  try{
   const raw=localStorage.getItem(STORAGE);
-  state=raw?mergeDefaults(defaults,JSON.parse(raw)):defaults;
+  if(raw){
+   const parsed=JSON.parse(raw);
+   if(Number(parsed?.schemaVersion||0)<SCHEMA_VERSION)snapshotLocal('pre_migration');
+   state=mergeDefaults(defaults,parsed);
+  }else state=defaults;
  }catch(e){
   console.error('Falha ao ler dados locais',e);
   try{const raw=localStorage.getItem(STORAGE);if(raw)localStorage.setItem(BACKUP_PREFIX+'corrompido_'+Date.now(),raw)}catch(_){}
