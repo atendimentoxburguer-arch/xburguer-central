@@ -1,4 +1,4 @@
-/* X Burguer Central V15 — PWA */
+/* X Burguer Central V16 — PWA */
 let deferredInstallPrompt=null;
 const installBtn=document.getElementById('installAppBtn');
 let swRegistration=null;
