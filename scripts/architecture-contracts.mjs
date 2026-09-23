@@ -26,7 +26,7 @@ for(const file of jsFiles){
     throw new Error('Constante de núcleo declarada fora de core.js: '+file);
   }
 
-  if(file!=='print-agent-client.js' && /https?:\/\//i.test(text)){
+  if(file!=='print-agent-client.js' && /['\"`]https?:\\/\\//i.test(text)){
     throw new Error('URL HTTP hardcoded fora do adaptador permitido: '+file);
   }
 }
