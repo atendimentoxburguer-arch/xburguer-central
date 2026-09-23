@@ -1,4 +1,4 @@
-/* X Burguer Central V23 — relatórios operacionais */
+/* Relatórios operacionais */
 let reportTabV22='caixas';
 let reportRangeV22=30;
 function reportInRangeV22(value,now=Date.now()){
