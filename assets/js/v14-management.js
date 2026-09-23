@@ -542,4 +542,29 @@
       '<div class="modal-foot"><button class="btn btn-outline" onclick="closeModal();renderCardapio()">Concluir</button></div>'
     );
   };
+  filterCats=function(q){
+    q=String(q||'').trim().toLowerCase();
+    document.querySelectorAll('#catList .cat-row').forEach(function(row){
+      row.hidden=Boolean(q&&!row.dataset.name.includes(q));
+    });
+  };
+
+  const baseToggleSoldV14=toggleSold;
+  toggleSold=function(id){
+    const p=product(id);if(!p)return;
+    if(p.sold&&Number(p.stock)<=0){toast('Ajuste o estoque antes de disponibilizar este item.','warning');return}
+    baseToggleSoldV14(id);
+  };
+
+  resetDemo=async function(){
+    const ok=await confirmDialog('Restaurar demonstração','Apagar as alterações locais e restaurar os dados de demonstração?',{confirmLabel:'Restaurar',danger:true});
+    if(!ok)return;
+    state=defaultState();
+    normalize();
+    try{localStorage.setItem(STORAGE,JSON.stringify(state))}catch(e){}
+    menuSelectedV14.clear();
+    renderAll();
+    toast('Demonstração restaurada.','success');
+  };
+
 })();
