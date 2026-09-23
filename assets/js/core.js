@@ -1,4 +1,4 @@
-/* X Burguer Central V17 — core, estado, persistência e impressão */
+/* X Burguer Central V18 — core, estado, persistência e roteamento de impressão */
 function icon(name,extra=''){
   return `<i class="bi bi-${name} ${extra}" aria-hidden="true"></i>`;
 }
@@ -25,8 +25,8 @@ function initThemeUI(){
   applyTheme(document.documentElement.getAttribute('data-bs-theme')||'light');
 }
 
-const APP_VERSION='17.0.0';
-const SCHEMA_VERSION=6;
+const APP_VERSION='18.0.0';
+const SCHEMA_VERSION=7;
 const LOGO='assets/img/logo.png';
 const STORAGE='xburguer_gestor_pro_v3';
 const BACKUP_PREFIX='xburguer_backup_';
@@ -43,14 +43,16 @@ function defaultState(){return {schemaVersion:SCHEMA_VERSION,
  settings:{storeName:'X Burguer',storeOpen:true,autoAccept:false,deliveryMin:'10 a 60 min',counterMin:'15 a 35 min',deliveryFee:7,serviceFee:10,city:'Goianésia - GO',phone:'(62) 99999-9999',cashback:3,loyalty:true,
  printing:{
   enabled:true,
-  showLogo:true,
+  orientation:'portrait',
+  density:'compact',
+  fontScale:'normal',
+  strongText:true,
+  showLogo:false,
   footer:'Obrigado pela preferência!',
-  openKitchenOnAccept:false,
-  openReceiptOnSave:false,
   profiles:[
-   {id:'print-counter',name:'Balcão / Caixa',purpose:'receipt',paper:'80mm',copies:1,enabled:true,station:'all'},
-   {id:'print-kitchen',name:'Cozinha',purpose:'kitchen',paper:'80mm',copies:1,enabled:true,station:'all'},
-   {id:'print-delivery',name:'Expedição / Delivery',purpose:'delivery',paper:'80mm',copies:1,enabled:true,station:'all'}
+   {id:'print-counter',name:'Balcão / Caixa',purpose:'receipt',paper:'80mm',copies:1,enabled:true,station:'all',autoEvents:[]},
+   {id:'print-kitchen',name:'Cozinha',purpose:'kitchen',paper:'80mm',copies:1,enabled:true,station:'all',autoEvents:[]},
+   {id:'print-delivery',name:'Expedição / Delivery',purpose:'delivery',paper:'80mm',copies:1,enabled:true,station:'all',autoEvents:[]}
   ]
  }},
  categories:[
@@ -160,16 +162,23 @@ function normalize(){
  if(!Array.isArray(state.cash.movements))state.cash.movements=[];
  if(!Array.isArray(state.cash.history))state.cash.history=[];
  const printDefaults=d.settings.printing;
- if(!state.settings.printing||typeof state.settings.printing!=='object'||Array.isArray(state.settings.printing))state.settings.printing={...printDefaults,profiles:printDefaults.profiles.map(p=>({...p}))};
+ if(!state.settings.printing||typeof state.settings.printing!=='object'||Array.isArray(state.settings.printing))state.settings.printing={...printDefaults,profiles:printDefaults.profiles.map(p=>({...p,autoEvents:[...(p.autoEvents||[])]}))};
+ const legacyKitchenAuto=Boolean(state.settings.printing.openKitchenOnAccept);
+ const legacyReceiptAuto=Boolean(state.settings.printing.openReceiptOnSave);
  state.settings.printing.enabled=state.settings.printing.enabled!==false;
- state.settings.printing.showLogo=state.settings.printing.showLogo!==false;
+ state.settings.printing.orientation='portrait';
+ state.settings.printing.density=['compact','comfortable'].includes(state.settings.printing.density)?state.settings.printing.density:'compact';
+ state.settings.printing.fontScale=['small','normal','large'].includes(state.settings.printing.fontScale)?state.settings.printing.fontScale:'normal';
+ state.settings.printing.strongText=state.settings.printing.strongText!==false;
+ state.settings.printing.showLogo=Boolean(state.settings.printing.showLogo);
  state.settings.printing.footer=String(state.settings.printing.footer??printDefaults.footer).slice(0,180);
- state.settings.printing.openKitchenOnAccept=Boolean(state.settings.printing.openKitchenOnAccept);
- state.settings.printing.openReceiptOnSave=Boolean(state.settings.printing.openReceiptOnSave);
- if(!Array.isArray(state.settings.printing.profiles)||!state.settings.printing.profiles.length)state.settings.printing.profiles=printDefaults.profiles.map(p=>({...p}));
- const allowedPurpose=new Set(['receipt','kitchen','delivery']),allowedPaper=new Set(['58mm','80mm','a4']);
- state.settings.printing.profiles=state.settings.printing.profiles.slice(0,12).map((p,i)=>{
+ if(!Array.isArray(state.settings.printing.profiles)||!state.settings.printing.profiles.length)state.settings.printing.profiles=printDefaults.profiles.map(p=>({...p,autoEvents:[...(p.autoEvents||[])]}));
+ const allowedPurpose=new Set(['receipt','kitchen','delivery']),allowedPaper=new Set(['58mm','80mm','a4']),allowedEvents=new Set(['created','production','ready','completed']);
+ state.settings.printing.profiles=state.settings.printing.profiles.slice(0,16).map((p,i)=>{
   const fallback=printDefaults.profiles[i]||printDefaults.profiles[0];
+  let autoEvents=Array.isArray(p?.autoEvents)?p.autoEvents.filter(e=>allowedEvents.has(e)):[];
+  if(!autoEvents.length&&legacyKitchenAuto&&(p?.purpose||fallback.purpose)==='kitchen')autoEvents=['production'];
+  if(!autoEvents.length&&legacyReceiptAuto&&(p?.purpose||fallback.purpose)==='receipt')autoEvents=['created'];
   return {
    id:SAFE_ID.test(String(p?.id||''))?String(p.id):uid('print-'),
    name:String(p?.name||fallback.name||'Impressora').trim().slice(0,80)||'Impressora',
@@ -177,9 +186,12 @@ function normalize(){
    paper:allowedPaper.has(p?.paper)?p.paper:'80mm',
    copies:Math.min(3,Math.max(1,Number(p?.copies)||1)),
    enabled:p?.enabled!==false,
-   station:String(p?.station||'all').trim().slice(0,80)||'all'
+   station:String(p?.station||'all').trim().slice(0,80)||'all',
+   autoEvents:[...new Set(autoEvents)]
   };
  });
+ delete state.settings.printing.openKitchenOnAccept;
+ delete state.settings.printing.openReceiptOnSave;
  state.orders.forEach(o=>{
   if(!Array.isArray(o.items))o.items=[];
   o.status=ORDER_STATUSES.has(o.status)?o.status:'analysis';
