@@ -26,3 +26,7 @@ A validação local cobre referências entre pedidos/clientes e movimentos/produ
 ## Impressão V17
 
 A impressão usa documentos gerados localmente e o diálogo nativo do navegador. O módulo não recebe comandos remotos de impressão e não tenta acessar dispositivos USB diretamente. Dados dinâmicos são escapados antes de compor os documentos impressos.
+
+## Print Agent V19
+
+O agente de impressão escuta somente em `127.0.0.1`, exige pareamento e token local para rotas protegidas, restringe CORS ao GitHub Pages oficial/origens locais e rejeita URLs de agente que não sejam loopback. O token não é versionado e é removido de backups exportados. Logs, fila e token ficam em `%APPDATA%\X Burguer Central\Print Agent`.
