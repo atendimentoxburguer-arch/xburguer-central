@@ -52,14 +52,14 @@ for(const match of html.matchAll(/(?:src|href)="([^"]+)"/g)){
 }
 
 const scripts=[...html.matchAll(/<script[^>]+src="([^"]+)"/g)].map(m=>m[1]);
-for(const requiredScript of ['assets/js/core.js','assets/js/v14-management.js','assets/js/app.js']){
+for(const requiredScript of ['assets/js/core.js','assets/js/salon-management.js','assets/js/menu-management.js','assets/js/app.js']){
   if(!scripts.includes(requiredScript)){
     console.error('Script essencial ausente do HTML:',requiredScript);
     process.exitCode=1;
   }
 }
-if(!(scripts.indexOf('assets/js/core.js')<scripts.indexOf('assets/js/v14-management.js')&&scripts.indexOf('assets/js/v14-management.js')<scripts.indexOf('assets/js/app.js'))){
-  console.error('Ordem de carregamento inválida: core -> v14-management -> app.');
+if(!(scripts.indexOf('assets/js/core.js')<scripts.indexOf('assets/js/salon-management.js')&&scripts.indexOf('assets/js/salon-management.js')<scripts.indexOf('assets/js/menu-management.js')&&scripts.indexOf('assets/js/menu-management.js')<scripts.indexOf('assets/js/app.js'))){
+  console.error('Ordem de carregamento inválida: core -> salon-management -> menu-management -> app.');
   process.exitCode=1;
 }
 
