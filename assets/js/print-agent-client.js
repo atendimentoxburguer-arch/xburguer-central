@@ -68,14 +68,14 @@
       const cfg=agentConfig();cfg.token=String(result.token||'');cfg.pairedAt=new Date().toISOString();cfg.lastVersion=result.version||'';save({render:false});
       await probePrintAgent({silent:true});
       toast('Agente de impressão conectado.','success');
-      printerCenter?.();
+      globalThis.printerCenter?.();
       return true;
     }catch(error){toast('Não foi possível parear: '+String(error.message||error),'error');return false}
   }
   async function unpairPrintAgent(){
     const ok=await confirmDialog('Desconectar agente','Remover a autorização deste navegador? O agente continuará instalado no computador.',{confirmLabel:'Desconectar',danger:true});
     if(!ok)return;
-    const cfg=agentConfig();cfg.token='';cfg.pairedAt='';cfg.lastSeen='';agentHealth={online:false,authorized:false,version:'',queue:null,error:'',checkedAt:''};save({render:false});printerCenter?.();
+    const cfg=agentConfig();cfg.token='';cfg.pairedAt='';cfg.lastSeen='';agentHealth={online:false,authorized:false,version:'',queue:null,error:'',checkedAt:''};save({render:false});globalThis.printerCenter?.();
   }
   function openLocalPrintAgentPage(){window.open(agentBase()+'/','_blank','noopener,noreferrer')}
   async function fetchPhysicalPrinters(){
@@ -94,7 +94,7 @@
     const options=[{value:'',label:'Sem impressora física'}].concat(printers.map(p=>({value:p.name,label:p.name+(p.offline?' — Offline':'')})));
     const v=await formDialog({title:'Mapear impressora física',subtitle:profile.name,fields:[{key:'device',label:'Impressora do Windows',type:'select',value:profile.deviceName||'',options}]});
     if(!v)return;
-    profile.deviceName=v.device||'';save({render:false});printerCenter?.();toast(profile.deviceName?'Impressora física vinculada.':'Mapeamento removido.','success');
+    profile.deviceName=v.device||'';save({render:false});globalThis.printerCenter?.();toast(profile.deviceName?'Impressora física vinculada.':'Mapeamento removido.','success');
   }
 
   function agentJob(profile,document,event='manual'){
