@@ -54,3 +54,7 @@ A V15 consolidou migração de dados no núcleo, separou os módulos de salão e
 ## Revisão V16
 
 A V16 passou por revisão ponta a ponta de engenharia e QA: fluxo de pedidos e PDV, taxas históricas, caixa físico, estoque auditável, delivery, KDS por estação, clientes, equipe, acessibilidade, tratamento de falhas e testes automatizados. Consulte `docs/AUDITORIA_V16.md`.
+
+## Impressão V17
+
+O sistema agora possui impressão de comprovantes, cozinha e delivery com layouts 58 mm, 80 mm e A4, configuração de destinos e impressão de teste. Consulte `docs/IMPRESSAO.md`.
