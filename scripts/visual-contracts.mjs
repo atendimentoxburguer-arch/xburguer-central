@@ -79,7 +79,7 @@ for(const selector of [
 }
 
 const visualCurrent=app.slice(v26Index);
-for(const token of ['--primary:#2563eb','--accent:#3b82f6','--sidebar:#0f172a','font-size:16px','font-family:"Inter"']){
+for(const token of ['--primary:#2563eb','--accent:#3b82f6','--sidebar:#0f172a','--text:#111827','--muted:#475569','font-size:16px','font-size:1rem','font-family:"Inter"']){
   if(!visualCurrent.includes(token))throw new Error('Token do sistema visual atual ausente: '+token);
 }
 for(const selector of ['.nav button.active{','.page-head{','.btn-primary,.btn-blue,.btn-green{','.metric::before{','.table-shell{','.product-tile{','.checkout-primary-payments-v24 button{']){
@@ -87,7 +87,7 @@ for(const selector of ['.nav button.active{','.page-head{','.btn-primary,.btn-bl
 }
 if(!domain.includes('Acabamento visual dos módulos de gestão'))throw new Error('Acabamento dos módulos de gestão ausente.');
 if(!html.includes('family=Inter:wght@400;500;600;700;800&display=swap'))throw new Error('Fonte Inter esperada não está carregada.');
-if(/family=Manrope|font-family:\"Manrope\"/.test(html+app+domain+printAgent))throw new Error('Manrope não deve voltar à interface V29.');
+if(/family=Manrope|font-family:\"Manrope\"/.test(html+app+domain+printAgent))throw new Error('Manrope não deve voltar à interface atual.');
 
 const bannedInterfaceColors=[
   '#22c55e','#16a34a','#dc2626','#b91c1c','#ef4444',
