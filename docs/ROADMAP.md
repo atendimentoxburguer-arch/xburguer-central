@@ -9,6 +9,7 @@
 - [x] Documentação técnica inicial.
 
 ## Fase 2 — Refinamento do protótipo
+- [x] Pagamentos V23: conta inteira, divisão, pagamento por produto, fracionamento de unidade, estorno e meios mistos.
 - [x] Gestão V21: pedidos por mesa, histórico/cancelamento/exclusão segura e fotos de produtos no cardápio/PDV.
 - [x] Impressão V18: retrato econômico, alto contraste e roteamento automático por destino/estação.
 - [x] Revisão ponta a ponta V16: pedidos, PDV, caixa, estoque, delivery, KDS, CRM, equipe, acessibilidade e QA.

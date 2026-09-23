@@ -26,11 +26,11 @@ context.globalThis=context;
 vm.runInContext(source,context,{filename:'assets/js/core.js'});
 
 const api=vm.runInContext('({APP_VERSION,SCHEMA_VERSION,defaultState,validateState,safeProductImageSrc})',context);
-assert.equal(api.APP_VERSION,'22.0.0');
-assert.equal(api.SCHEMA_VERSION,10);
+assert.equal(api.APP_VERSION,'23.0.0');
+assert.equal(api.SCHEMA_VERSION,11);
 
 const fresh=vm.runInContext('defaultState()',context);
-assert.equal(fresh.schemaVersion,10);
+assert.equal(fresh.schemaVersion,11);
 assert.ok(Array.isArray(fresh.diningAreas)&&fresh.diningAreas.length>=1);
 assert.ok(fresh.tables.every(t=>t.area&&Number(t.seats)>=1));
 assert.equal(new Set(fresh.tables.map(t=>t.name.toLowerCase())).size,fresh.tables.length);
@@ -68,7 +68,7 @@ context.__legacy=JSON.stringify({
 });
 vm.runInContext('state=JSON.parse(__legacy);normalize()',context);
 const migrated=vm.runInContext('state',context);
-assert.equal(migrated.schemaVersion,10);
+assert.equal(migrated.schemaVersion,11);
 assert.ok(migrated.diningAreas.length>=1);
 assert.ok(migrated.tables.every(t=>t.area&&t.seats>=1&&Number.isFinite(t.order)));
 assert.ok(migrated.products.every(p=>typeof p.description==='string'&&p.station&&typeof p.manualSold==='boolean'));

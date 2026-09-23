@@ -172,7 +172,7 @@
     function row(o){
       const meta=o.status==='analysis'?['Em análise','b-orange']:o.status==='production'?['Em produção','b-orange']:o.status==='ready'?['Pronto','b-green']:o.status==='done'?['Concluído','b-green']:['Cancelado','b-red'];
       const qty=o.items.reduce(function(sum,i){return sum+(Number(i.q)||0)},0);
-      return '<div class="table-order-row"><div class="table-order-id"><b>#'+esc(o.id)+'</b><span class="badge '+meta[1]+'">'+meta[0]+'</span></div><div class="table-order-copy"><b>'+qty+' item(ns) • '+money(orderTotal(o))+'</b><span>'+esc(o.customer||'Não identificado')+' • '+esc(o.payment||'Não registrado')+'</span>'+(o.cancelReason?'<small>'+icon('info-circle')+' '+esc(o.cancelReason)+'</small>':'')+'</div><button class="btn btn-outline btn-sm" onclick="detailsOrder(\''+o.id+'\')">Gerenciar</button></div>';
+      return '<div class="table-order-row"><div class="table-order-id"><b>#'+esc(o.id)+'</b><span class="badge '+meta[1]+'">'+meta[0]+'</span></div><div class="table-order-copy"><b>'+qty+' item(ns) • '+money(orderTotal(o))+'</b><span>'+esc(o.customer||'Não identificado')+' • '+esc(orderPaymentLabel(o))+'</span>'+(o.cancelReason?'<small>'+icon('info-circle')+' '+esc(o.cancelReason)+'</small>':'')+'</div><button class="btn btn-outline btn-sm" onclick="detailsOrder(\''+o.id+'\')">Gerenciar</button></div>';
     }
     openModal(
       '<div class="modal-head"><div><h2>'+esc(t.name)+'</h2><p class="dialog-subtitle">'+esc(tableAreaNameV14(t))+' • '+Number(t.seats||0)+' lugares'+(t.server?' • '+esc(t.server):'')+'</p></div><button class="icon-btn" onclick="closeModal()" aria-label="Fechar">'+icon('x-lg')+'</button></div>'+

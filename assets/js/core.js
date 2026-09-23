@@ -25,8 +25,8 @@ function initThemeUI(){
   applyTheme(document.documentElement.getAttribute('data-bs-theme')||'light');
 }
 
-const APP_VERSION='22.0.0';
-const SCHEMA_VERSION=10;
+const APP_VERSION='23.0.0';
+const SCHEMA_VERSION=11;
 const LOGO='assets/img/logo.png';
 const STORAGE='xburguer_gestor_pro_v3';
 const BACKUP_PREFIX='xburguer_backup_';
@@ -243,6 +243,21 @@ function normalize(){
   o.discount=Math.max(0,Number(o.discount)||0);
   o.surcharge=Math.max(0,Number(o.surcharge)||0);
   o.splitCount=Math.min(20,Math.max(1,Number(o.splitCount)||1));
+  o.settlements=Array.isArray(o.settlements)?o.settlements.slice(-200).map(s=>{
+   const allocations=Array.isArray(s?.allocations)?s.allocations.slice(0,200).map(a=>({
+    unitKey:String(a?.unitKey||'').slice(0,180),
+    amountCents:Math.max(0,Math.round(Number(a?.amountCents)||0))
+   })).filter(a=>a.unitKey&&a.amountCents>0):[];
+   return {
+    id:SAFE_ID.test(String(s?.id||''))?String(s.id):uid('st'),
+    groupId:SAFE_ID.test(String(s?.groupId||''))?String(s.groupId):uid('pay'),
+    method:String(s?.method||'Não registrado').trim().slice(0,80)||'Não registrado',
+    kind:['total','split','items','item-part'].includes(s?.kind)?s.kind:'total',
+    amountCents:Math.max(0,Math.round(Number(s?.amountCents)||0)),
+    at:s?.at?String(s.at):new Date().toISOString(),
+    allocations
+   };
+  }).filter(s=>s.amountCents>0):[];
   o.cancelReason=String(o.cancelReason||'').trim().slice(0,240);
   o.cancelledAt=o.cancelledAt?String(o.cancelledAt):'';
   o.completedAt=o.completedAt?String(o.completedAt):'';
@@ -410,6 +425,28 @@ function recordStockMovement(productId,delta,reason='Ajuste',ref=''){
  if(state.inventoryMovements.length>1000)state.inventoryMovements=state.inventoryMovements.slice(-1000);
 }
 function paymentIsCash(payment){return String(payment||'').toLowerCase().includes('dinheiro')}
+function orderSettlementTotal(o){
+ return (Array.isArray(o?.settlements)?o.settlements:[]).reduce((sum,s)=>sum+Math.max(0,Math.round(Number(s?.amountCents)||0)),0)/100;
+}
+function orderPaymentBreakdown(o){
+ const by={},settlements=Array.isArray(o?.settlements)?o.settlements.filter(s=>Math.round(Number(s?.amountCents)||0)>0):[];
+ if(settlements.length){
+  settlements.forEach(s=>{const key=String(s.method||'Não registrado');by[key]=(by[key]||0)+Math.round(Number(s.amountCents)||0)/100});
+  return by;
+ }
+ const key=String(o?.payment||'Não registrado');by[key]=orderTotal(o);return by;
+}
+function orderPaymentLabel(o){
+ const methods=Object.entries(orderPaymentBreakdown(o)).filter(([,value])=>Number(value)>0).map(([key])=>key);
+ return methods.length>1?'Misto':methods[0]||String(o?.payment||'Não registrado');
+}
+function orderPaymentAmount(o,method){
+ const target=String(method||'');
+ return Object.entries(orderPaymentBreakdown(o)).reduce((sum,[key,value])=>sum+(key===target?Number(value)||0:0),0);
+}
+function orderCashAmount(o){
+ return Object.entries(orderPaymentBreakdown(o)).reduce((sum,[key,value])=>sum+(paymentIsCash(key)?Number(value)||0:0),0);
+}
 function orderSubtotal(o){return o.items.reduce((s,i)=>s+(Number(i.price)||0)*(Number(i.q)||0),0)}
 function orderFeeTotal(o){
  const subtotal=orderSubtotal(o);

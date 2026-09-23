@@ -10,11 +10,11 @@ function cashSessionOrders(){
 }
 function cashPaymentBreakdown(){
  const by={};
- cashSessionOrders().forEach(o=>{const key=o.payment||'Não registrado';by[key]=(by[key]||0)+orderTotal(o)});
+ cashSessionOrders().forEach(o=>Object.entries(orderPaymentBreakdown(o)).forEach(([key,value])=>{by[key]=(by[key]||0)+(Number(value)||0)}));
  return by;
 }
 function cashSalesTotal(){return cashSessionOrders().reduce((s,o)=>s+orderTotal(o),0)}
-function cashCashSales(){return cashSessionOrders().filter(o=>paymentIsCash(o.payment)).reduce((s,o)=>s+orderTotal(o),0)}
+function cashCashSales(){return cashSessionOrders().reduce((s,o)=>s+orderCashAmount(o),0)}
 function cashMovementsNet(){return state.cash.movements.reduce((s,m)=>s+(m.type==='suprimento'?Number(m.value)||0:-(Number(m.value)||0)),0)}
 function cashDrawerBalance(){return Number(state.cash.opening||0)+cashCashSales()+cashMovementsNet()}
 function cashBalance(){return cashDrawerBalance()}

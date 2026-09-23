@@ -59,6 +59,26 @@ await vm.runInContext("closeTableCheckoutV22(__tableId)",context);
 assert.equal(vm.runInContext("state.tables.find(t=>t.id===__tableId).status",context),'free');
 assert.equal(vm.runInContext("state.orders.filter(o=>o.table==='Mesa 6'&&!['cancelled'].includes(o.status)).every(o=>o.status==='done')",context),true);
 
+// Pagamentos parciais: produto inteiro, divisão de uma unidade e meios mistos.
+vm.runInContext(`
+ state.tables=[{id:'tpay',name:'Mesa Pagamento',status:'busy',area:'area-salao',seats:4,guests:2,server:'Mariana',order:0}];
+ state.orders=[{id:'pay1',type:'Mesa',table:'Mesa Pagamento',customer:'Teste',status:'ready',payment:'Não registrado',serviceFeePct:0,items:[{p:'p1',q:2,price:30}],discount:0,surcharge:0,settlements:[]}];
+`,context);
+const units=vm.runInContext("checkoutItemUnitsV23(state.orders)",context);
+assert.equal(units.length,2);
+assert.equal(units[0].amountCents,3000);
+vm.runInContext("recordCheckoutPaymentV23(state.orders,3000,'PIX','items',[checkoutItemUnitsV23(state.orders)[0].key])",context);
+assert.equal(vm.runInContext("checkoutRemainingCentsV23(state.orders)",context),3000);
+vm.runInContext("recordCheckoutPaymentV23(state.orders,1500,'Dinheiro','item-part',[checkoutItemUnitsV23(state.orders)[1].key])",context);
+assert.equal(vm.runInContext("checkoutRemainingCentsV23(state.orders)",context),1500);
+vm.runInContext("recordCheckoutPaymentV23(state.orders,1500,'Cartão (Débito)','item-part',[checkoutItemUnitsV23(state.orders)[1].key])",context);
+assert.equal(vm.runInContext("checkoutRemainingCentsV23(state.orders)",context),0);
+assert.equal(vm.runInContext("orderPaymentLabel(state.orders[0])",context),'Misto');
+assert.equal(vm.runInContext("orderCashAmount(state.orders[0])",context),15);
+await vm.runInContext("closeTableCheckoutV22('tpay')",context);
+assert.equal(vm.runInContext("state.orders[0].status",context),'done');
+assert.equal(vm.runInContext("state.tables[0].status",context),'free');
+
 // Ajustes de checkout entram no total.
 context.__order={type:'Balcão',items:[{p:'p1',q:1,price:100}],discount:12,surcharge:7};
 assert.equal(vm.runInContext("orderTotal(__order)",context),95);

@@ -76,3 +76,7 @@ A ETAPA 2 transforma o agente de impressão em aplicativo Windows instalável, c
 ## Operação V21
 
 A V21 amplia a operação diária: cada mesa passa a exibir e gerenciar seus pedidos individualmente, a tela de pedidos ganha histórico de concluídos/cancelados, cancelamento com motivo e exclusão definitiva segura de pedidos cancelados. O gestor de cardápio passa a aceitar fotos JPG/PNG/WebP ou URL, comprimir uploads para o armazenamento local e mostrar as imagens também no PDV.
+## Pagamentos de mesa V23
+
+O fechamento de mesas agora permite receber a conta inteira, dividir o valor em parcelas/pessoas, pagar produtos individualmente e fracionar o valor de uma unidade. Cada recebimento guarda forma de pagamento e alocação, permite estorno antes da conclusão e bloqueia edição/cancelamento enquanto houver valores recebidos. Pagamentos mistos são consolidados corretamente no caixa e nos relatórios.
+

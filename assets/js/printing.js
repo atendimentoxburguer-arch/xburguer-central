@@ -52,7 +52,7 @@
       customer:String(order.customer||'Não identificado'),
       phone:String(order.phone||''),
       address:String(order.address||''),
-      payment:String(order.payment||'Não registrado'),
+      payment:orderPaymentLabel(order),
       notes:String(order.notes||''),
       createdAt:formatPrintDate(order.createdAt),
       completedAt:order.completedAt?formatPrintDate(order.completedAt):'',
