@@ -35,6 +35,18 @@ for(const file of js){
     console.error('javascript: não permitido:',path.relative(root,file));
     process.exitCode=1;
   }
+  if(/\$\{p\.emoji\}/.test(text)){
+    console.error('Interpolação de emoji sem escape:',path.relative(root,file));
+    process.exitCode=1;
+  }
+  if(/\$\{o\.table\|\|/.test(text)){
+    console.error('Interpolação de mesa sem escape:',path.relative(root,file));
+    process.exitCode=1;
+  }
+  if(/^\s{2}[A-Za-z_$][\w$]*V14\s*=\s*(?:async\s+)?function/m.test(text)){
+    console.error('Handler V14 global implícito encontrado:',path.relative(root,file));
+    process.exitCode=1;
+  }
 }
 
 const localRefs=[];
