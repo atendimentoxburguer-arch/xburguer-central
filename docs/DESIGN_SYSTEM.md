@@ -44,3 +44,11 @@ A organização de espaçamento e densidade segue princípios comuns em design s
 - Tabelas mantêm alinhamento de colunas e usam rolagem horizontal em telas pequenas.
 - Cards de pedidos, mesas, PDV e KDS seguem a mesma escala de espaçamento e raios.
 - Estilos de layout não devem ser adicionados inline; usar classes reutilizáveis.
+
+## Gestão operacional V14
+
+- Salão é organizado por áreas/seções, com mesas exibindo capacidade, ocupação, responsável e consumo.
+- Mesas podem ser criadas individualmente ou em lote, reordenadas, transferidas e administradas em um painel próprio.
+- Cardápio usa uma visão de gestão com KPIs, filtros de disponibilidade/estoque, ordenação, seleção múltipla e ações em massa.
+- Produto concentra nome, descrição, preço, custo, estoque, mínimo, estação de preparo, categoria, visibilidade e status de esgotado.
+- Cores de status continuam acompanhadas de texto e não são usadas como único indicador.

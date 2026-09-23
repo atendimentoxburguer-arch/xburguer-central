@@ -9,6 +9,8 @@
 - [x] Documentação técnica inicial.
 
 ## Fase 2 — Refinamento do protótipo
+- [x] Gestão avançada de salão por áreas, capacidade, responsáveis e mesas.
+- [x] Gestão avançada de cardápio com filtros, estoque, custos, estações e ações em massa.
 - [ ] Revisar visual de cada tela com screenshots.
 - [x] Substituir prompts por modais e formulários próprios.
 - [x] Melhorar estados vazios e tratamento de erros do front-end.
