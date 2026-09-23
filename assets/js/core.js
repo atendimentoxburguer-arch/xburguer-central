@@ -263,6 +263,11 @@ function normalize(){
   event:String(j?.event||'manual').slice(0,40),
   paper:['58mm','80mm'].includes(j?.paper)?j.paper:'80mm',
   copies:Math.min(3,Math.max(1,Number(j?.copies)||1)),
+  profile:{
+   paper:['58mm','80mm'].includes(j?.profile?.paper)?j.profile.paper:(['58mm','80mm'].includes(j?.paper)?j.paper:'80mm'),
+   copies:Math.min(3,Math.max(1,Number(j?.profile?.copies??j?.copies)||1)),
+   strongText:j?.profile?.strongText!==false
+  },
   document:j?.document&&typeof j.document==='object'?j.document:{},
   attempts:Math.max(0,Number(j?.attempts)||0),
   createdAt:j?.createdAt||new Date().toISOString(),
