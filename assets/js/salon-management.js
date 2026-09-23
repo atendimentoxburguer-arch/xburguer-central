@@ -187,7 +187,7 @@
       (history.length?'<section class="table-orders-section history"><div class="table-orders-head"><div><b>Histórico recente</b><span>Últimos pedidos concluídos ou cancelados nesta mesa.</span></div></div><div class="table-orders-list">'+history.map(row).join('')+'</div></section>':'')+
       '<div class="modal-foot table-modal-actions">'+
         '<button class="btn btn-outline" onclick="editTableV14(\''+id+'\')">'+icon('pencil')+'<span>Editar mesa</span></button>'+
-        (t.status!=='free'?'<button class="btn btn-outline" onclick="transferTableV14(\''+id+'\')">'+icon('arrow-left-right')+'<span>Transferir</span></button><button class="btn btn-outline" onclick="tSetV14(\''+id+'\',\'closing\')">'+icon('receipt')+'<span>Fechar conta</span></button><button class="btn btn-green" onclick="closeModal();openTableCheckoutV22(\''+id+'\')">'+icon('cash-coin')+'<span>Fechar conta</span></button>':'<button class="btn btn-primary" onclick="closeModal();newTableOrderV14(\''+id+'\')">'+icon('plus-lg')+'<span>Novo pedido</span></button>')+
+        (t.status!=='free'?'<button class="btn btn-outline" onclick="transferTableV14(\''+id+'\')">'+icon('arrow-left-right')+'<span>Transferir</span></button><button class="btn btn-outline" onclick="tSetV14(\''+id+'\',\'closing\')">'+icon('receipt')+'<span>Marcar fechamento</span></button><button class="btn btn-green" onclick="closeModal();openTableCheckoutV22(\''+id+'\')">'+icon('cash-coin')+'<span>Fechar conta</span></button>':'<button class="btn btn-primary" onclick="closeModal();newTableOrderV14(\''+id+'\')">'+icon('plus-lg')+'<span>Novo pedido</span></button>')+
       '</div>'
     );
   };
