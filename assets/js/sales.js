@@ -50,8 +50,8 @@ async function finishPdv(editId=''){
  }
  pdvCart=[];pdvDraftTable='';pdvEditingId='';pdvCustomerDraft='';pdvPayDraft='PIX';syncTables();save();
  if(createdOrder){
-  dispatchAutoPrintEvent?.('created',createdOrder);
-  if(createdOrder.status==='production')dispatchAutoPrintEvent?.('production',createdOrder);
+  globalThis.dispatchAutoPrintEvent?.('created',createdOrder);
+  if(createdOrder.status==='production')globalThis.dispatchAutoPrintEvent?.('production',createdOrder);
  }
  go('pedidos');toast('Pedido salvo com sucesso.','success');
 }
