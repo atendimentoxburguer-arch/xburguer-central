@@ -87,6 +87,8 @@ assert.equal(vm.runInContext("state.tables[0].guests",context),0);
 vm.runInContext("state.tables[0].status='closing';state.tables[0].guests=2;syncTables()",context);
 assert.equal(vm.runInContext("state.tables[0].status",context),'free');
 const completed=vm.runInContext("state.orders[0].completedAt",context);
+vm.runInContext("state.tables[0].server='Mariana';syncTables()",context);
+assert.equal(vm.runInContext("state.tables[0].server",context),'Mariana');
 await vm.runInContext("closeOrderCheckoutV22('qa')",context);
 assert.equal(vm.runInContext("state.orders[0].completedAt",context),completed);
 
