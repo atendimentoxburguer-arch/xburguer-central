@@ -165,14 +165,15 @@ context.document.getElementById=()=>null;
 
 // Período aplicado a pedidos e fechamentos, excluindo datas futuras/inválidas.
 context.cashDrawerBalance=()=>0;
-vm.runInContext(`reportRangeV22=7;state.cash.history=[
+context.cashMovementsNet=()=>0;
+vm.runInContext(`reportRange='7';state.cash.history=[
  {closedAt:new Date().toISOString(),sales:123},
  {closedAt:new Date(Date.now()-20*86400000).toISOString(),sales:456},
  {closedAt:new Date(Date.now()+86400000).toISOString(),sales:789}];`,context);
-const cashHtml=vm.runInContext('renderReportCaixasV22()',context);
+const cashHtml=vm.runInContext('renderReportCash()',context);
 assert.match(cashHtml,/<td>123<\/td>/);
 assert.doesNotMatch(cashHtml,/<td>(456|789)<\/td>/);
-assert.equal(vm.runInContext("reportInRangeV22('invalid')",context),false);
+assert.equal(vm.runInContext("reportInPeriod('invalid')",context),false);
 
 // O quadro encaminha pedidos de loja ao checkout, sem recebimento implícito.
 vm.runInContext("state.orders[0].type='Balcão';state.orders[0].status='ready';advanceOrder('qa0')",context);
