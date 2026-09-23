@@ -10,7 +10,7 @@ function advanceOrder(id){
   if(o.courier&&!o.deliveryCounted){const d=state.couriers.find(d=>d.id===o.courier);if(d)d.deliveries=(Number(d.deliveries)||0)+1;o.deliveryCounted=true}
  }
  syncTables();save();
- if(printEvent)dispatchAutoPrintEvent?.(printEvent,o);
+ if(printEvent)globalThis.dispatchAutoPrintEvent?.(printEvent,o);
  toast('Pedido atualizado.','success');
 }
 async function cancelOrder(id){
