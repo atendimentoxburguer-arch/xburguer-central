@@ -2,7 +2,7 @@
 
 ## Direção visual V26
 
-A interface deve parecer um sistema operacional de restaurante profissional: rápida de ler, compacta sem ficar apertada, consistente entre módulos e alinhada à identidade da X Burguer. A marca usa **vermelho escuro/bordô como ação principal**, **dourado/mostarda como acento**, branco e neutros quentes. Cores semânticas continuam reservadas para estados como sucesso, alerta e erro.
+A interface deve parecer um sistema operacional de restaurante profissional: rápida de ler, compacta sem ficar apertada e consistente entre módulos. A paleta operacional usa **azul petróleo/azul profundo como ação principal**, **dourado/mostarda como acento**, branco e neutros frios. O vermelho fica reservado para erro, cancelamento e ações destrutivas.
 
 ## Tipografia
 
@@ -32,12 +32,12 @@ A interface deve parecer um sistema operacional de restaurante profissional: rá
 
 ## Componentes
 
-- **Sidebar:** bordô escuro, ícones dourados e estado ativo em vermelho da marca.
+- **Sidebar:** azul-grafite escuro, ícones dourados e estado ativo em azul petróleo.
 - **Topbar:** clara, compacta, com logo circular preservada.
-- **Page head:** superfície neutra com filete lateral dourado → bordô.
-- **Botões primários:** bordô; sucesso usa verde; exclusão/erro usa vermelho semântico.
+- **Page head:** superfície neutra com filete lateral dourado → azul petróleo.
+- **Botões primários:** azul petróleo; sucesso usa verde; exclusão/erro usa vermelho semântico.
 - **Cards:** branco/neutro com borda discreta.
-- **Métricas:** filete superior dourado → bordô.
+- **Métricas:** filete superior dourado → azul petróleo.
 - **Tabelas:** cabeçalho neutro e linhas simples, sem blocos visuais excessivos.
 - **Formulários:** labels mais legíveis, foco visível e campos consistentes.
 - **Modais:** hierarquia clara, ações no rodapé.
