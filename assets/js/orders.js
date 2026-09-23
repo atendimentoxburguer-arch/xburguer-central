@@ -1,12 +1,17 @@
-/* X Burguer Central V17 — pedidos e impressão */
+/* X Burguer Central V18 — pedidos e roteamento de impressão */
 function advanceOrder(id){
  const o=state.orders.find(o=>o.id===id);if(!o)return;
- let enteredProduction=false;
- if(o.status==='analysis'){o.status='production';enteredProduction=true}
- else if(o.status==='production')o.status='ready';
- else if(o.status==='ready'){if(o.type==='Delivery'&&!o.courier){toast('Atribua um entregador antes de finalizar a entrega.','warning');return}o.status='done';o.completedAt=new Date().toISOString();if(o.courier&&!o.deliveryCounted){const d=state.couriers.find(d=>d.id===o.courier);if(d)d.deliveries=(Number(d.deliveries)||0)+1;o.deliveryCounted=true}}
- if(enteredProduction)maybePrintKitchen?.(o);
- syncTables();save();toast('Pedido atualizado.','success');
+ let printEvent='';
+ if(o.status==='analysis'){o.status='production';printEvent='production'}
+ else if(o.status==='production'){o.status='ready';printEvent='ready'}
+ else if(o.status==='ready'){
+  if(o.type==='Delivery'&&!o.courier){toast('Atribua um entregador antes de finalizar a entrega.','warning');return}
+  o.status='done';o.completedAt=new Date().toISOString();printEvent='completed';
+  if(o.courier&&!o.deliveryCounted){const d=state.couriers.find(d=>d.id===o.courier);if(d)d.deliveries=(Number(d.deliveries)||0)+1;o.deliveryCounted=true}
+ }
+ syncTables();save();
+ if(printEvent)globalThis.dispatchAutoPrintEvent?.(printEvent,o);
+ toast('Pedido atualizado.','success');
 }
 async function cancelOrder(id){
  const o=state.orders.find(o=>o.id===id);if(!o)return;

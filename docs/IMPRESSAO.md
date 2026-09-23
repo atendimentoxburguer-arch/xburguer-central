@@ -1,44 +1,89 @@
-# Impressão — X Burguer Central V17
+# Impressão — X Burguer Central V18
 
-## O que funciona agora
+## Padrão de impressão
 
-O sistema gera documentos próprios para:
-- comprovante de balcão/caixa;
-- ficha de cozinha;
-- ficha de cozinha por estação;
-- expedição/delivery.
+A impressão foi otimizada para **retrato/vertical**, com foco em economia de bobina e leitura rápida.
 
-Os layouts suportam papel térmico de 58 mm, 80 mm e A4. Cada destino lógico pode definir formato e número de cópias.
+- papel térmico 58 mm;
+- papel térmico 80 mm;
+- A4 em retrato;
+- margens mínimas;
+- espaçamento compacto;
+- texto preto puro e reforçado;
+- divisórias simples, sem fundos que gastem impressão;
+- logo opcional e desativado por padrão na V18 para economizar papel;
+- tamanho da fonte configurável.
 
-## Como a impressão funciona
+A densidade física/temperatura da cabeça térmica continua sendo uma configuração do driver/impressora. O sistema reforça peso, contraste e cor do texto no documento.
 
-A aplicação publicada no GitHub Pages usa a impressão nativa do navegador. Ao imprimir, o navegador abre o diálogo do sistema operacional; nele o operador escolhe a impressora física instalada, USB, rede ou compartilhada.
+## Destinos de impressão
 
-O X Burguer Central não tenta selecionar uma impressora do Windows silenciosamente. Isso é uma restrição deliberada da arquitetura web e evita depender de APIs experimentais ou específicas de fabricante.
+Em **Configurações → Impressoras → Gerenciar** é possível criar quantos destinos lógicos forem necessários, por exemplo:
 
-## Central de impressão
+- Balcão / Caixa;
+- Cozinha geral;
+- Chapa;
+- Fritadeira;
+- Bebidas;
+- Bar;
+- Expedição / Delivery.
 
-Em **Configurações → Impressoras → Gerenciar** é possível:
-- ativar/desativar impressão;
-- definir papel 58 mm, 80 mm ou A4;
-- definir 1 a 3 cópias;
-- configurar comprovante, cozinha e expedição;
-- limitar o destino de cozinha a uma estação;
-- realizar impressão de teste;
-- editar o rodapé;
-- abrir impressão da cozinha ao aceitar pedido;
-- abrir comprovante ao salvar pedido no PDV.
+Cada destino pode definir:
+- documento: comprovante, cozinha ou expedição;
+- papel: 58 mm, 80 mm ou A4;
+- 1 a 3 cópias;
+- setor da cozinha;
+- ativo/inativo;
+- eventos automáticos.
 
-## Pontos de impressão
+## Automação
 
-- **Pedidos → Detalhes → Imprimir:** comprovante, cozinha ou expedição.
-- **KDS:** imprimir a ficha do pedido/estação atual.
-- **Entregas:** imprimir a ficha de expedição.
-- **PDV:** impressão opcional automática após salvar.
-- **Aceite do pedido:** impressão opcional automática da cozinha.
+O botão de raio de cada destino abre o roteamento automático. É possível selecionar:
 
-## Próxima etapa para impressão silenciosa
+- **Ao criar pedido**;
+- **Ao entrar em produção**;
+- **Ao ficar pronto**;
+- **Ao concluir pedido**.
 
-Para impressão direta sem o diálogo do navegador, o projeto precisará de um componente local/desktop ou serviço de impressão autorizado. Esse componente faria a ponte entre o navegador e impressoras térmicas/ESC-POS, com mapeamento de dispositivo físico por estação.
+Exemplos:
 
-WebUSB não foi escolhido como base principal porque sua disponibilidade entre navegadores é limitada e a integração com impressoras depende do protocolo/dispositivo.
+- **Chapa** → cozinha → setor Chapa → automático ao entrar em produção;
+- **Fritadeira** → cozinha → setor Fritadeira → automático ao entrar em produção;
+- **Bebidas** → cozinha → setor Bebidas → automático ao entrar em produção;
+- **Expedição** → delivery → automático ao ficar pronto;
+- **Caixa** → comprovante → automático ao criar ou concluir.
+
+Se vários destinos corresponderem ao mesmo evento, o sistema tenta abrir uma impressão para cada destino.
+
+## Impressão física
+
+A aplicação publicada no GitHub Pages usa a impressão nativa do navegador. O X Burguer Central controla:
+
+- conteúdo;
+- layout;
+- papel;
+- cópias;
+- estação/setor;
+- momento em que a impressão é aberta.
+
+A **impressora física** ainda é escolhida no diálogo do Windows/navegador. Browsers não permitem que uma página comum selecione silenciosamente qualquer impressora instalada.
+
+Para impressão realmente silenciosa e roteamento direto para dispositivos físicos diferentes, será necessária uma ponte local/desktop autorizada no computador do restaurante.
+
+## Pontos manuais de impressão
+
+- **Pedidos → Detalhes → Imprimir**;
+- **KDS → Imprimir ficha**;
+- **Entregas → Imprimir**;
+- **Central de impressão → Impressão de teste**.
+
+## Layout econômico
+
+Em **Layout da impressão** é possível configurar:
+
+- espaçamento compacto ou confortável;
+- fonte pequena, normal ou grande;
+- texto padrão ou escuro/reforçado;
+- mostrar/ocultar logo.
+
+A orientação permanece vertical para manter consistência e reduzir desperdício.

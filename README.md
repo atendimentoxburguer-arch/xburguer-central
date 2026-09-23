@@ -58,3 +58,7 @@ A V16 passou por revisão ponta a ponta de engenharia e QA: fluxo de pedidos e P
 ## Impressão V17
 
 O sistema agora possui impressão de comprovantes, cozinha e delivery com layouts 58 mm, 80 mm e A4, configuração de destinos e impressão de teste. Consulte `docs/IMPRESSAO.md`.
+
+## Impressão V18
+
+A impressão passou a usar layout vertical compacto, texto de alto contraste e roteamento automático configurável por destino, etapa do pedido e estação de preparo. É possível criar destinos como Caixa, Chapa, Fritadeira, Bebidas, Bar e Expedição. Consulte `docs/IMPRESSAO.md`.

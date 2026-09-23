@@ -1,9 +1,21 @@
-/* X Burguer Central V17 — impressão */
+/* X Burguer Central V18 — impressão vertical, econômica e roteada */
 (function(){
   'use strict';
 
   const PURPOSE_LABEL={receipt:'Comprovante / Caixa',kitchen:'Cozinha',delivery:'Expedição / Delivery'};
   const PAPER_LABEL={'58mm':'58 mm','80mm':'80 mm',a4:'A4'};
+  const EVENT_LABEL={
+    created:'Ao criar pedido',
+    production:'Ao entrar em produção',
+    ready:'Ao ficar pronto',
+    completed:'Ao concluir pedido'
+  };
+  const EVENT_HELP={
+    created:'Ideal para comprovante/caixa.',
+    production:'Ideal para cozinha e setores.',
+    ready:'Ideal para expedição ou conferência.',
+    completed:'Ideal para comprovante final.'
+  };
 
   function printSettings(){return state.settings.printing}
   function printProfiles(purpose){return (printSettings()?.profiles||[]).filter(p=>p.enabled&&(!purpose||p.purpose===purpose))}
@@ -12,6 +24,10 @@
   function formatPrintDate(value){
     const d=new Date(value||Date.now());
     return Number.isFinite(d.getTime())?d.toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'}):'—';
+  }
+  function autoSummary(profile){
+    const events=Array.isArray(profile?.autoEvents)?profile.autoEvents:[];
+    return events.length?events.map(e=>EVENT_LABEL[e]||e).join(' • '):'Somente manual';
   }
 
   function buildPrintPayload(order,purpose='receipt',station='all'){
@@ -65,16 +81,15 @@
     return `<section class="print-items">${payload.items.map(i=>`<div class="print-item"><div><b>${i.qty}x ${esc(i.name)}</b>${station?`<small>${esc(i.station)}</small>`:''}</div>${prices?`<strong>${money(i.total)}</strong>`:''}</div>`).join('')||'<p class="print-empty">Nenhum item para este destino.</p>'}</section>`;
   }
   function renderReceipt(payload){
-    return `${renderHeader(payload,'COMPROVANTE DE PEDIDO')}${renderMeta(payload)}<section class="print-customer"><b>${esc(payload.customer)}</b>${payload.phone?`<span>${esc(payload.phone)}</span>`:''}${payload.address?`<span>${esc(payload.address)}</span>`:''}</section>${renderItems(payload,{prices:true})}<section class="print-totals"><div><span>Subtotal</span><b>${money(payload.subtotal)}</b></div>${payload.fees?`<div><span>${esc(payload.feeLabel)}</span><b>${money(payload.fees)}</b></div>`:''}<div class="grand"><span>Total</span><b>${money(payload.total)}</b></div></section><section class="print-payment"><span>Pagamento</span><b>${esc(payload.payment)}</b></section>${payload.notes?`<section class="print-notes"><b>Observações</b><p>${esc(payload.notes)}</p></section>`:''}<footer>${esc(printSettings().footer||'')}</footer>`;
+    return `${renderHeader(payload,'COMPROVANTE DE PEDIDO')}${renderMeta(payload)}<section class="print-customer"><b>${esc(payload.customer)}</b>${payload.phone?`<span>${esc(payload.phone)}</span>`:''}${payload.address?`<span>${esc(payload.address)}</span>`:''}</section>${renderItems(payload,{prices:true})}<section class="print-totals"><div><span>Subtotal</span><b>${money(payload.subtotal)}</b></div>${payload.fees?`<div><span>${esc(payload.feeLabel)}</span><b>${money(payload.fees)}</b></div>`:''}<div class="grand"><span>Total</span><b>${money(payload.total)}</b></div></section><section class="print-payment"><span>Pagamento</span><b>${esc(payload.payment)}</b></section>${payload.notes?`<section class="print-notes"><b>Observações</b><p>${esc(payload.notes)}</p></section>`:''}${printSettings().footer?`<footer>${esc(printSettings().footer)}</footer>`:''}`;
   }
   function renderKitchen(payload){
     const title=payload.station==='all'?'COZINHA':'COZINHA — '+payload.station;
-    return `${renderHeader(payload,title)}${renderMeta(payload)}${payload.customer&&payload.customer!=='Não identificado'?`<section class="print-customer"><b>${esc(payload.customer)}</b></section>`:''}${renderItems(payload,{station:true})}${payload.notes?`<section class="print-notes emphasis"><b>OBSERVAÇÕES</b><p>${esc(payload.notes)}</p></section>`:''}<footer>Produção • ${esc(payload.createdAt)}</footer>`;
+    return `${renderHeader(payload,title)}${renderMeta(payload)}${payload.customer&&payload.customer!=='Não identificado'?`<section class="print-customer compact-customer"><b>${esc(payload.customer)}</b></section>`:''}${renderItems(payload,{station:true})}${payload.notes?`<section class="print-notes emphasis"><b>OBSERVAÇÕES</b><p>${esc(payload.notes)}</p></section>`:''}<footer>Produção • ${esc(payload.createdAt)}</footer>`;
   }
   function renderDelivery(payload){
-    return `${renderHeader(payload,'EXPEDIÇÃO / DELIVERY')}${renderMeta(payload)}<section class="print-customer strong"><b>${esc(payload.customer)}</b>${payload.phone?`<span>${esc(payload.phone)}</span>`:''}${payload.address?`<span>${esc(payload.address)}</span>`:''}</section>${renderItems(payload,{prices:false})}<section class="print-payment"><span>Pagamento</span><b>${esc(payload.payment)} • ${money(payload.total)}</b></section>${payload.notes?`<section class="print-notes"><b>Observações</b><p>${esc(payload.notes)}</p></section>`:''}<footer>${esc(printSettings().footer||'')}</footer>`;
+    return `${renderHeader(payload,'EXPEDIÇÃO / DELIVERY')}${renderMeta(payload)}<section class="print-customer strong"><b>${esc(payload.customer)}</b>${payload.phone?`<span>${esc(payload.phone)}</span>`:''}${payload.address?`<span>${esc(payload.address)}</span>`:''}</section>${renderItems(payload)}<section class="print-payment"><span>Pagamento</span><b>${esc(payload.payment)} • ${money(payload.total)}</b></section>${payload.notes?`<section class="print-notes"><b>Observações</b><p>${esc(payload.notes)}</p></section>`:''}${printSettings().footer?`<footer>${esc(printSettings().footer)}</footer>`:''}`;
   }
-
   function renderPrintBody(payload){
     if(payload.purpose==='kitchen')return renderKitchen(payload);
     if(payload.purpose==='delivery')return renderDelivery(payload);
@@ -83,13 +98,21 @@
 
   function openPrintWindow({title,body,paper='80mm',copies=1}){
     if(typeof window==='undefined'||typeof window.open!=='function')return false;
-    const win=window.open('','_blank','width=520,height=760');
+    const win=window.open('','_blank','width=430,height=760');
     if(!win){toast('O navegador bloqueou a janela de impressão. Libere pop-ups para este site.','warning');return false}
+    const cfg=printSettings();
     const cssUrl=new URL('assets/css/print.css',location.href).href;
     const count=Math.min(3,Math.max(1,Number(copies)||1));
-    const pages=Array.from({length:count},(_,i)=>`<article class="print-sheet paper-${esc(paper)}">${body}</article>${i<count-1?'<div class="print-copy-break"></div>':''}`).join('');
+    const classes=[
+      'print-sheet',
+      'paper-'+paper,
+      'density-'+(cfg.density||'compact'),
+      'font-'+(cfg.fontScale||'normal'),
+      cfg.strongText?'print-strong':''
+    ].filter(Boolean).join(' ');
+    const pages=Array.from({length:count},(_,i)=>`<article class="${esc(classes)}">${body}</article>${i<count-1?'<div class="print-copy-break"></div>':''}`).join('');
     win.document.open();
-    win.document.write(`<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(title)}</title><link rel="stylesheet" href="${esc(cssUrl)}"></head><body>${pages}<script>window.addEventListener('load',()=>setTimeout(()=>window.print(),120));window.addEventListener('afterprint',()=>window.close());<\/script></body></html>`);
+    win.document.write(`<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light only"><title>${esc(title)}</title><link rel="stylesheet" href="${esc(cssUrl)}"></head><body class="orientation-portrait">${pages}<script>window.addEventListener('load',()=>setTimeout(()=>window.print(),140));window.addEventListener('afterprint',()=>window.close());<\/script></body></html>`);
     win.document.close();
     return true;
   }
@@ -102,13 +125,35 @@
     if(!profile||!profile.enabled){toast('Nenhum destino de impressão ativo para '+(PURPOSE_LABEL[purpose]||purpose)+'.','warning');return false}
     const effectiveStation=purpose==='kitchen'?(station!=='all'?station:(profile.station||'all')):'all';
     const payload=buildPrintPayload(order,purpose,effectiveStation);
-    if(purpose==='kitchen'&&!payload.items.length){toast('Este pedido não possui itens para o setor selecionado.','warning');return false}
+    if(purpose==='kitchen'&&!payload.items.length)return false;
     return openPrintWindow({
       title:(PURPOSE_LABEL[purpose]||'Impressão')+' #'+order.id,
       body:renderPrintBody(payload),
       paper:profile.paper,
       copies:profile.copies
     });
+  }
+
+  function profileMatchesEvent(profile,event,order){
+    if(!profile?.enabled||!Array.isArray(profile.autoEvents)||!profile.autoEvents.includes(event))return false;
+    if(profile.purpose==='delivery'&&order.type!=='Delivery')return false;
+    if(profile.purpose==='kitchen'&&profile.station!=='all'&&!order.items.some(i=>stationForItem(i)===profile.station))return false;
+    return true;
+  }
+  function autoProfilesForEvent(event,order){
+    return (printSettings()?.profiles||[]).filter(p=>profileMatchesEvent(p,event,order));
+  }
+  function dispatchAutoPrintEvent(event,order){
+    if(!printSettings()?.enabled||!order)return 0;
+    const targets=autoProfilesForEvent(event,order);
+    if(!targets.length)return 0;
+    let opened=0,blocked=0;
+    targets.forEach(profile=>{
+      const ok=printOrderWithProfile(order.id,profile.purpose,profile.id,profile.station||'all');
+      if(ok)opened++;else blocked++;
+    });
+    if(blocked)toast('Uma ou mais impressões automáticas foram bloqueadas. Libere pop-ups para o X Burguer Central.','warning');
+    return opened;
   }
 
   function printTestProfile(id){
@@ -127,14 +172,14 @@
   function printOrderMenu(id){
     const order=state.orders.find(o=>o.id===id);if(!order){toast('Pedido não encontrado.','error');return}
     const kitchenStations=[...new Set(order.items.map(i=>stationForItem(i)))];
-    openModal(`<div class="modal-head"><div><h2>Imprimir pedido #${esc(order.id)}</h2><p class="dialog-subtitle">Escolha o documento que será enviado ao diálogo de impressão do sistema.</p></div><button class="icon-btn" onclick="closeModal()" aria-label="Fechar">${icon('x-lg')}</button></div>
+    openModal(`<div class="modal-head"><div><h2>Imprimir pedido #${esc(order.id)}</h2><p class="dialog-subtitle">Formato vertical e econômico. Escolha o documento.</p></div><button class="icon-btn" onclick="closeModal()" aria-label="Fechar">${icon('x-lg')}</button></div>
     <div class="print-choice-grid">
       <button class="print-choice" onclick="printReceipt('${order.id}')"><span>${icon('receipt')}</span><div><b>Comprovante</b><small>Cliente, itens, valores e pagamento.</small></div></button>
       <button class="print-choice" onclick="printKitchen('${order.id}')"><span>${icon('printer')}</span><div><b>Cozinha</b><small>Itens, mesa e observações sem preços.</small></div></button>
       ${order.type==='Delivery'?`<button class="print-choice" onclick="printDelivery('${order.id}')"><span>${icon('truck')}</span><div><b>Expedição</b><small>Endereço, telefone e itens do delivery.</small></div></button>`:''}
     </div>
-    ${kitchenStations.length>1?`<div class="print-stations"><b>Imprimir setor específico</b><div>${kitchenStations.map(st=>`<button class="btn btn-outline btn-sm" data-station="${esc(st)}" onclick="printKitchenFromButton('${order.id}',this)">${esc(st)}</button>`).join('')}</div></div>`:''}
-    <div class="modal-foot"><button class="btn btn-outline" onclick="printerCenter()">${icon('gear')}<span>Configurar impressoras</span></button><button class="btn btn-primary" onclick="closeModal()">Fechar</button></div>`);
+    ${kitchenStations.length>1?`<div class="print-stations"><b>Imprimir somente um setor</b><div>${kitchenStations.map(st=>`<button class="btn btn-outline btn-sm" data-station="${esc(st)}" onclick="printKitchenFromButton('${order.id}',this)">${esc(st)}</button>`).join('')}</div></div>`:''}
+    <div class="modal-foot"><button class="btn btn-outline" onclick="printerCenter()">${icon('gear')}<span>Configurar impressão</span></button><button class="btn btn-primary" onclick="closeModal()">Fechar</button></div>`);
   }
   function printKitchenFromButton(id,btn){return printOrderWithProfile(id,'kitchen','',btn?.dataset?.station||'all')}
   function printKitchenTicketFromButton(btn){
@@ -142,30 +187,61 @@
     return printOrderWithProfile(id,'kitchen','',station);
   }
 
+  function appearanceSummary(){
+    const cfg=printSettings();
+    const density=cfg.density==='compact'?'Compacto/econômico':'Confortável';
+    const size=cfg.fontScale==='small'?'Pequena':cfg.fontScale==='large'?'Grande':'Normal';
+    return `Vertical • ${density} • Fonte ${size} • ${cfg.strongText?'Texto reforçado':'Texto padrão'} • ${cfg.showLogo?'Com logo':'Sem logo'}`;
+  }
+
   function printerCenter(){
     const cfg=printSettings(),profiles=cfg.profiles||[];
-    openModal(`<div class="modal-head"><div><h2>Central de impressão</h2><p class="dialog-subtitle">Configure comprovantes, cozinha e expedição. A impressora física é escolhida no diálogo de impressão do sistema.</p></div><button class="icon-btn" onclick="closeModal()" aria-label="Fechar">${icon('x-lg')}</button></div>
-    <div class="print-info">${icon('info-circle')}<div><b>Impressão pelo navegador</b><span>Funciona com impressoras térmicas 58/80 mm e impressoras A4 instaladas no computador. O navegador abre o seletor de impressão do sistema.</span></div></div>
-    <div class="print-master-row"><div><b>Impressão no sistema</b><span>Desative para ocultar ações automáticas.</span></div><span class="toggle ${cfg.enabled?'on':''}" role="switch" aria-checked="${cfg.enabled?'true':'false'}" tabindex="0" onclick="togglePrintingEnabled()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();togglePrintingEnabled()}"></span></div>
-    <div class="printer-profiles">${profiles.map(p=>`<div class="printer-profile"><span class="printer-profile-icon">${icon(p.purpose==='kitchen'?'printer':p.purpose==='delivery'?'truck':'receipt')}</span><div class="printer-profile-copy"><b>${esc(p.name)}</b><span>${esc(PURPOSE_LABEL[p.purpose]||p.purpose)} • ${esc(PAPER_LABEL[p.paper]||p.paper)} • ${p.copies} cópia(s)${p.purpose==='kitchen'&&p.station!=='all'?' • '+esc(p.station):''}</span></div><span class="badge ${p.enabled?'b-green':'b-gray'}">${p.enabled?'Ativo':'Inativo'}</span><div class="printer-profile-actions"><button class="icon-btn" onclick="printTestProfile('${p.id}')" title="Impressão de teste">${icon('printer')}</button><button class="icon-btn" onclick="editPrinterProfile('${p.id}')" title="Editar">${icon('pencil')}</button><button class="icon-btn" onclick="togglePrinterProfile('${p.id}')" title="${p.enabled?'Desativar':'Ativar'}">${icon(p.enabled?'pause-circle':'play-circle')}</button></div></div>`).join('')}</div>
-    <div class="print-automation"><div class="print-master-row"><div><b>Abrir cozinha ao aceitar pedido</b><span>Abre a impressão da cozinha quando o pedido entra em produção.</span></div><span class="toggle ${cfg.openKitchenOnAccept?'on':''}" role="switch" aria-checked="${cfg.openKitchenOnAccept?'true':'false'}" onclick="togglePrintAutomation('kitchen')"></span></div><div class="print-master-row"><div><b>Abrir comprovante ao salvar no PDV</b><span>Abre o comprovante automaticamente após criar um pedido.</span></div><span class="toggle ${cfg.openReceiptOnSave?'on':''}" role="switch" aria-checked="${cfg.openReceiptOnSave?'true':'false'}" onclick="togglePrintAutomation('receipt')"></span></div></div>
+    openModal(`<div class="modal-head"><div><h2>Central de impressão</h2><p class="dialog-subtitle">Impressão vertical, econômica e com roteamento por setor.</p></div><button class="icon-btn" onclick="closeModal()" aria-label="Fechar">${icon('x-lg')}</button></div>
+    <div class="print-info">${icon('info-circle')}<div><b>Impressão física pelo navegador</b><span>O sistema define conteúdo, papel, cópias e quando abrir a impressão. A impressora física continua sendo escolhida no diálogo do Windows/navegador.</span></div></div>
+    <div class="print-config-grid">
+      <div class="print-master-row"><div><b>Impressão no sistema</b><span>Ativa ações manuais e automações.</span></div><span class="toggle ${cfg.enabled?'on':''}" role="switch" aria-checked="${cfg.enabled?'true':'false'}" tabindex="0" onclick="togglePrintingEnabled()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();togglePrintingEnabled()}"></span></div>
+      <button class="print-layout-card" onclick="editPrintAppearance()"><span class="printer-profile-icon">${icon('file-earmark-text')}</span><div><b>Layout da impressão</b><span>${esc(appearanceSummary())}</span></div>${icon('chevron-right')}</button>
+    </div>
+    <div class="printer-section-head"><div><b>Destinos de impressão</b><span>Crie um destino por local: caixa, cozinha, chapa, fritadeira, bebidas, bar ou expedição.</span></div><button class="btn btn-primary btn-sm" onclick="addPrinterProfile()">${icon('plus-lg')}<span>Destino</span></button></div>
+    <div class="printer-profiles">${profiles.map(p=>`<div class="printer-profile"><span class="printer-profile-icon">${icon(p.purpose==='kitchen'?'printer':p.purpose==='delivery'?'truck':'receipt')}</span><div class="printer-profile-copy"><b>${esc(p.name)}</b><span>${esc(PURPOSE_LABEL[p.purpose]||p.purpose)} • ${esc(PAPER_LABEL[p.paper]||p.paper)} • ${p.copies} cópia(s)${p.purpose==='kitchen'&&p.station!=='all'?' • '+esc(p.station):''}</span><small>${esc(autoSummary(p))}</small></div><span class="badge ${p.enabled?'b-green':'b-gray'}">${p.enabled?'Ativo':'Inativo'}</span><div class="printer-profile-actions"><button class="icon-btn" onclick="printTestProfile('${p.id}')" title="Impressão de teste">${icon('printer')}</button><button class="icon-btn" onclick="editPrinterAutomation('${p.id}')" title="Automação">${icon('lightning-charge')}</button><button class="icon-btn" onclick="editPrinterProfile('${p.id}')" title="Editar">${icon('pencil')}</button><button class="icon-btn" onclick="togglePrinterProfile('${p.id}')" title="${p.enabled?'Desativar':'Ativar'}">${icon(p.enabled?'pause-circle':'play-circle')}</button><button class="icon-btn danger-soft" onclick="deletePrinterProfile('${p.id}')" title="Excluir">${icon('trash')}</button></div></div>`).join('')||'<div class="empty">Nenhum destino configurado.</div>'}</div>
+    <div class="print-routing-note">${icon('diagram-3')}<div><b>Como configurar a impressão automática</b><span>Abra o raio de cada destino e escolha em qual etapa ele deve imprimir. Ex.: Chapa → “Ao entrar em produção”; Expedição → “Ao ficar pronto”.</span></div></div>
     <div class="modal-foot"><button class="btn btn-outline" onclick="editPrintFooter()">${icon('card-text')}<span>Rodapé</span></button><button class="btn btn-primary" onclick="closeModal()">Concluir</button></div>`);
   }
 
   function togglePrintingEnabled(){state.settings.printing.enabled=!state.settings.printing.enabled;save({render:false});printerCenter()}
   function togglePrinterProfile(id){const p=profileById(id);if(!p)return;p.enabled=!p.enabled;save({render:false});printerCenter()}
-  function togglePrintAutomation(kind){
-    if(kind==='kitchen')state.settings.printing.openKitchenOnAccept=!state.settings.printing.openKitchenOnAccept;
-    if(kind==='receipt')state.settings.printing.openReceiptOnSave=!state.settings.printing.openReceiptOnSave;
-    save({render:false});printerCenter();
+
+  async function addPrinterProfile(){
+    const stations=['all',...new Set(state.products.map(x=>x.station||'Cozinha'))].map(s=>({value:s,label:s==='all'?'Todos os setores':s}));
+    const v=await formDialog({title:'Novo destino de impressão',subtitle:'Use um destino para cada local físico ou setor.',fields:[
+      {key:'name',label:'Nome do destino',value:'Nova impressora',required:true},
+      {key:'purpose',label:'Documento',type:'select',value:'kitchen',options:[{value:'receipt',label:'Comprovante / Caixa'},{value:'kitchen',label:'Cozinha'},{value:'delivery',label:'Expedição / Delivery'}]},
+      {key:'paper',label:'Papel',type:'select',value:'80mm',options:[{value:'58mm',label:'Térmica 58 mm'},{value:'80mm',label:'Térmica 80 mm'},{value:'a4',label:'A4 vertical'}]},
+      {key:'copies',label:'Cópias',type:'number',value:1,min:1,max:3,step:'1'},
+      {key:'station',label:'Setor da cozinha',type:'select',value:'all',options:stations}
+    ]});
+    if(!v)return;
+    const name=v.name.trim().slice(0,80);
+    if(!name)return;
+    state.settings.printing.profiles.push({
+      id:uid('print-'),name,
+      purpose:['receipt','kitchen','delivery'].includes(v.purpose)?v.purpose:'kitchen',
+      paper:['58mm','80mm','a4'].includes(v.paper)?v.paper:'80mm',
+      copies:Math.min(3,Math.max(1,Number(v.copies)||1)),
+      enabled:true,
+      station:v.purpose==='kitchen'?(v.station||'all'):'all',
+      autoEvents:[]
+    });
+    save({render:false});printerCenter();toast('Destino de impressão criado.','success');
   }
+
   async function editPrinterProfile(id){
     const p=profileById(id);if(!p)return;
     const stations=['all',...new Set(state.products.map(x=>x.station||'Cozinha'))].map(s=>({value:s,label:s==='all'?'Todos os setores':s}));
     const v=await formDialog({title:'Editar destino de impressão',subtitle:p.name,fields:[
-      {key:'name',label:'Nome interno',value:p.name,required:true},
-      {key:'purpose',label:'Uso',type:'select',value:p.purpose,options:[{value:'receipt',label:'Comprovante / Caixa'},{value:'kitchen',label:'Cozinha'},{value:'delivery',label:'Expedição / Delivery'}]},
-      {key:'paper',label:'Papel',type:'select',value:p.paper,options:[{value:'58mm',label:'Térmica 58 mm'},{value:'80mm',label:'Térmica 80 mm'},{value:'a4',label:'A4'}]},
+      {key:'name',label:'Nome do destino',value:p.name,required:true},
+      {key:'purpose',label:'Documento',type:'select',value:p.purpose,options:[{value:'receipt',label:'Comprovante / Caixa'},{value:'kitchen',label:'Cozinha'},{value:'delivery',label:'Expedição / Delivery'}]},
+      {key:'paper',label:'Papel',type:'select',value:p.paper,options:[{value:'58mm',label:'Térmica 58 mm'},{value:'80mm',label:'Térmica 80 mm'},{value:'a4',label:'A4 vertical'}]},
       {key:'copies',label:'Cópias',type:'number',value:p.copies,min:1,max:3,step:'1'},
       {key:'station',label:'Setor da cozinha',type:'select',value:p.station||'all',options:stations}
     ]});
@@ -177,6 +253,49 @@
     p.station=p.purpose==='kitchen'?(v.station||'all'):'all';
     save({render:false});printerCenter();toast('Destino de impressão atualizado.','success');
   }
+
+  async function deletePrinterProfile(id){
+    const p=profileById(id);if(!p)return;
+    if((printSettings().profiles||[]).length<=1){toast('Mantenha pelo menos um destino de impressão.','warning');return}
+    const ok=await confirmDialog('Excluir destino','Excluir “'+p.name+'” e suas automações?',{confirmLabel:'Excluir',danger:true});
+    if(!ok)return;
+    state.settings.printing.profiles=state.settings.printing.profiles.filter(x=>x.id!==id);
+    save({render:false});printerCenter();toast('Destino removido.','success');
+  }
+
+  function editPrinterAutomation(id){
+    const p=profileById(id);if(!p)return;
+    openModal(`<div class="modal-head"><div><h2>Automação — ${esc(p.name)}</h2><p class="dialog-subtitle">Escolha exatamente quando este destino deve abrir a impressão.</p></div><button class="icon-btn" onclick="printerCenter()" aria-label="Voltar">${icon('arrow-left')}</button></div>
+      <div class="automation-list">${Object.keys(EVENT_LABEL).map(event=>{const on=p.autoEvents.includes(event);return `<button class="automation-row ${on?'active':''}" onclick="togglePrinterEvent('${p.id}','${event}')"><span class="automation-icon">${icon(on?'check-circle-fill':'circle')}</span><div><b>${esc(EVENT_LABEL[event])}</b><span>${esc(EVENT_HELP[event])}</span></div><span class="badge ${on?'b-green':'b-gray'}">${on?'Automático':'Manual'}</span></button>`}).join('')}</div>
+      <div class="print-routing-example"><b>Destino</b><span>${esc(PURPOSE_LABEL[p.purpose])}${p.purpose==='kitchen'?' • '+esc(p.station==='all'?'Todos os setores':p.station):''} • ${esc(PAPER_LABEL[p.paper])}</span></div>
+      <div class="modal-foot"><button class="btn btn-primary" onclick="printerCenter()">Concluir</button></div>`);
+  }
+  function togglePrinterEvent(id,event){
+    if(!Object.prototype.hasOwnProperty.call(EVENT_LABEL,event))return;
+    const p=profileById(id);if(!p)return;
+    const set=new Set(p.autoEvents||[]);
+    if(set.has(event))set.delete(event);else set.add(event);
+    p.autoEvents=[...set];
+    save({render:false});editPrinterAutomation(id);
+  }
+
+  async function editPrintAppearance(){
+    const cfg=printSettings();
+    const v=await formDialog({title:'Layout da impressão',subtitle:'Retrato/vertical é fixo para economizar papel.',fields:[
+      {key:'density',label:'Espaçamento',type:'select',value:cfg.density,options:[{value:'compact',label:'Compacto / econômico'},{value:'comfortable',label:'Confortável'}]},
+      {key:'fontScale',label:'Tamanho da fonte',type:'select',value:cfg.fontScale,options:[{value:'small',label:'Pequena'},{value:'normal',label:'Normal'},{value:'large',label:'Grande'}]},
+      {key:'strongText',label:'Peso da impressão',type:'select',value:cfg.strongText?'1':'0',options:[{value:'1',label:'Escuro / reforçado'},{value:'0',label:'Padrão'}]},
+      {key:'showLogo',label:'Logo no topo',type:'select',value:cfg.showLogo?'1':'0',options:[{value:'0',label:'Ocultar para economizar papel'},{value:'1',label:'Mostrar logo'}]}
+    ]});
+    if(!v)return;
+    cfg.orientation='portrait';
+    cfg.density=['compact','comfortable'].includes(v.density)?v.density:'compact';
+    cfg.fontScale=['small','normal','large'].includes(v.fontScale)?v.fontScale:'normal';
+    cfg.strongText=v.strongText==='1';
+    cfg.showLogo=v.showLogo==='1';
+    save({render:false});printerCenter();toast('Layout de impressão atualizado.','success');
+  }
+
   async function editPrintFooter(){
     const v=await formDialog({title:'Rodapé do comprovante',fields:[{key:'footer',label:'Mensagem',value:printSettings().footer||'',full:true}]});
     if(!v)return;
@@ -184,14 +303,8 @@
     save({render:false});printerCenter();
   }
 
-  function maybePrintKitchen(order){
-    if(printSettings()?.enabled&&printSettings()?.openKitchenOnAccept)return printOrderWithProfile(order.id,'kitchen');
-    return false;
-  }
-  function maybePrintReceipt(order){
-    if(printSettings()?.enabled&&printSettings()?.openReceiptOnSave)return printOrderWithProfile(order.id,'receipt');
-    return false;
-  }
+  function maybePrintKitchen(order){return dispatchAutoPrintEvent('production',order)}
+  function maybePrintReceipt(order){return dispatchAutoPrintEvent('created',order)}
 
   globalThis.buildPrintPayload=buildPrintPayload;
   globalThis.printOrderWithProfile=printOrderWithProfile;
@@ -205,9 +318,15 @@
   globalThis.printerCenter=printerCenter;
   globalThis.togglePrintingEnabled=togglePrintingEnabled;
   globalThis.togglePrinterProfile=togglePrinterProfile;
-  globalThis.togglePrintAutomation=togglePrintAutomation;
+  globalThis.addPrinterProfile=addPrinterProfile;
   globalThis.editPrinterProfile=editPrinterProfile;
+  globalThis.deletePrinterProfile=deletePrinterProfile;
+  globalThis.editPrinterAutomation=editPrinterAutomation;
+  globalThis.togglePrinterEvent=togglePrinterEvent;
+  globalThis.editPrintAppearance=editPrintAppearance;
   globalThis.editPrintFooter=editPrintFooter;
+  globalThis.dispatchAutoPrintEvent=dispatchAutoPrintEvent;
+  globalThis.autoProfilesForEvent=autoProfilesForEvent;
   globalThis.maybePrintKitchen=maybePrintKitchen;
   globalThis.maybePrintReceipt=maybePrintReceipt;
 })();
