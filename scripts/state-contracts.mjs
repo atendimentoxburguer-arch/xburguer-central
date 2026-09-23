@@ -107,7 +107,7 @@ const maliciousAgent=structuredClone(migrated);
 maliciousAgent.settings.printing.agent.url='https://evil.example';
 context.__maliciousAgent=maliciousAgent;
 vm.runInContext('state=__maliciousAgent;normalize()',context);
-assert.equal(vm.runInContext('state.settings.printing.agent.url',context),'http://127.0.0.1:17871');
+assert.equal(vm.runInContext('state.settings.printing.agent.url',context),'');
 
 context.__mesa={type:'Mesa',items:[{p:'p1',q:1,price:100}]};
 assert.equal(vm.runInContext('orderSubtotal(__mesa)',context),100);
