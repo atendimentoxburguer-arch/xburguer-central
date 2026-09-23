@@ -34,3 +34,7 @@ A versão atual continua sendo um protótipo: os dados ficam no `localStorage` d
 ## Produção real
 
 Antes de usar como sistema transacional real, implementar backend, autenticação, autorização, PostgreSQL, logs, backup no servidor e integrações oficiais. Consulte `docs/ARQUITETURA.md`, `docs/AUDITORIA.md`, `docs/ROADMAP.md` e `SECURITY.md`.
+
+## Visual V12
+
+A interface foi refinada com uma hierarquia tipográfica mais forte (Manrope + Inter), espaçamento consistente, cartões e tabelas mais bem enquadrados, ícones mais elegantes, estados semânticos mais suaves e responsividade revisada. O objetivo é manter alta legibilidade e velocidade operacional sem excesso de elementos decorativos.

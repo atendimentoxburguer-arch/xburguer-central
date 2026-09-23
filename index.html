@@ -15,7 +15,7 @@
   <title>X Burguer Central</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" type="image/svg+xml" href="assets/img/icon.svg">
   <link rel="apple-touch-icon" href="assets/img/logo.png">
@@ -40,27 +40,27 @@
     <div class="side-search"><input id="sideSearch" type="search" placeholder="Buscar módulo..." aria-label="Buscar módulo"></div>
     <div class="side-title">Seu dia a dia</div>
     <nav class="nav">
-      <button type="button" data-page="pedidos" class="active" aria-current="page"><span class="ico"><i class="bi bi-receipt-cutoff"></i></span><span>Meus pedidos</span><span class="count" id="sideNewCount">0</span></button>
-      <button type="button" data-page="pdv"><span class="ico"><i class="bi bi-shop-window"></i></span><span>Pedidos balcão (PDV)</span></button>
-      <button type="button" data-page="salao"><span class="ico"><i class="bi bi-table"></i></span><span>Pedidos salão</span></button>
-      <button type="button" data-page="cardapio"><span class="ico"><i class="bi bi-card-list"></i></span><span>Gestor de cardápio</span></button>
-      <button type="button" data-page="entregas"><span class="ico"><i class="bi bi-scooter"></i></span><span>Entregas</span></button>
-      <button type="button" data-page="performance"><span class="ico"><i class="bi bi-graph-up-arrow"></i></span><span>Meu desempenho</span></button>
+      <button type="button" data-page="pedidos" class="active" aria-current="page"><span class="ico"><i class="bi bi-bag-check"></i></span><span>Meus pedidos</span><span class="count" id="sideNewCount">0</span></button>
+      <button type="button" data-page="pdv"><span class="ico"><i class="bi bi-cash-coin"></i></span><span>Pedidos balcão (PDV)</span></button>
+      <button type="button" data-page="salao"><span class="ico"><i class="bi bi-grid-3x3-gap"></i></span><span>Pedidos salão</span></button>
+      <button type="button" data-page="cardapio"><span class="ico"><i class="bi bi-journal-richtext"></i></span><span>Gestor de cardápio</span></button>
+      <button type="button" data-page="entregas"><span class="ico"><i class="bi bi-truck"></i></span><span>Entregas</span></button>
+      <button type="button" data-page="performance"><span class="ico"><i class="bi bi-bar-chart-line"></i></span><span>Meu desempenho</span></button>
       <button type="button" data-page="kds"><span class="ico"><i class="bi bi-fire"></i></span><span>Cozinha - KDS</span></button>
       <button type="button" data-page="clientes"><span class="ico"><i class="bi bi-people"></i></span><span>Clientes</span></button>
     </nav>
     <div class="side-title">Venda mais</div>
     <nav class="nav">
-      <button type="button" data-page="marketing"><span class="ico"><i class="bi bi-stars"></i></span><span>Fidelidade e promoções</span></button>
-      <button type="button" data-page="atendimento"><span class="ico"><i class="bi bi-chat-dots"></i></span><span>Atendimento / WhatsApp</span></button>
+      <button type="button" data-page="marketing"><span class="ico"><i class="bi bi-megaphone"></i></span><span>Fidelidade e promoções</span></button>
+      <button type="button" data-page="atendimento"><span class="ico"><i class="bi bi-chat-square-dots"></i></span><span>Atendimento / WhatsApp</span></button>
     </nav>
     <div class="side-title">Gestão avançada</div>
     <nav class="nav">
-      <button type="button" data-page="caixa"><span class="ico"><i class="bi bi-cash-register"></i></span><span>Frente de caixa</span></button>
-      <button type="button" data-page="estoque"><span class="ico"><i class="bi bi-box-seam"></i></span><span>Estoque</span></button>
-      <button type="button" data-page="financeiro"><span class="ico"><i class="bi bi-cash-stack"></i></span><span>Financeiro</span></button>
-      <button type="button" data-page="equipe"><span class="ico"><i class="bi bi-person-gear"></i></span><span>Equipe e permissões</span></button>
-      <button type="button" data-page="config"><span class="ico"><i class="bi bi-gear"></i></span><span>Configurações</span></button>
+      <button type="button" data-page="caixa"><span class="ico"><i class="bi bi-wallet2"></i></span><span>Frente de caixa</span></button>
+      <button type="button" data-page="estoque"><span class="ico"><i class="bi bi-box2"></i></span><span>Estoque</span></button>
+      <button type="button" data-page="financeiro"><span class="ico"><i class="bi bi-graph-up-arrow"></i></span><span>Financeiro</span></button>
+      <button type="button" data-page="equipe"><span class="ico"><i class="bi bi-person-badge"></i></span><span>Equipe e permissões</span></button>
+      <button type="button" data-page="config"><span class="ico"><i class="bi bi-sliders2"></i></span><span>Configurações</span></button>
     </nav>
   </aside>
   <button type="button" class="sidebar-backdrop" id="sidebarBackdrop" aria-label="Fechar menu"></button>
@@ -72,10 +72,10 @@
       </div>
       <div class="topbar-right">
         <div class="store-switch"><span id="storeText">Loja aberta</span><span id="storeToggle" class="toggle on" onclick="toggleStore()" role="switch" aria-label="Abrir ou fechar loja"></span></div>
-        <button type="button" class="icon-btn install-btn" id="installAppBtn" hidden title="Instalar aplicativo" aria-label="Instalar aplicativo"><i class="bi bi-download"></i></button>
+        <button type="button" class="icon-btn install-btn" id="installAppBtn" hidden title="Instalar aplicativo" aria-label="Instalar aplicativo"><i class="bi bi-box-arrow-down"></i></button>
         <button type="button" class="icon-btn theme-btn" id="themeToggle" onclick="toggleTheme()" title="Alternar tema" aria-label="Alternar tema"><i id="themeIcon" class="bi bi-moon-stars"></i></button>
         <button type="button" class="icon-btn" onclick="toast('Nenhuma notificação crítica.')" title="Notificações" aria-label="Notificações"><i class="bi bi-bell"></i></button>
-        <button type="button" class="icon-btn" onclick="go('config')" title="Configurações" aria-label="Configurações"><i class="bi bi-gear"></i></button>
+        <button type="button" class="icon-btn" onclick="go('config')" title="Configurações" aria-label="Configurações"><i class="bi bi-sliders2"></i></button>
       </div>
     </header>
     <div class="content" id="appContent">
@@ -99,8 +99,8 @@
 </div>
 <div class="right-rail" aria-label="Atalhos">
   <button type="button" onclick="go('clientes')" title="Clientes" aria-label="Clientes"><i class="bi bi-people"></i></button>
-  <button type="button" onclick="go('entregas')" title="Entregas" aria-label="Entregas"><i class="bi bi-scooter"></i></button>
-  <button type="button" onclick="go('salao')" title="Salão" aria-label="Salão"><i class="bi bi-table"></i></button>
+  <button type="button" onclick="go('entregas')" title="Entregas" aria-label="Entregas"><i class="bi bi-truck"></i></button>
+  <button type="button" onclick="go('salao')" title="Salão" aria-label="Salão"><i class="bi bi-grid-3x3-gap"></i></button>
 </div>
 <div class="modal" id="modal" role="dialog" aria-modal="true" aria-hidden="true"><div class="modal-card" id="modalCard" tabindex="-1"></div></div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
