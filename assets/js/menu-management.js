@@ -1,4 +1,4 @@
-/* X Burguer Central V21 — gestão de cardápio e fotos */
+/* Cardápio — categorias, produtos e fotos */
 (function(){
   'use strict';
   let menuStatusV14='all';
