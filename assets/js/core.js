@@ -162,6 +162,7 @@ function normalize(){
  if(!Array.isArray(state.cash.movements))state.cash.movements=[];
  if(!Array.isArray(state.cash.history))state.cash.history=[];
  const printDefaults=d.settings.printing;
+ const migratingPrintV18=Number(state.schemaVersion||0)<7;
  if(!state.settings.printing||typeof state.settings.printing!=='object'||Array.isArray(state.settings.printing))state.settings.printing={...printDefaults,profiles:printDefaults.profiles.map(p=>({...p,autoEvents:[...(p.autoEvents||[])]}))};
  const legacyKitchenAuto=Boolean(state.settings.printing.openKitchenOnAccept);
  const legacyReceiptAuto=Boolean(state.settings.printing.openReceiptOnSave);
@@ -170,7 +171,7 @@ function normalize(){
  state.settings.printing.density=['compact','comfortable'].includes(state.settings.printing.density)?state.settings.printing.density:'compact';
  state.settings.printing.fontScale=['small','normal','large'].includes(state.settings.printing.fontScale)?state.settings.printing.fontScale:'normal';
  state.settings.printing.strongText=state.settings.printing.strongText!==false;
- state.settings.printing.showLogo=Boolean(state.settings.printing.showLogo);
+ state.settings.printing.showLogo=migratingPrintV18?false:Boolean(state.settings.printing.showLogo);
  state.settings.printing.footer=String(state.settings.printing.footer??printDefaults.footer).slice(0,180);
  if(!Array.isArray(state.settings.printing.profiles)||!state.settings.printing.profiles.length)state.settings.printing.profiles=printDefaults.profiles.map(p=>({...p,autoEvents:[...(p.autoEvents||[])]}));
  const allowedPurpose=new Set(['receipt','kitchen','delivery']),allowedPaper=new Set(['58mm','80mm','a4']),allowedEvents=new Set(['created','production','ready','completed']);
