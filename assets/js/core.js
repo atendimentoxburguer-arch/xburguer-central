@@ -1,4 +1,4 @@
-/* X Burguer Central V21 — core, pedidos, mesas e cardápio com fotos */
+/* X Burguer Central V22 — operação de salão, fechamento e relatórios */
 function icon(name,extra=''){
   return `<i class="bi bi-${name} ${extra}" aria-hidden="true"></i>`;
 }
@@ -25,8 +25,8 @@ function initThemeUI(){
   applyTheme(document.documentElement.getAttribute('data-bs-theme')||'light');
 }
 
-const APP_VERSION='21.0.0';
-const SCHEMA_VERSION=9;
+const APP_VERSION='22.0.0';
+const SCHEMA_VERSION=10;
 const LOGO='assets/img/logo.png';
 const STORAGE='xburguer_gestor_pro_v3';
 const BACKUP_PREFIX='xburguer_backup_';
@@ -54,6 +54,7 @@ function productMedia(p,className=''){
 const uid=p=>p+(globalThis.crypto?.randomUUID?.().replace(/-/g,'').slice(0,10)||Math.random().toString(36).slice(2,12));
 function defaultState(){return {schemaVersion:SCHEMA_VERSION,
  settings:{storeName:'X Burguer',storeOpen:true,autoAccept:false,deliveryMin:'10 a 60 min',counterMin:'15 a 35 min',deliveryFee:7,serviceFee:10,city:'Goianésia - GO',phone:'(62) 99999-9999',cashback:3,loyalty:true,
+ salon:{enabled:true,commandCount:0,hasWaiters:true,operationModel:'a-la-carte',serviceModes:['table','counter'],qrEnabled:false},
  printing:{
   enabled:true,
   orientation:'portrait',
@@ -179,6 +180,16 @@ function normalize(){
  if(!state.cash||typeof state.cash!=='object')state.cash=d.cash;
  if(!Array.isArray(state.cash.movements))state.cash.movements=[];
  if(!Array.isArray(state.cash.history))state.cash.history=[];
+ const salonDefaults=d.settings.salon;
+ if(!state.settings.salon||typeof state.settings.salon!=='object'||Array.isArray(state.settings.salon))state.settings.salon={...salonDefaults};
+ state.settings.salon.enabled=state.settings.salon.enabled!==false;
+ state.settings.salon.commandCount=Math.min(500,Math.max(0,Number(state.settings.salon.commandCount)||0));
+ state.settings.salon.hasWaiters=state.settings.salon.hasWaiters!==false;
+ state.settings.salon.operationModel=['a-la-carte','self-service','rodizio','none'].includes(state.settings.salon.operationModel)?state.settings.salon.operationModel:'a-la-carte';
+ const allowedSalonModes=new Set(['table','command','counter']);
+ state.settings.salon.serviceModes=Array.isArray(state.settings.salon.serviceModes)?[...new Set(state.settings.salon.serviceModes.filter(x=>allowedSalonModes.has(x)))]:['table','counter'];
+ if(!state.settings.salon.serviceModes.length)state.settings.salon.serviceModes=['table'];
+ state.settings.salon.qrEnabled=Boolean(state.settings.salon.qrEnabled);
  const printDefaults=d.settings.printing;
  const migratingPrintV18=Number(state.schemaVersion||0)<7;
  const migratingPrintV19=Number(state.schemaVersion||0)<8;
@@ -229,6 +240,9 @@ function normalize(){
   o.customerId=SAFE_ID.test(String(o.customerId||''))?String(o.customerId):'';
   o.type=ORDER_TYPES.has(o.type)?o.type:'Balcão';
   o.payment=String(o.payment||'Não registrado');
+  o.discount=Math.max(0,Number(o.discount)||0);
+  o.surcharge=Math.max(0,Number(o.surcharge)||0);
+  o.splitCount=Math.min(20,Math.max(1,Number(o.splitCount)||1));
   o.cancelReason=String(o.cancelReason||'').trim().slice(0,240);
   o.cancelledAt=o.cancelledAt?String(o.cancelledAt):'';
   o.completedAt=o.completedAt?String(o.completedAt):'';
@@ -268,6 +282,15 @@ function normalize(){
   t.server=String(t.server||'');
   t.order=Number.isFinite(Number(t.order))?Number(t.order):i;
  });
+ state.team=state.team.map(u=>({
+  ...u,
+  id:SAFE_ID.test(String(u?.id||''))?String(u.id):uid('u'),
+  name:String(u?.name||'Colaborador').trim().slice(0,120)||'Colaborador',
+  role:String(u?.role||'Garçom').trim().slice(0,40)||'Garçom',
+  active:u?.active!==false,
+  email:String(u?.email||'').trim().slice(0,160),
+  phone:String(u?.phone||'').trim().slice(0,40)
+ }));
  state.inventoryMovements=state.inventoryMovements.map(m=>({
   id:SAFE_ID.test(String(m?.id||''))?String(m.id):uid('im'),
   productId:String(m?.productId||''),
@@ -394,7 +417,10 @@ function orderFeeTotal(o){
  const service=o.type==='Mesa'?subtotal*Math.max(0,Number(o.serviceFeePct ?? state.settings.serviceFee)||0)/100:0;
  return delivery+service;
 }
-function orderTotal(o){return orderSubtotal(o)+orderFeeTotal(o)}
+function orderTotal(o){
+ const gross=orderSubtotal(o)+orderFeeTotal(o)+Math.max(0,Number(o.surcharge)||0);
+ return Math.max(0,gross-Math.max(0,Number(o.discount)||0));
+}
 function orderCost(o){return o.items.reduce((s,i)=>s+(Number(i.cost ?? product(i.p)?.cost)||0)*(Number(i.q)||0),0)}
 function orderAge(o){const ts=new Date(o.createdAt).getTime();return Number.isFinite(ts)?Math.max(0,Math.floor((Date.now()-ts)/60000)):0}
 function orderTime(o){const d=new Date(o.createdAt);return Number.isFinite(d.getTime())?d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}):'—'}
