@@ -1398,3 +1398,145 @@ button:disabled,.btn:disabled{
   .notification-item .badge{grid-column:2;justify-self:start}
   .courier-actions{margin-left:0}
 }
+
+
+/* ======================================================================
+   V17 — central de impressão
+   ====================================================================== */
+.print-info{
+  display:grid;
+  grid-template-columns:36px minmax(0,1fr);
+  gap:10px;
+  align-items:start;
+  padding:12px;
+  margin-bottom:12px;
+  border:1px solid color-mix(in srgb,var(--primary) 24%,var(--border));
+  border-radius:13px;
+  background:var(--primary-soft);
+}
+.print-info>.bi{font-size:1.2rem;color:var(--primary);margin-top:1px}
+.print-info b,.print-info span{display:block}
+.print-info span{margin-top:3px;color:var(--muted);font-size:.76rem;line-height:1.45}
+.print-master-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:14px;
+  min-height:58px;
+  padding:10px 12px;
+  border:1px solid var(--border);
+  border-radius:13px;
+  background:var(--surface-2);
+}
+.print-master-row>div{min-width:0}
+.print-master-row b,.print-master-row span{display:block}
+.print-master-row>div>span{margin-top:2px;color:var(--muted);font-size:.7rem;line-height:1.35}
+.printer-profiles{
+  display:grid;
+  gap:8px;
+  margin:12px 0;
+}
+.printer-profile{
+  display:grid;
+  grid-template-columns:40px minmax(0,1fr) auto auto;
+  gap:10px;
+  align-items:center;
+  min-height:64px;
+  padding:10px 11px;
+  border:1px solid var(--border);
+  border-radius:13px;
+  background:var(--surface);
+}
+.printer-profile-icon{
+  width:40px;height:40px;
+  display:grid;place-items:center;
+  border-radius:12px;
+  background:var(--surface-3);
+  color:var(--primary);
+}
+.printer-profile-copy{min-width:0}
+.printer-profile-copy b,.printer-profile-copy span{display:block}
+.printer-profile-copy b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.printer-profile-copy span{margin-top:3px;color:var(--muted);font-size:.7rem;line-height:1.35}
+.printer-profile-actions{
+  display:flex;
+  align-items:center;
+  gap:5px;
+}
+.printer-profile-actions .icon-btn{
+  width:34px;height:34px;flex:0 0 34px;
+}
+.print-automation{
+  display:grid;
+  gap:8px;
+  margin-top:12px;
+}
+.print-choice-grid{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:10px;
+}
+.print-choice{
+  display:grid;
+  grid-template-columns:40px minmax(0,1fr);
+  gap:10px;
+  align-items:center;
+  min-height:86px;
+  padding:12px;
+  border:1px solid var(--border);
+  border-radius:14px;
+  background:var(--surface);
+  color:var(--text);
+  text-align:left;
+  transition:border-color .16s ease,background .16s ease,box-shadow .16s ease;
+}
+.print-choice:hover{
+  border-color:color-mix(in srgb,var(--primary) 35%,var(--border));
+  background:var(--primary-soft);
+  box-shadow:var(--shadow-sm);
+}
+.print-choice>span{
+  width:40px;height:40px;
+  display:grid;place-items:center;
+  border-radius:12px;
+  background:var(--surface-3);
+  color:var(--primary);
+  font-size:1.08rem;
+}
+.print-choice b,.print-choice small{display:block}
+.print-choice small{margin-top:3px;color:var(--muted);line-height:1.35}
+.print-stations{
+  margin-top:12px;
+  padding:11px 12px;
+  border:1px solid var(--border);
+  border-radius:13px;
+  background:var(--surface-2);
+}
+.print-stations>b{display:block;margin-bottom:8px}
+.print-stations>div{display:flex;gap:6px;flex-wrap:wrap}
+.delivery-actions{
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  gap:6px;
+  flex-wrap:wrap;
+}
+@media(max-width:820px){
+  .printer-profile{
+    grid-template-columns:40px minmax(0,1fr) auto;
+  }
+  .printer-profile-actions{
+    grid-column:2/4;
+    justify-content:flex-end;
+  }
+  .print-choice-grid{grid-template-columns:1fr}
+}
+@media(max-width:560px){
+  .print-master-row{align-items:flex-start}
+  .printer-profile{
+    grid-template-columns:36px minmax(0,1fr);
+  }
+  .printer-profile>.badge{grid-column:2;justify-self:start}
+  .printer-profile-actions{grid-column:2;justify-content:flex-start}
+  .delivery-actions{justify-content:flex-start}
+}
