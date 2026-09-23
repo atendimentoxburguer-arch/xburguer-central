@@ -16,6 +16,7 @@ A impressão silenciosa já possui um agente Windows separado, com fila, retry, 
 - `assets/css/print.css`: documentos de impressão.
 - `assets/js/core.js`: estado, persistência, migração, cálculos e utilitários.
 - `assets/js/ui.js`: navegação, modais, diálogos e feedback.
+- `assets/js/integrations.js`: adaptadores externos permitidos no frontend atual.
 - `assets/js/orders.js`: pedidos.
 - `assets/js/sales.js`: PDV e checkout.
 - `assets/js/operations.js`: delivery, desempenho e KDS.
@@ -33,7 +34,7 @@ A impressão silenciosa já possui um agente Windows separado, com fila, retry, 
 
 1. Persistência local pertence somente ao núcleo (`core.js`).
 2. Módulos de tela não acessam `localStorage` diretamente.
-3. Integrações HTTP externas não entram diretamente nos módulos do frontend.
+3. URLs e provedores externos ficam em adaptadores explícitos; módulos de tela não conhecem fornecedor.
 4. Pagamento, fiscal, WhatsApp e demais provedores futuros devem ser integrados no backend por adaptadores próprios.
 5. CSS não deve crescer por blocos de versão sobrepostos. O CI aplica orçamento de tamanho e contratos de estabilidade.
 6. Mudanças grandes entram por branch + pull request; `main` deve permanecer estável.
