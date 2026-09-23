@@ -68,3 +68,7 @@ A impressão passou a usar layout vertical compacto, texto de alto contraste e r
 ## Impressão gerenciada V19
 
 A ETAPA 1 adiciona um agente local Windows para impressão silenciosa em térmicas ESC/POS, com pareamento, descoberta de impressoras, mapeamento por destino, fila persistente, retry e logs. O navegador mantém uma outbox quando o agente está temporariamente indisponível. Consulte `docs/PRINT_AGENT.md`.
+
+## Print Agent V20
+
+A ETAPA 2 transforma o agente de impressão em aplicativo Windows instalável, com runtime embutido, bandeja, inicialização automática, janela própria de gerenciamento, fila/histórico, teste, diagnóstico, reinício e build `.exe` automatizada pelo GitHub Actions. O usuário final não precisa instalar Node.js. Consulte `docs/PRINT_AGENT.md`.
