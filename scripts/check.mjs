@@ -9,7 +9,7 @@ const sw=fs.readFileSync(path.join(root,'service-worker.js'),'utf8');
 
 const required=[
   'assets/css/app.css',
-  'assets/css/v14-management.css',
+  'assets/css/domain-management.css',
   'assets/img/logo.png',
   'assets/img/icon.svg',
   'assets/img/icon-maskable.svg',
