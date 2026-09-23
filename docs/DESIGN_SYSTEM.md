@@ -1,6 +1,6 @@
 # Design System — X Burguer Central
 
-## Direção visual V26
+## Direção visual V27
 
 A interface deve parecer um sistema operacional de restaurante profissional: rápida de ler, compacta sem ficar apertada e consistente entre módulos. A paleta operacional usa **azul petróleo/azul profundo como ação principal**, **dourado/mostarda como acento**, branco e neutros frios. O vermelho fica reservado para erro, cancelamento e ações destrutivas.
 
