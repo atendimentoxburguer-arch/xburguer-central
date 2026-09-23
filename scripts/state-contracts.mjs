@@ -77,7 +77,7 @@ assert.ok(Array.isArray(migrated.settings.printing.profiles));
 assert.ok(migrated.settings.printing.profiles.length>=1);
 assert.equal(migrated.settings.printing.orientation,'portrait');
 assert.ok(migrated.settings.printing.profiles.every(p=>Array.isArray(p.autoEvents)));
-assert.equal(migrated.settings.printing.agent.url,'http://127.0.0.1:17871');
+assert.equal(migrated.settings.printing.agent.url,'');
 assert.ok(Array.isArray(migrated.printOutbox));
 assert.ok(migrated.orders.every(o=>typeof o.cancelReason==='string'&&typeof o.stockRestored==='boolean'));
 assert.ok(migrated.orders.every(o=>typeof o.discount==='number'&&typeof o.surcharge==='number'&&Number(o.splitCount)>=1));
