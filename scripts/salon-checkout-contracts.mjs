@@ -106,11 +106,12 @@ assert.equal(vm.runInContext("state.tables[0].status",context),'free');
 context.__order={type:'Balcão',items:[{p:'p1',q:1,price:100}],discount:12,surcharge:7};
 assert.equal(vm.runInContext("orderTotal(__order)",context),95);
 
-// Relatórios retornam visão operacional.
-vm.runInContext("reportRangeV22=90",context);
-const reportHtml=vm.runInContext("renderReportPedidosV22()",context);
+// Relatórios retornam visão operacional detalhada.
+vm.runInContext("reportRange='90'",context);
+const reportHtml=vm.runInContext("renderReportOrders()",context);
 assert.match(reportHtml,/Ticket médio/);
 assert.match(reportHtml,/Pedido/);
+assert.match(reportHtml,/Subtotal/);
 
 // Recebimentos não podem reabrir cancelados nem modificar encerrados.
 vm.runInContext(`state.orders=[{id:'qa',type:'Balcão',status:'cancelled',payment:'PIX',items:[{p:'p1',q:1,price:100}],discount:0,surcharge:0}];`,context);
