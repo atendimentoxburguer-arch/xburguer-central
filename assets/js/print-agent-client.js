@@ -80,18 +80,18 @@
   }
   function openLocalPrintAgentPage(){window.open(agentBase()+'/','_blank','noopener,noreferrer')}
   function openPrintAgentDownload(){window.open('https://github.com/atendimentoxburguer-arch/xburguer-central/releases/latest','_blank','noopener,noreferrer')}
-  async function fetchPhysicalPrinters(){
+  async function fetchPhysicalPrinters({silent=false}={}){
     if(!agentConfig().token){toast('Pareie o agente antes de buscar impressoras.','warning');return []}
     try{
       const data=await agentRequest('/printers',{timeout:7000});
       physicalPrinters=Array.isArray(data.printers)?data.printers:[];
       setHealth({online:true,authorized:true,error:'',version:agentHealth.version});
       return physicalPrinters;
-    }catch(error){physicalPrinters=[];setHealth({online:false,authorized:false,error:String(error.message||error)});toast('Não foi possível listar as impressoras: '+String(error.message||error),'error');return []}
+    }catch(error){physicalPrinters=[];setHealth({online:false,authorized:false,error:String(error.message||error)});if(!silent)toast('Não foi possível listar as impressoras: '+String(error.message||error),'error');return []}
   }
   async function mapPrinterDevice(profileId){
     const profile=(state.settings.printing.profiles||[]).find(p=>p.id===profileId);if(!profile)return;
-    if(profile.paper==='a4'){toast('Na ETAPA 1, impressão silenciosa é destinada a térmicas 58/80 mm. Para A4 use o modo do navegador.','warning');return}
+    if(profile.paper==='a4'){toast('O aplicativo de impressão silenciosa é destinado a térmicas 58/80 mm. Para A4 use o modo do navegador.','warning');return}
     if(!agentConfig().token){const paired=await pairPrintAgent();if(!paired)return}
     const printers=await fetchPhysicalPrinters();if(!printers.length){toast('Nenhuma impressora instalada foi encontrada pelo agente.','warning');return}
     const options=[{value:'',label:'Sem impressora física'}].concat(printers.map(p=>({value:p.name,label:p.name+(p.offline?' — Offline':'')})));
@@ -190,9 +190,11 @@
     return {state:'online',label:'Online'};
   }
   async function refreshPrinterDeviceBadges(){
-    if(!agentConfig().token||!agentHealth.online||!agentHealth.authorized)return;
+    if(!agentConfig().token)return;
     try{
-      await fetchPhysicalPrinters();
+      if(!agentHealth.online||!agentHealth.authorized)await probePrintAgent({silent:true});
+      if(!agentHealth.online||!agentHealth.authorized)return;
+      await fetchPhysicalPrinters({silent:true});
       document.querySelectorAll('[data-printer-device]').forEach(el=>{
         const info=printerDeviceState(el.dataset.printerDevice||'');
         el.dataset.deviceState=info.state;
