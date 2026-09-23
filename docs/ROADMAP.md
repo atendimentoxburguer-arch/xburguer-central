@@ -9,7 +9,7 @@
 - [x] Documentação técnica inicial.
 
 ## Fase 2 — Refinamento do protótipo
-- [x] Impressão V17: comprovante, cozinha, estação e delivery em 58/80 mm e A4.
+- [x] Impressão V18: retrato econômico, alto contraste e roteamento automático por destino/estação.
 - [x] Revisão ponta a ponta V16: pedidos, PDV, caixa, estoque, delivery, KDS, CRM, equipe, acessibilidade e QA.
 - [x] Auditoria de engenharia V15: migração de estado, segurança de renderização, regras críticas e testes automatizados.
 - [x] Gestão avançada de salão por áreas, capacidade, responsáveis e mesas.
@@ -19,7 +19,7 @@
 - [x] Melhorar estados vazios e tratamento de erros do front-end.
 - [x] Padronizar ícones e ações principais.
 - [x] Melhorar acessibilidade por teclado, foco e redução de movimento.
-- [ ] Criar testes automatizados das regras de pedidos e caixa.
+- [x] Criar testes automatizados das regras de pedidos e caixa.
 - [x] Tornar a aplicação instalável como PWA com cache offline.
 - [x] Adicionar exportação/importação de backup local.
 
@@ -33,7 +33,8 @@
 ## Fase 4 — Integrações
 - [ ] WhatsApp Business oficial.
 - [ ] Pagamentos.
-- [ ] Impressão.
+- [x] Impressão web e roteamento lógico.
+- [ ] Impressão silenciosa com ponte local/desktop.
 - [ ] NFC-e/fiscal.
 - [ ] QR Code por mesa.
 
