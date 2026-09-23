@@ -25,7 +25,7 @@ function initThemeUI(){
   applyTheme(document.documentElement.getAttribute('data-bs-theme')||'light');
 }
 
-const APP_VERSION='29.0.0';
+const APP_VERSION='30.0.0';
 const SCHEMA_VERSION=11;
 const LOGO='assets/img/logo.png';
 const STORAGE='xburguer_gestor_pro_v3';
@@ -239,6 +239,7 @@ function normalize(){
   o.customer=String(o.customer||'Não identificado');
   o.customerId=SAFE_ID.test(String(o.customerId||''))?String(o.customerId):'';
   o.type=ORDER_TYPES.has(o.type)?o.type:'Balcão';
+  o.server=String(o.server||'').trim().slice(0,120);
   o.payment=String(o.payment||'Não registrado');
   o.discount=Math.max(0,Number(o.discount)||0);
   o.surcharge=Math.max(0,Number(o.surcharge)||0);

@@ -146,7 +146,7 @@ async function finishPdv(editId='',checkoutAfter=false){
   if(!address||existing?.type!=='Delivery'){const v=await formDialog({title:'Dados da entrega',fields:[{key:'address',label:'Endereço',value:address,required:true,full:true},{key:'phone',label:'Telefone',value:phone,placeholder:'(62) 9____-____'}]});if(!v)return;address=v.address.trim();phone=v.phone.trim()}
  }else{table='';address=''}
  const matchedCustomer=state.customers.find(c=>phone&&c.phone&&c.phone===phone)||state.customers.find(c=>c.name.trim().toLowerCase()===customer.trim().toLowerCase());
- const customerId=matchedCustomer?.id||'',oldQty=new Map((existing?.items||[]).map(i=>[i.p,Number(i.q)||0]));
+ const customerId=matchedCustomer?.id||'',server=type==='Mesa'?(state.tables.find(t=>t.name===table)?.server||existing?.server||''):'',oldQty=new Map((existing?.items||[]).map(i=>[i.p,Number(i.q)||0]));
  let createdOrder=null;
  for(const i of pdvCart){const p=product(i.p),available=(Number(p?.stock)||0)+(oldQty.get(i.p)||0);if(!p||(p.sold&&!(oldQty.get(i.p)>0))||available<i.q){toast(`Estoque insuficiente para ${p?.name||'um item'}.`,'error');return}}
  if(existing){
@@ -154,10 +154,10 @@ async function finishPdv(editId='',checkoutAfter=false){
   ids.forEach(pid=>{const p=product(pid);if(!p)return;const before=oldQty.get(pid)||0,after=newQty.get(pid)||0,delta=before-after;p.stock=Math.max(0,(Number(p.stock)||0)+delta);p.sold=Boolean(p.manualSold||p.stock<=0);if(delta)recordStockMovement(pid,delta,'Edição de pedido',existing.id)});
   const deliveryFee=type==='Delivery'?Math.max(0,Number(existing.type===type?existing.deliveryFee??state.settings.deliveryFee:state.settings.deliveryFee)||0):0;
   const serviceFeePct=type==='Mesa'?Math.max(0,Number(existing.type===type?existing.serviceFeePct??state.settings.serviceFee:state.settings.serviceFee)||0):0;
-  Object.assign(existing,{items:pdvCart.map(x=>({...x,cost:Number(product(x.p)?.cost)||0})),customer,customerId,payment:pay,type,table,address,phone,discount:pdvDiscountDraft,surcharge:pdvSurchargeDraft,splitCount:pdvSplitDraft,deliveryFee,serviceFeePct});
+  Object.assign(existing,{items:pdvCart.map(x=>({...x,cost:Number(product(x.p)?.cost)||0})),customer,customerId,server,payment:pay,type,table,address,phone,discount:pdvDiscountDraft,surcharge:pdvSurchargeDraft,splitCount:pdvSplitDraft,deliveryFee,serviceFeePct});
  }else{
   const id=String(Math.max(...state.orders.map(o=>Number(o.id)||0),77500)+1);
-  createdOrder={id,type,table,customer,customerId,phone,address,payment:pay,status:state.settings.autoAccept?'production':'analysis',createdAt:new Date().toISOString(),discount:pdvDiscountDraft,surcharge:pdvSurchargeDraft,splitCount:pdvSplitDraft,deliveryFee:type==='Delivery'?Math.max(0,Number(state.settings.deliveryFee)||0):0,serviceFeePct:type==='Mesa'?Math.max(0,Number(state.settings.serviceFee)||0):0,items:pdvCart.map(x=>({...x,cost:Number(product(x.p)?.cost)||0})),notes:'',courier:'',scheduled:false};
+  createdOrder={id,type,table,customer,customerId,server,phone,address,payment:pay,status:state.settings.autoAccept?'production':'analysis',createdAt:new Date().toISOString(),discount:pdvDiscountDraft,surcharge:pdvSurchargeDraft,splitCount:pdvSplitDraft,deliveryFee:type==='Delivery'?Math.max(0,Number(state.settings.deliveryFee)||0):0,serviceFeePct:type==='Mesa'?Math.max(0,Number(state.settings.serviceFee)||0):0,items:pdvCart.map(x=>({...x,cost:Number(product(x.p)?.cost)||0})),notes:'',courier:'',scheduled:false};
   state.orders.push(createdOrder);
   pdvCart.forEach(i=>{const p=product(i.p);if(p&&Number.isFinite(p.stock)){p.stock=Math.max(0,p.stock-i.q);p.sold=Boolean(p.manualSold||p.stock<=0);recordStockMovement(p.id,-Number(i.q||0),'Venda',id)}})
  }

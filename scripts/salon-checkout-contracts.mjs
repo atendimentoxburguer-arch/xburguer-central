@@ -106,11 +106,12 @@ assert.equal(vm.runInContext("state.tables[0].status",context),'free');
 context.__order={type:'Balcão',items:[{p:'p1',q:1,price:100}],discount:12,surcharge:7};
 assert.equal(vm.runInContext("orderTotal(__order)",context),95);
 
-// Relatórios retornam visão operacional.
-vm.runInContext("reportRangeV22=90",context);
-const reportHtml=vm.runInContext("renderReportPedidosV22()",context);
+// Relatórios retornam visão operacional detalhada.
+vm.runInContext("reportRange='90'",context);
+const reportHtml=vm.runInContext("renderReportOrders()",context);
 assert.match(reportHtml,/Ticket médio/);
 assert.match(reportHtml,/Pedido/);
+assert.match(reportHtml,/Subtotal/);
 
 // Recebimentos não podem reabrir cancelados nem modificar encerrados.
 vm.runInContext(`state.orders=[{id:'qa',type:'Balcão',status:'cancelled',payment:'PIX',items:[{p:'p1',q:1,price:100}],discount:0,surcharge:0}];`,context);
@@ -164,14 +165,15 @@ context.document.getElementById=()=>null;
 
 // Período aplicado a pedidos e fechamentos, excluindo datas futuras/inválidas.
 context.cashDrawerBalance=()=>0;
-vm.runInContext(`reportRangeV22=7;state.cash.history=[
+context.cashMovementsNet=()=>0;
+vm.runInContext(`reportRange='7';state.cash.history=[
  {closedAt:new Date().toISOString(),sales:123},
  {closedAt:new Date(Date.now()-20*86400000).toISOString(),sales:456},
  {closedAt:new Date(Date.now()+86400000).toISOString(),sales:789}];`,context);
-const cashHtml=vm.runInContext('renderReportCaixasV22()',context);
+const cashHtml=vm.runInContext('renderReportCash()',context);
 assert.match(cashHtml,/<td>123<\/td>/);
 assert.doesNotMatch(cashHtml,/<td>(456|789)<\/td>/);
-assert.equal(vm.runInContext("reportInRangeV22('invalid')",context),false);
+assert.equal(vm.runInContext("reportInPeriod('invalid')",context),false);
 
 // O quadro encaminha pedidos de loja ao checkout, sem recebimento implícito.
 vm.runInContext("state.orders[0].type='Balcão';state.orders[0].status='ready';advanceOrder('qa0')",context);

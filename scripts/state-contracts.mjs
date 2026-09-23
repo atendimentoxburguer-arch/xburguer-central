@@ -26,7 +26,7 @@ context.globalThis=context;
 vm.runInContext(source,context,{filename:'assets/js/core.js'});
 
 const api=vm.runInContext('({APP_VERSION,SCHEMA_VERSION,defaultState,validateState,safeProductImageSrc})',context);
-assert.equal(api.APP_VERSION,'29.0.0');
+assert.equal(api.APP_VERSION,'30.0.0');
 assert.equal(api.SCHEMA_VERSION,11);
 
 const fresh=vm.runInContext('defaultState()',context);
@@ -80,6 +80,7 @@ assert.ok(migrated.settings.printing.profiles.every(p=>Array.isArray(p.autoEvent
 assert.equal(migrated.settings.printing.agent.url,'');
 assert.ok(Array.isArray(migrated.printOutbox));
 assert.ok(migrated.orders.every(o=>typeof o.cancelReason==='string'&&typeof o.stockRestored==='boolean'));
+assert.ok(migrated.orders.every(o=>typeof o.server==='string'));
 assert.ok(migrated.orders.every(o=>typeof o.discount==='number'&&typeof o.surcharge==='number'&&Number(o.splitCount)>=1));
 assert.ok(migrated.team.every(u=>typeof u.email==='string'&&typeof u.phone==='string'));
 assert.ok(Array.isArray(migrated.settings.salon.serviceModes));
