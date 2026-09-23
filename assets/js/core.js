@@ -15,7 +15,7 @@ function applyTheme(mode){
     btn.setAttribute('aria-label',btn.title);
   }
   const meta=document.querySelector('meta[name="theme-color"]');
-  if(meta) meta.setAttribute('content',theme==='dark'?'#120d0e':'#991f25');
+  if(meta) meta.setAttribute('content',theme==='dark'?'#0b1118':'#1f5b78');
 }
 function toggleTheme(){
   const current=document.documentElement.getAttribute('data-bs-theme')||'light';
@@ -25,7 +25,7 @@ function initThemeUI(){
   applyTheme(document.documentElement.getAttribute('data-bs-theme')||'light');
 }
 
-const APP_VERSION='26.0.0';
+const APP_VERSION='27.0.0';
 const SCHEMA_VERSION=11;
 const LOGO='assets/img/logo.png';
 const STORAGE='xburguer_gestor_pro_v3';
