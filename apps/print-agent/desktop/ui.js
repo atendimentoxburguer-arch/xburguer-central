@@ -34,7 +34,7 @@ async function loadSnapshot(){
   }
 }
 async function loadSettings(){
-  const s=await window.xbAgent.settings();text($('versionText'),'Versão '+s.version+(s.packaged?' • aplicativo instalado':' • desenvolvimento'));
+  const s=await window.xbAgent.settings();text($('versionText'),'Versão '+s.version+(s.packaged?' • aplicativo instalado':' • desenvolvimento'));if(s.logoUrl)$('brandLogo').src=s.logoUrl;
   $('startupToggle').checked=Boolean(s.startWithWindows);
 }
 function renderPrinters(list){
