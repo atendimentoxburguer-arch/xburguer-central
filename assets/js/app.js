@@ -17,6 +17,8 @@ const sideSearch=document.getElementById('sideSearch');
 sideSearch?.addEventListener('input',e=>filterNavigation(e.target.value));
 sideSearch?.addEventListener('keydown',e=>{if(e.key!=='Enter')return;const hit=[...document.querySelectorAll('.nav button:not(.is-filtered-out)')][0];if(hit){go(hit.dataset.page);e.target.value='';filterNavigation('')}});
 window.addEventListener('online',updateConnectionStatus);window.addEventListener('offline',updateConnectionStatus);
+document.getElementById('storeToggle')?.addEventListener('keydown',event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleStore()}});
+
 window.addEventListener('popstate',()=>{const id=location.hash.slice(1);if(document.getElementById(id))go(id,{historyMode:'none'})});
 document.addEventListener('keydown',event=>{const tag=document.activeElement?.tagName?.toLowerCase(),typing=['input','textarea','select'].includes(tag);if(event.key==='Escape'){if(document.getElementById('modal')?.classList.contains('open'))closeModal(null);else toggleSide(false)}if((event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==='k'){event.preventDefault();sideSearch?.focus();sideSearch?.select()}if(!typing&&event.key==='/'){event.preventDefault();sideSearch?.focus()}});
 let shownGlobalError=false;
