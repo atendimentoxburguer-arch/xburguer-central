@@ -195,6 +195,7 @@ function checkoutSplitOrderV22(id,delta){const o=state.orders.find(x=>x.id===id)
 function checkoutSplitTableV22(id,delta){const t=state.tables.find(x=>x.id===id);if(!t)return;const orders=state.orders.filter(o=>o.table===t.name&&!['done','cancelled'].includes(o.status)),next=Math.min(20,Math.max(1,(Number(orders[0]?.splitCount)||1)+delta));orders.forEach(o=>o.splitCount=next);save({render:false});openTableCheckoutV22(id)}
 async function closeOrderCheckoutV22(id){
  const o=state.orders.find(x=>x.id===id);if(!o)return;
+ if(o.type==='Delivery'){toast('Pedidos delivery devem ser finalizados pelo fluxo de Entregas.','warning');return}
  if(['analysis','production'].includes(o.status)){toast('O pedido ainda está em análise ou produção. Avance-o antes de fechar a conta.','warning');return}
  const ok=await confirmDialog('Fechar conta','Confirmar recebimento de '+money(orderTotal(o))+' e concluir o pedido #'+id+'?',{confirmLabel:'Fechar conta'});if(!ok)return;
  o.status='done';o.completedAt=new Date().toISOString();closeModal();syncTables();save();toast('Conta fechada com sucesso.','success');
