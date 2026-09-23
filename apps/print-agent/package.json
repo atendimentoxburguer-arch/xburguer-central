@@ -14,8 +14,9 @@
     "start": "electron .",
     "start:server": "node server.mjs",
     "check": "node --check server.mjs && node --check lib/agent-core.mjs && node --check desktop/main.mjs && node --check desktop/ui.js && node --check desktop/preload.cjs",
-    "pack": "electron-builder --dir --win --x64",
-    "dist": "electron-builder --win nsis --x64"
+    "prepare:icon": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/prepare-build-icon.ps1",
+    "pack": "npm run prepare:icon && electron-builder --dir --win --x64",
+    "dist": "npm run prepare:icon && electron-builder --win nsis --x64"
   },
   "devDependencies": {
     "electron": "44.3.0",
@@ -51,7 +52,7 @@
           ]
         }
       ],
-      "icon": "../../assets/img/logo.png",
+      "icon": "build/icon.png",
       "artifactName": "X-Burguer-Print-Agent-Setup-${version}.${ext}"
     },
     "nsis": {
