@@ -1,62 +1,69 @@
 # Design System — X Burguer Central
 
-## Direção visual
+## Direção visual V26
 
-Interface operacional premium, limpa e rápida para restaurante. O visual usa azul como cor de ação, superfícies neutras e cores semânticas apenas para estado e urgência.
+A interface deve parecer um sistema operacional de restaurante profissional: rápida de ler, compacta sem ficar apertada, consistente entre módulos e alinhada à identidade da X Burguer. A marca usa **vermelho escuro/bordô como ação principal**, **dourado/mostarda como acento**, branco e neutros quentes. Cores semânticas continuam reservadas para estados como sucesso, alerta e erro.
 
 ## Tipografia
 
-- Manrope: títulos, navegação, botões e elementos de destaque.
-- Inter: textos, formulários, tabelas e informações operacionais.
-- Tamanhos maiores em títulos e métricas; corpo próximo de 15px para legibilidade em monitores de operação.
+- **Manrope**: títulos, navegação, botões, métricas e destaques.
+- **Inter**: textos, formulários, tabelas e informações operacionais.
+- Base desktop: 16 px no HTML, com corpo visual próximo de 15 px.
+- Títulos de página: aproximadamente 23 px; títulos internos ficam entre 14 e 18 px conforme hierarquia.
+- Textos auxiliares não devem ficar menores que o necessário para leitura operacional.
+- Evitar excesso de caixa alta. Usar caixa alta apenas em labels curtas e cabeçalhos de tabela.
 
-## Espaçamento
+## Iconografia
 
-Escala baseada em múltiplos consistentes de 4 e 8 px para reduzir desalinhamentos e aumentar previsibilidade visual.
+- Biblioteca principal: Bootstrap Icons.
+- Ícone aparece antes do texto em botões.
+- Ícones de ação usam tamanho e caixa consistentes.
+- Dourado pode destacar navegação/identidade; vermelho bordô identifica ações primárias.
+- Cores de estado nunca dependem apenas do ícone: sempre combinar com texto.
 
-## Ícones
+## Escala e densidade
 
-Ícones ficam dentro de áreas com tamanho e alinhamento consistentes. Evitar símbolos decorativos que não tenham significado operacional. Em botões com texto, o ícone acompanha a ação e recebe menos destaque que o rótulo.
+- Espaçamentos seguem múltiplos previsíveis de 4 px.
+- Cards padrão: raio entre 10 e 14 px.
+- Botões padrão: altura aproximada de 40 px; compactos, 32 px.
+- Campos: altura aproximada de 40 px.
+- Sombras são sutis; borda e hierarquia devem fazer a maior parte do trabalho visual.
+- Evitar animações que movam componentes no hover. Mudanças de borda, fundo e sombra são preferíveis.
 
 ## Componentes
 
-- Cards: borda sutil, sombra suave e raio consistente.
-- Tabelas: linhas enquadradas como blocos, com cabeçalho discreto.
-- Formulários: campos mais altos, labels claros e foco visível.
-- Pedidos: status por cor + texto; nunca depender apenas de cor.
-- Modais: hierarquia clara, ações no rodapé e foco inicial.
-- Sidebar: navegação de alta frequência com ícones centralizados e estado ativo evidente.
+- **Sidebar:** bordô escuro, ícones dourados e estado ativo em vermelho da marca.
+- **Topbar:** clara, compacta, com logo circular preservada.
+- **Page head:** superfície neutra com filete lateral dourado → bordô.
+- **Botões primários:** bordô; sucesso usa verde; exclusão/erro usa vermelho semântico.
+- **Cards:** branco/neutro com borda discreta.
+- **Métricas:** filete superior dourado → bordô.
+- **Tabelas:** cabeçalho neutro e linhas simples, sem blocos visuais excessivos.
+- **Formulários:** labels mais legíveis, foco visível e campos consistentes.
+- **Modais:** hierarquia clara, ações no rodapé.
+- **Checkout:** mantém o layout V24, mas recebe a tipografia, cores e densidade V26.
 
 ## Responsividade
 
-Desktop prioriza densidade e leitura simultânea. Em tablet e celular, grids são reduzidos e ações passam a ocupar largura maior.
+Desktop prioriza leitura simultânea e densidade operacional. Em tablet e celular:
+- grids reduzem colunas progressivamente;
+- ações podem ocupar largura maior;
+- tabelas usam rolagem horizontal;
+- sidebar vira painel móvel;
+- texto mantém legibilidade sem reduzir excessivamente.
 
-## Referências de princípios
+## Regras de engenharia visual
 
-A organização de espaçamento e densidade segue princípios comuns em design systems maduros, como Carbon. A direção de iconografia prioriza formas limpas e consistentes, semelhante ao princípio de bibliotecas SVG como Lucide.
+- Novos estilos globais devem ficar em blocos de versão no nível raiz do CSS, nunca aninhados acidentalmente em media queries.
+- Regras específicas do checkout devem permanecer isoladas.
+- Estilos de domínio carregados depois de `app.css` precisam manter a mesma escala visual.
+- Mudanças visuais devem preservar foco de teclado, contraste e `prefers-reduced-motion`.
+- O workflow Quality executa contratos de estabilidade visual para impedir regressões de cascata.
 
-## Regras de alinhamento V13
+## Gestão operacional
 
-- Toolbars usam uma grade previsível: conteúdo flexível à esquerda e ações à direita; em larguras menores viram uma coluna.
-- Componentes operacionais não devem se mover ao passar o mouse; feedback usa borda/sombra em vez de deslocamento.
-- Ícones e botões têm caixas fixas para evitar desalinhamento vertical.
-- Textos longos usam truncamento ou quebra controlada conforme o contexto.
-- Tabelas mantêm alinhamento de colunas e usam rolagem horizontal em telas pequenas.
-- Cards de pedidos, mesas, PDV e KDS seguem a mesma escala de espaçamento e raios.
-- Estilos de layout não devem ser adicionados inline; usar classes reutilizáveis.
-
-## Gestão operacional V14
-
-- Salão é organizado por áreas/seções, com mesas exibindo capacidade, ocupação, responsável e consumo.
-- Mesas podem ser criadas individualmente ou em lote, reordenadas, transferidas e administradas em um painel próprio.
-- Cardápio usa uma visão de gestão com KPIs, filtros de disponibilidade/estoque, ordenação, seleção múltipla e ações em massa.
-- Produto concentra nome, descrição, preço, custo, estoque, mínimo, estação de preparo, categoria, visibilidade e status de esgotado.
-- Cores de status continuam acompanhadas de texto e não são usadas como único indicador.
-
-## Estados operacionais V16
-
-- Valores financeiros exibem subtotal, taxas e total quando isso afeta a decisão do operador.
-- Estados de bloqueio usam texto e botão desabilitado, não apenas cor.
-- Alertas operacionais devem indicar ação de destino.
-- Foco de teclado deve permanecer visível e animações devem respeitar prefers-reduced-motion.
-- Em telas estreitas, ações críticas permanecem legíveis antes de detalhes secundários.
+- Pedidos, mesas, PDV e KDS compartilham a mesma escala de espaçamento, tipografia e ícones.
+- Status operacionais usam texto + cor.
+- Valores financeiros devem destacar total e saldo sem competir visualmente com ações.
+- Cardápio prioriza leitura do produto, foto, preço e disponibilidade.
+- Salão prioriza mesa, responsável, ocupação e consumo.
