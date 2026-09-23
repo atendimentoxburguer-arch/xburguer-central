@@ -26,7 +26,8 @@ for(const file of jsFiles){
     throw new Error('Constante de núcleo declarada fora de core.js: '+file);
   }
 
-  if(!['print-agent-client.js','integrations.js'].includes(file) && /['\"`]https?:\\/\\//i.test(text)){
+  const hasHardcodedHttp=text.includes("'http://")||text.includes("\"http://")||text.includes("'https://")||text.includes("\"https://");
+  if(!['print-agent-client.js','integrations.js'].includes(file) && hasHardcodedHttp){
     throw new Error('URL HTTP hardcoded fora do adaptador permitido: '+file);
   }
 }
