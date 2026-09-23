@@ -29,11 +29,11 @@
     };
     draw();
     let quality=.82,data=canvas.toDataURL('image/webp',quality);
-    while(data.length>118000&&quality>.46){quality-=.08;data=canvas.toDataURL('image/webp',quality)}
-    if(data.length>138000){
+    while(data.length>90000&&quality>.46){quality-=.08;data=canvas.toDataURL('image/webp',quality)}
+    if(data.length>110000){
       width=Math.max(1,Math.round(width*.78));height=Math.max(1,Math.round(height*.78));draw();
       quality=.7;data=canvas.toDataURL('image/webp',quality);
-      while(data.length>118000&&quality>.42){quality-=.07;data=canvas.toDataURL('image/webp',quality)}
+      while(data.length>90000&&quality>.42){quality-=.07;data=canvas.toDataURL('image/webp',quality)}
     }
     source.close?.();
     const safe=safeProductImageSrc(data);
@@ -192,9 +192,17 @@ function menuStatsV14(){
     catch(error){toast(String(error.message||error),'error');return}
     const price=Math.max(0,Number(v.price)||0),stock=Math.max(0,Number(v.stock)||0);
     const item={id:uid('p'),cat:v.cat,name:v.name.trim(),description:(v.description||'').trim(),price:price,cost:Math.max(0,Number(v.cost)||0),emoji:v.emoji||'🍔',image,active:true,manualSold:false,sold:stock<=0,stock:stock,min:Math.max(0,Number(v.min)||0),station:v.station||'Cozinha'};
+    const previousSelected=selectedCat,movementCount=state.inventoryMovements.length;
     state.products.push(item);
     if(stock)recordStockMovement(item.id,stock,'Estoque inicial','cadastro');
-    selectedCat=v.cat;save();toast('Item criado.','success');
+    selectedCat=v.cat;
+    if(!save()){
+      state.products=state.products.filter(function(p){return p.id!==item.id});
+      state.inventoryMovements=state.inventoryMovements.slice(0,movementCount);
+      selectedCat=previousSelected;
+      return;
+    }
+    toast('Item criado.','success');
   };
 
   globalThis.editProduct=function(id){return editProductV14(id)};
@@ -214,12 +222,19 @@ function menuStatsV14(){
       {key:'sold',label:'Esgotamento manual',type:'select',value:p.manualSold?'1':'0',options:[{value:'0',label:'Automático pelo estoque'},{value:'1',label:'Esgotado manualmente'}]}
     ]});
     if(!v)return;
-    const beforeStock=Number(p.stock)||0;
+    const before={...p},beforeStock=Number(p.stock)||0,movementCount=state.inventoryMovements.length,previousSelected=selectedCat;
     const stock=Math.max(0,Number(v.stock)||0);
     const manualSold=v.sold==='1';
     Object.assign(p,{name:v.name.trim(),description:(v.description||'').trim(),price:Math.max(0,Number(v.price)||0),cost:Math.max(0,Number(v.cost)||0),stock:stock,min:Math.max(0,Number(v.min)||0),station:v.station||'Cozinha',cat:v.cat,active:v.active==='1',manualSold:manualSold,sold:manualSold||stock<=0});
     if(stock!==beforeStock)recordStockMovement(p.id,stock-beforeStock,'Edição de produto','cardapio');
-    selectedCat=v.cat;save();toast('Item atualizado.','success');
+    selectedCat=v.cat;
+    if(!save()){
+      Object.assign(p,before);
+      state.inventoryMovements=state.inventoryMovements.slice(0,movementCount);
+      selectedCat=previousSelected;
+      return;
+    }
+    toast('Item atualizado.','success');
   };
 
   globalThis.editProductPhotoV21=function(id){
