@@ -23,7 +23,7 @@ jobs:
       - name: Check JavaScript syntax
         run: |
           set -e
-          for file in assets/js/*.js service-worker.js scripts/*.mjs; do
+          for file in assets/js/*.js service-worker.js scripts/*.mjs apps/print-agent/*.mjs apps/print-agent/lib/*.mjs; do
             node --check "$file"
           done
       - name: Run static project checks
@@ -34,3 +34,5 @@ jobs:
         run: node scripts/business-contracts.mjs
       - name: Printing contract tests
         run: node scripts/printing-contracts.mjs
+      - name: Print agent contract tests
+        run: node scripts/print-agent-contracts.mjs
