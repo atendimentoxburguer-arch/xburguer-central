@@ -1356,3 +1356,45 @@ button:disabled,.btn:disabled{
     border-color:var(--border-strong)!important;
   }
 }
+
+
+/* V16.1 — ações, alertas e microconsistência */
+.row-actions,.courier-actions{
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  gap:5px;
+}
+.row-actions .icon-btn,.courier-actions .icon-btn{
+  width:34px;
+  height:34px;
+  flex:0 0 34px;
+}
+.courier-actions{margin-left:auto}
+.notification-list{display:grid;gap:8px}
+.notification-item{
+  display:grid;
+  grid-template-columns:36px minmax(0,1fr) auto;
+  align-items:center;
+  gap:10px;
+  padding:10px 11px;
+  border:1px solid var(--border);
+  border-radius:12px;
+  background:var(--surface-2);
+}
+.notification-item .n-icon{
+  width:36px;height:36px;display:grid;place-items:center;
+  border-radius:11px;background:var(--primary-soft);color:var(--primary);
+}
+.notification-item.warning .n-icon{background:var(--warning-soft);color:var(--warning)}
+.notification-item.danger .n-icon{background:var(--danger-soft);color:var(--danger)}
+.notification-item.success .n-icon{background:var(--success-soft);color:var(--success)}
+.notification-item>div{min-width:0}
+.notification-item b,.notification-item span{display:block}
+.notification-item span{margin-top:2px;color:var(--muted);font-size:.72rem}
+.notification-item .badge{justify-self:end}
+@media(max-width:560px){
+  .notification-item{grid-template-columns:34px minmax(0,1fr)}
+  .notification-item .badge{grid-column:2;justify-self:start}
+  .courier-actions{margin-left:0}
+}
