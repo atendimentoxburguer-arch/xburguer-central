@@ -1,8 +1,8 @@
-/* X Burguer Central V19 — bootstrap da aplicação */
+/* X Burguer Central V22 — bootstrap da aplicação */
 function enhanceTables(){document.querySelectorAll('.page.active .table:not([data-enhanced])').forEach(table=>{table.dataset.enhanced='1';if(table.parentElement?.classList.contains('table-shell'))return;const wrap=document.createElement('div');wrap.className='table-shell';table.parentNode.insertBefore(wrap,table);wrap.appendChild(table)})}
 function renderPage(id){
  updatePageTitle(id);
- const renderer={pedidos:renderPedidos,pdv:()=>renderPdv(),salao:renderSalao,cardapio:renderCardapio,entregas:renderEntregas,performance:renderPerformance,kds:renderKds,clientes:renderClientes,marketing:renderMarketing,atendimento:renderAtendimento,caixa:renderCaixa,estoque:renderEstoque,financeiro:renderFinanceiro,equipe:renderEquipe,config:renderConfig}[id];
+ const renderer={pedidos:renderPedidos,pdv:()=>renderPdv(),salao:renderSalao,cardapio:renderCardapio,entregas:renderEntregas,performance:renderPerformance,kds:renderKds,clientes:renderClientes,marketing:renderMarketing,atendimento:renderAtendimento,caixa:renderCaixa,estoque:renderEstoque,financeiro:renderFinanceiro,equipe:renderEquipe,relatorios:renderRelatorios,config:renderConfig}[id];
  if(!renderer)return;
  try{renderer();enhanceTables()}
  catch(error){
@@ -33,7 +33,7 @@ function showNotifications(){
  openModal(`<div class="modal-head"><div><h2>Central de alertas</h2><p class="dialog-subtitle">Pendências calculadas a partir dos dados locais deste navegador.</p></div><button class="icon-btn" onclick="closeModal()" aria-label="Fechar">${icon('x-lg')}</button></div><div class="notification-list">${alerts.map(a=>`<button type="button" class="notification-item ${a.type}" onclick="closeModal();go('${a.page}')"><span class="n-icon">${icon(a.icon)}</span><div><b>${esc(a.title)}</b><span>${esc(a.text)}</span></div><span class="badge ${a.type==='danger'?'b-red':a.type==='warning'?'b-orange':a.type==='success'?'b-green':'b-blue'}">Abrir</span></button>`).join('')}</div>`);
 }
 function updatePageTitle(id){
- const names={pedidos:'Pedidos',pdv:'PDV',salao:'Salão',cardapio:'Cardápio',entregas:'Entregas',performance:'Desempenho',kds:'Cozinha KDS',clientes:'Clientes',marketing:'Promoções',atendimento:'Atendimento',caixa:'Caixa',estoque:'Estoque',financeiro:'Financeiro',equipe:'Equipe',config:'Configurações'};
+ const names={pedidos:'Pedidos',pdv:'PDV',salao:'Salão',cardapio:'Cardápio',entregas:'Entregas',performance:'Desempenho',kds:'Cozinha KDS',clientes:'Clientes',marketing:'Promoções',atendimento:'Atendimento',caixa:'Caixa',estoque:'Estoque',financeiro:'Financeiro',equipe:'Equipe',relatorios:'Relatórios',config:'Configurações'};
  document.title=(names[id]?names[id]+' — ':'')+'X Burguer Central';
 }
 function filterNavigation(query=''){const q=query.trim().toLowerCase();document.querySelectorAll('.nav button').forEach(btn=>btn.classList.toggle('is-filtered-out',!!q&&!btn.textContent.toLowerCase().includes(q)))}
