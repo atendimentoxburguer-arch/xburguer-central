@@ -138,6 +138,10 @@
     if(!t){toast('Mesa não encontrada.','error');return}
     pdvType='Mesa';
     pdvDraftTable=t.name;
+    pdvCart=[];
+    pdvEditingId='';
+    pdvCustomerDraft='';
+    pdvPayDraft='PIX';
     go('pdv');
     renderPdv();
     toast('Novo pedido vinculado a '+t.name+'.','info');
