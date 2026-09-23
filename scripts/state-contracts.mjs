@@ -26,15 +26,19 @@ context.globalThis=context;
 vm.runInContext(source,context,{filename:'assets/js/core.js'});
 
 const api=vm.runInContext('({APP_VERSION,SCHEMA_VERSION,defaultState,validateState,safeProductImageSrc})',context);
-assert.equal(api.APP_VERSION,'21.0.0');
-assert.equal(api.SCHEMA_VERSION,9);
+assert.equal(api.APP_VERSION,'22.0.0');
+assert.equal(api.SCHEMA_VERSION,10);
 
 const fresh=vm.runInContext('defaultState()',context);
-assert.equal(fresh.schemaVersion,9);
+assert.equal(fresh.schemaVersion,10);
 assert.ok(Array.isArray(fresh.diningAreas)&&fresh.diningAreas.length>=1);
 assert.ok(fresh.tables.every(t=>t.area&&Number(t.seats)>=1));
 assert.equal(new Set(fresh.tables.map(t=>t.name.toLowerCase())).size,fresh.tables.length);
 assert.ok(Array.isArray(fresh.inventoryMovements));
+assert.equal(fresh.settings.salon.enabled,true);
+assert.ok(Array.isArray(fresh.settings.salon.serviceModes));
+assert.ok(fresh.settings.salon.serviceModes.includes('table'));
+assert.equal(fresh.settings.salon.operationModel,'a-la-carte');
 assert.ok(fresh.settings.printing?.enabled);
 assert.equal(fresh.settings.printing.profiles.length,3);
 assert.ok(fresh.settings.printing.profiles.every(p=>['58mm','80mm','a4'].includes(p.paper)));
@@ -64,7 +68,7 @@ context.__legacy=JSON.stringify({
 });
 vm.runInContext('state=JSON.parse(__legacy);normalize()',context);
 const migrated=vm.runInContext('state',context);
-assert.equal(migrated.schemaVersion,9);
+assert.equal(migrated.schemaVersion,10);
 assert.ok(migrated.diningAreas.length>=1);
 assert.ok(migrated.tables.every(t=>t.area&&t.seats>=1&&Number.isFinite(t.order)));
 assert.ok(migrated.products.every(p=>typeof p.description==='string'&&p.station&&typeof p.manualSold==='boolean'));
@@ -76,6 +80,9 @@ assert.ok(migrated.settings.printing.profiles.every(p=>Array.isArray(p.autoEvent
 assert.equal(migrated.settings.printing.agent.url,'http://127.0.0.1:17871');
 assert.ok(Array.isArray(migrated.printOutbox));
 assert.ok(migrated.orders.every(o=>typeof o.cancelReason==='string'&&typeof o.stockRestored==='boolean'));
+assert.ok(migrated.orders.every(o=>typeof o.discount==='number'&&typeof o.surcharge==='number'&&Number(o.splitCount)>=1));
+assert.ok(migrated.team.every(u=>typeof u.email==='string'&&typeof u.phone==='string'));
+assert.ok(Array.isArray(migrated.settings.salon.serviceModes));
 assert.ok(migrated.products.every(p=>typeof p.image==='string'));
 assert.equal(migrated.products[0].manualSold,true);
 assert.equal(migrated.products[0].sold,true);
@@ -106,5 +113,7 @@ context.__mesa={type:'Mesa',items:[{p:'p1',q:1,price:100}]};
 assert.equal(vm.runInContext('orderSubtotal(__mesa)',context),100);
 assert.equal(vm.runInContext('orderFeeTotal(__mesa)',context),10);
 assert.equal(vm.runInContext('orderTotal(__mesa)',context),110);
+context.__adjusted={type:'Balcão',items:[{p:'p1',q:1,price:100}],discount:10,surcharge:5};
+assert.equal(vm.runInContext('orderTotal(__adjusted)',context),95);
 
 console.log('State contracts OK');
