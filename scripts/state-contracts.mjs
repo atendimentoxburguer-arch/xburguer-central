@@ -26,11 +26,11 @@ context.globalThis=context;
 vm.runInContext(source,context,{filename:'assets/js/core.js'});
 
 const api=vm.runInContext('({APP_VERSION,SCHEMA_VERSION,defaultState,validateState})',context);
-assert.equal(api.APP_VERSION,'17.0.0');
-assert.equal(api.SCHEMA_VERSION,6);
+assert.equal(api.APP_VERSION,'18.0.0');
+assert.equal(api.SCHEMA_VERSION,7);
 
 const fresh=vm.runInContext('defaultState()',context);
-assert.equal(fresh.schemaVersion,6);
+assert.equal(fresh.schemaVersion,7);
 assert.ok(Array.isArray(fresh.diningAreas)&&fresh.diningAreas.length>=1);
 assert.ok(fresh.tables.every(t=>t.area&&Number(t.seats)>=1));
 assert.equal(new Set(fresh.tables.map(t=>t.name.toLowerCase())).size,fresh.tables.length);
@@ -38,6 +38,11 @@ assert.ok(Array.isArray(fresh.inventoryMovements));
 assert.ok(fresh.settings.printing?.enabled);
 assert.equal(fresh.settings.printing.profiles.length,3);
 assert.ok(fresh.settings.printing.profiles.every(p=>['58mm','80mm','a4'].includes(p.paper)));
+assert.equal(fresh.settings.printing.orientation,'portrait');
+assert.equal(fresh.settings.printing.density,'compact');
+assert.equal(fresh.settings.printing.strongText,true);
+assert.equal(fresh.settings.printing.showLogo,false);
+assert.ok(fresh.settings.printing.profiles.every(p=>Array.isArray(p.autoEvents)));
 
 context.__legacy=JSON.stringify({
   ...fresh,
@@ -50,13 +55,15 @@ context.__legacy=JSON.stringify({
 });
 vm.runInContext('state=JSON.parse(__legacy);normalize()',context);
 const migrated=vm.runInContext('state',context);
-assert.equal(migrated.schemaVersion,6);
+assert.equal(migrated.schemaVersion,7);
 assert.ok(migrated.diningAreas.length>=1);
 assert.ok(migrated.tables.every(t=>t.area&&t.seats>=1&&Number.isFinite(t.order)));
 assert.ok(migrated.products.every(p=>typeof p.description==='string'&&p.station&&typeof p.manualSold==='boolean'));
 assert.ok(Array.isArray(migrated.inventoryMovements));
 assert.ok(Array.isArray(migrated.settings.printing.profiles));
 assert.ok(migrated.settings.printing.profiles.length>=1);
+assert.equal(migrated.settings.printing.orientation,'portrait');
+assert.ok(migrated.settings.printing.profiles.every(p=>Array.isArray(p.autoEvents)));
 assert.equal(migrated.products[0].manualSold,true);
 assert.equal(migrated.products[0].sold,true);
 assert.equal(vm.runInContext('validateState(state)',context),'');
