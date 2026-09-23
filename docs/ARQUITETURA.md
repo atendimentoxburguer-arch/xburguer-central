@@ -44,9 +44,11 @@ Nenhum módulo de feature deve gravar diretamente no `localStorage`.
 - Cardápio: `menu-management.js`
 - Impressão: `printing.js`
 
-### Integrações locais
+### Integrações do frontend atual
 
-`print-agent-client.js` é o adaptador autorizado a usar HTTP no frontend atual. Ele conversa somente com o agente local de impressão em loopback.
+`integrations.js` concentra adaptadores externos estritamente necessários enquanto a aplicação ainda é estática. Os módulos de tela recebem apenas funções estáveis e não conhecem URL ou fornecedor.
+
+`print-agent-client.js` é o adaptador autorizado a usar `fetch()` para o agente local de impressão em loopback. Quando o backend entrar, integrações de pagamento, fiscal e mensagens permanecerão fora do navegador.
 
 ## Arquitetura alvo de produção
 
