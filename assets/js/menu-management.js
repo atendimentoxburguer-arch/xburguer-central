@@ -1,5 +1,6 @@
 /* X Burguer Central V15 — gestão de cardápio */
 (function(){
+  'use strict';
   let menuStatusV14='all';
   let menuSortV14='name';
   let menuSelectedV14=new Set();
@@ -27,7 +28,7 @@ function menuStatsV14(){
     return items;
   }
 
-  renderCardapio=function(){
+  globalThis.renderCardapio=function(){
     const root=document.getElementById('cardapio');
     if(!state.categories.some(function(c){return c.id===selectedCat}))selectedCat=state.categories[0]?.id||'';
     menuSelectedV14=new Set([...menuSelectedV14].filter(function(id){return state.products.some(function(p){return p.id===id})}));
@@ -56,7 +57,7 @@ function menuStatsV14(){
     updateMenuBulkV14();
   };
 
-  itemRow=function(p){return itemRowV14(p)};
+  globalThis.itemRow=function(p){return itemRowV14(p)};
   function itemRowV14(p){
     const status=p.sold||p.stock<=0?'sold':!p.active?'paused':p.stock<=p.min?'low':'visible';
     const statusLabel=status==='sold'?'Esgotado':status==='paused'?'Pausado':status==='low'?'Estoque baixo':'Disponível';
@@ -73,7 +74,7 @@ function menuStatsV14(){
     '</div>';
   }
 
-  filterProductRows=function(){filterProductRowsV14(document.getElementById('productSearch')?.value||'')};
+  globalThis.filterProductRows=function(){filterProductRowsV14(document.getElementById('productSearch')?.value||'')};
   globalThis.filterProductRowsV14=function(q){
     q=String(q||'').trim().toLowerCase();
     document.querySelectorAll('#itemRows .menu-item-row').forEach(function(row){row.hidden=Boolean(q&&!row.dataset.search.includes(q))});
@@ -107,7 +108,7 @@ function menuStatsV14(){
     menuSelectedV14.clear();selectedCat=v.cat;save();toast('Itens movidos.','success');
   };
 
-  addProduct=function(){return addProductV14()};
+  globalThis.addProduct=function(){return addProductV14()};
   globalThis.addProductV14=async function(){
     const cats=state.categories.map(function(c){return {value:c.id,label:c.name}});
     const v=await formDialog({title:'Novo item',subtitle:'Cadastre preço, custo, estoque e estação de preparo.',fields:[
@@ -127,7 +128,7 @@ function menuStatsV14(){
     selectedCat=v.cat;save();toast('Item criado.','success');
   };
 
-  editProduct=function(id){return editProductV14(id)};
+  globalThis.editProduct=function(id){return editProductV14(id)};
   globalThis.editProductV14=async function(id){
     const p=product(id);if(!p)return;
     const cats=state.categories.map(function(c){return {value:c.id,label:c.name}});
@@ -150,7 +151,7 @@ function menuStatsV14(){
     selectedCat=v.cat;save();toast('Item atualizado.','success');
   };
 
-  addCategory=function(){return addCategoryV14()};
+  globalThis.addCategory=function(){return addCategoryV14()};
   globalThis.addCategoryV14=async function(){
     const v=await formDialog({title:'Nova categoria',fields:[{key:'name',label:'Nome',value:'Nova categoria',required:true}]});
     if(!v?.name)return;
@@ -190,14 +191,14 @@ function menuStatsV14(){
       '<div class="modal-foot"><button class="btn btn-outline" onclick="closeModal();renderCardapio()">Concluir</button></div>'
     );
   };
-  filterCats=function(q){
+  globalThis.filterCats=function(q){
     q=String(q||'').trim().toLowerCase();
     document.querySelectorAll('#catList .cat-row').forEach(function(row){
       row.hidden=Boolean(q&&!row.dataset.name.includes(q));
     });
   };
 
-  toggleSold=function(id){
+  globalThis.toggleSold=function(id){
     const p=product(id);if(!p)return;
     if(p.sold&&!p.manualSold&&Number(p.stock)<=0){toast('Ajuste o estoque antes de disponibilizar este item.','warning');return}
     p.manualSold=!Boolean(p.manualSold);
