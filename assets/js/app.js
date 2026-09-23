@@ -1,4 +1,4 @@
-/* X Burguer Central V22 — bootstrap da aplicação */
+/* Bootstrap da aplicação */
 function enhanceTables(){document.querySelectorAll('.page.active .table:not([data-enhanced])').forEach(table=>{table.dataset.enhanced='1';if(table.parentElement?.classList.contains('table-shell'))return;const wrap=document.createElement('div');wrap.className='table-shell';table.parentNode.insertBefore(wrap,table);wrap.appendChild(table)})}
 function renderPage(id){
  updatePageTitle(id);
