@@ -20,6 +20,8 @@ const required=[
   'apps/print-agent/lib/agent-core.mjs',
   'apps/print-agent/scripts/raw-print.ps1',
   'apps/print-agent/install-windows.ps1',
+  'apps/print-agent/package.json',
+  'apps/print-agent/INSTALAR-AGENTE.cmd',
   ...js.map(f=>path.relative(root,f))
 ];
 
@@ -104,5 +106,6 @@ if(duplicates.length){
 }
 
 JSON.parse(fs.readFileSync(path.join(root,'manifest.webmanifest'),'utf8'));
+JSON.parse(fs.readFileSync(path.join(root,'apps/print-agent/package.json'),'utf8'));
 
 if(!process.exitCode)console.log('Static checks OK');
