@@ -9,6 +9,7 @@
 - [x] Documentação técnica inicial.
 
 ## Fase 2 — Refinamento do protótipo
+- [x] Impressão V17: comprovante, cozinha, estação e delivery em 58/80 mm e A4.
 - [x] Revisão ponta a ponta V16: pedidos, PDV, caixa, estoque, delivery, KDS, CRM, equipe, acessibilidade e QA.
 - [x] Auditoria de engenharia V15: migração de estado, segurança de renderização, regras críticas e testes automatizados.
 - [x] Gestão avançada de salão por áreas, capacidade, responsáveis e mesas.

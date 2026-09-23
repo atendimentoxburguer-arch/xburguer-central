@@ -10,6 +10,7 @@ const sw=fs.readFileSync(path.join(root,'service-worker.js'),'utf8');
 const required=[
   'assets/css/app.css',
   'assets/css/domain-management.css',
+  'assets/css/print.css',
   'assets/img/logo.png',
   'assets/img/icon.svg',
   'assets/img/icon-maskable.svg',
@@ -73,14 +74,14 @@ for(const match of html.matchAll(/(?:src|href)="([^"]+)"/g)){
 }
 
 const scripts=[...html.matchAll(/<script[^>]+src="([^"]+)"/g)].map(m=>m[1]);
-for(const requiredScript of ['assets/js/core.js','assets/js/salon-management.js','assets/js/menu-management.js','assets/js/app.js']){
+for(const requiredScript of ['assets/js/core.js','assets/js/ui.js','assets/js/printing.js','assets/js/salon-management.js','assets/js/menu-management.js','assets/js/app.js']){
   if(!scripts.includes(requiredScript)){
     console.error('Script essencial ausente do HTML:',requiredScript);
     process.exitCode=1;
   }
 }
-if(!(scripts.indexOf('assets/js/core.js')<scripts.indexOf('assets/js/salon-management.js')&&scripts.indexOf('assets/js/salon-management.js')<scripts.indexOf('assets/js/menu-management.js')&&scripts.indexOf('assets/js/menu-management.js')<scripts.indexOf('assets/js/app.js'))){
-  console.error('Ordem de carregamento inválida: core -> salon-management -> menu-management -> app.');
+if(!(scripts.indexOf('assets/js/core.js')<scripts.indexOf('assets/js/ui.js')&&scripts.indexOf('assets/js/ui.js')<scripts.indexOf('assets/js/printing.js')&&scripts.indexOf('assets/js/printing.js')<scripts.indexOf('assets/js/salon-management.js')&&scripts.indexOf('assets/js/salon-management.js')<scripts.indexOf('assets/js/menu-management.js')&&scripts.indexOf('assets/js/menu-management.js')<scripts.indexOf('assets/js/app.js'))){
+  console.error('Ordem de carregamento inválida: core -> ui -> printing -> salon-management -> menu-management -> app.');
   process.exitCode=1;
 }
 

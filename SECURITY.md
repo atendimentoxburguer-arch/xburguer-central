@@ -22,3 +22,7 @@ Backups importados passam por limite de tamanho, validação de estrutura, IDs s
 ## Hardening V16
 
 A validação local cobre referências entre pedidos/clientes e movimentos/produtos, tipos/status de pedido, limites básicos de conteúdo e importações. A interface reduz inserção de valores editáveis dentro de handlers inline. A CSP ainda permite `unsafe-inline` por compatibilidade com a arquitetura atual; remover essa exceção requer a migração dos handlers HTML para listeners/event delegation.
+
+## Impressão V17
+
+A impressão usa documentos gerados localmente e o diálogo nativo do navegador. O módulo não recebe comandos remotos de impressão e não tenta acessar dispositivos USB diretamente. Dados dinâmicos são escapados antes de compor os documentos impressos.
