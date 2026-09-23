@@ -174,7 +174,7 @@ function load(){
  }
  normalize();
  const issue=validateState(state);
- if(issue){console.error('Estado local inconsistente:',issue);snapshotLocal('inconsistente');state=defaults;normalize()}
+ if(issue){console.error('Estado local inconsistente:',issue);snapshotLocal('inconsistente');state=defaults;normalize();try{localStorage.setItem(STORAGE,JSON.stringify(state))}catch(e){console.warn('Falha ao restaurar estado padrão',e)}}
 }
 function save(options={}){
  try{
