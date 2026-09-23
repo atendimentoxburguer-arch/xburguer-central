@@ -46,3 +46,7 @@ Foi realizada uma auditoria completa de consistência visual: alinhamento de too
 ## Gestão V14
 
 A área de salão ganhou gestão por áreas/seções, capacidade, pessoas sentadas, responsável, ordenação, criação em lote, transferência e administração completa das mesas. O gestor de cardápio ganhou indicadores, filtros, ordenação, edição em massa, disponibilidade/86, estoque mínimo, custo, descrição e estação de preparo.
+
+## Engenharia V15
+
+A V15 consolidou migração de dados no núcleo, separou os módulos de salão e cardápio, adicionou validação de backup/importação, endureceu regras de estoque e delivery e incluiu testes automatizados de estado e regras críticas. Consulte `docs/AUDITORIA_V15.md`.
