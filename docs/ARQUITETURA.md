@@ -71,3 +71,7 @@ Pedidos passam a preservar snapshots de preço, custo, taxa de entrega e percent
 - `scripts/printing-contracts.mjs`: contratos do payload de impressão e normalização de perfis.
 
 A camada de impressão possui roteamento automático por perfil. Cada perfil define finalidade, papel, cópias, estação e eventos do ciclo do pedido. A seleção da impressora física pertence ao navegador/sistema operacional. Impressão silenciosa e seleção direta do dispositivo exigirão uma ponte local/desktop no futuro.
+
+## Print Agent V19
+
+A impressão silenciosa usa uma arquitetura de ponte local. O front-end envia jobs estruturados para `http://127.0.0.1:17871`; o agente valida, persiste em fila e envia RAW/ESC-POS ao spooler do Windows. O agente só aceita loopback, usa pareamento/token local e não contém segredos no repositório. A fila centralizada em backend continua como etapa futura.
