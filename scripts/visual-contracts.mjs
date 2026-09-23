@@ -86,14 +86,15 @@ for(const selector of ['.nav button.active{','.page-head{','.btn-primary,.btn-bl
   if(!visualCurrent.includes(selector))throw new Error('Componente visual não padronizado: '+selector);
 }
 if(!domain.includes('Acabamento visual dos módulos de gestão'))throw new Error('Acabamento dos módulos de gestão ausente.');
-if(!html.includes('family=Inter:wght@400;500;600;700;800&display=swap'))throw new Error('Fonte Inter esperada não está carregada.');\nif(/family=Manrope|font-family:\"Manrope\"/.test(html+app+domain))throw new Error('Manrope não deve voltar à interface V29.');
+if(!html.includes('family=Inter:wght@400;500;600;700;800&display=swap'))throw new Error('Fonte Inter esperada não está carregada.');
+if(/family=Manrope|font-family:\"Manrope\"/.test(html+app+domain+printAgent))throw new Error('Manrope não deve voltar à interface V29.');
 
 const bannedInterfaceColors=[
   '#22c55e','#16a34a','#dc2626','#b91c1c','#ef4444',
   '#f97316','#f59e0b','#d2a53a','#ad8120','#e2b74f','#c99529'
 ];
 for(const color of bannedInterfaceColors){
-  if((app+'\\n'+domain).toLowerCase().includes(color))throw new Error('Cor fora da identidade azul/branco/cinza: '+color);
+  if((app+'\\n'+domain+'\\n'+printAgent).toLowerCase().includes(color))throw new Error('Cor fora da identidade azul/branco/cinza: '+color);
 }
 
 const combined=app+'\n'+domain;
