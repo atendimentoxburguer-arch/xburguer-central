@@ -443,11 +443,18 @@
   globalThis.renderComandas=function(){return renderComandasV14()};
   function renderComandasV14(){
     const occupied=orderedTablesV14().filter(function(t){return t.status!=='free'});
-    return '<div class="card commands-card"><div class="table-shell"><table class="table"><thead><tr><th>Mesa / comanda</th><th>Área</th><th>Responsável</th><th>Pessoas</th><th>Status</th><th>Pedidos</th><th>Total</th><th></th></tr></thead><tbody>'+
+    const total=occupied.reduce(function(sum,t){return sum+openOrdersV14(t).reduce(function(s,o){return s+orderTotal(o)},0)},0);
+    return '<div class="commands-summary-v22"><div><span>Comandas abertas</span><b>'+occupied.length+'</b></div><div><span>Capacidade configurada</span><b>'+Number(state.settings.salon.commandCount||0)+'</b></div><div><span>Valor em aberto</span><b>'+money(total)+'</b></div><div><span>Fechando conta</span><b>'+occupied.filter(function(t){return t.status==='closing'}).length+'</b></div></div>'+
+      '<div class="salon-subhead commands-head-v22"><div><h2>Comandas do salão</h2><p>Acompanhe consumo, responsável, pedidos e fechamento de cada mesa/comanda.</p></div><div class="searchbox"><span class="search-icon">'+icon('search')+'</span><input id="commandSearchV22" placeholder="Buscar mesa, garçom ou comanda" oninput="filterCommandsV22()"></div></div>'+
+      '<div class="card commands-card"><div class="table-shell"><table class="table"><thead><tr><th>Mesa / comanda</th><th>Área</th><th>Responsável</th><th>Pessoas</th><th>Status</th><th>Pedidos</th><th>Total</th><th></th></tr></thead><tbody>'+
       (occupied.map(function(t,i){
-        const os=openOrdersV14(t);
-        return '<tr><td><b>#C-'+(201+i)+'</b><br><span class="muted">'+esc(t.name)+'</span></td><td>'+esc(tableAreaNameV14(t))+'</td><td>'+esc(t.server||'—')+'</td><td>'+Number(t.guests||0)+' / '+Number(t.seats||0)+'</td><td><span class="badge '+(t.status==='closing'?'b-orange':'b-red')+'">'+tableStatusLabelV14(t.status)+'</span></td><td>'+os.length+'</td><td><b>'+money(os.reduce(function(s,o){return s+orderTotal(o)},0))+'</b></td><td><button class="btn btn-outline btn-sm" onclick="tableMenuV14(\''+t.id+'\')">Abrir</button></td></tr>';
+        const os=openOrdersV14(t),search=(t.name+' '+tableAreaNameV14(t)+' '+(t.server||'')+' C-'+(201+i)).toLowerCase();
+        return '<tr data-command-search="'+esc(search)+'"><td><b>#C-'+(201+i)+'</b><br><span class="muted">'+esc(t.name)+'</span></td><td>'+esc(tableAreaNameV14(t))+'</td><td>'+esc(t.server||'—')+'</td><td>'+Number(t.guests||0)+' / '+Number(t.seats||0)+'</td><td><span class="badge '+(t.status==='closing'?'b-orange':'b-red')+'">'+tableStatusLabelV14(t.status)+'</span></td><td>'+os.length+'</td><td><b>'+money(os.reduce(function(s,o){return s+orderTotal(o)},0))+'</b></td><td><div class="row-actions"><button class="btn btn-outline btn-sm" onclick="tableMenuV14(\''+t.id+'\')">Gerenciar</button><button class="btn btn-green btn-sm" onclick="openTableCheckoutV22(\''+t.id+'\')">Fechar</button></div></td></tr>';
       }).join('')||'<tr><td colspan="8"><div class="empty">Nenhuma comanda aberta.</div></td></tr>')+
       '</tbody></table></div></div>';
   }
+  globalThis.filterCommandsV22=function(){
+    const q=(document.getElementById('commandSearchV22')?.value||'').trim().toLowerCase();
+    document.querySelectorAll('[data-command-search]').forEach(function(row){row.hidden=!!q&&!row.dataset.commandSearch.includes(q)});
+  };
 })();
