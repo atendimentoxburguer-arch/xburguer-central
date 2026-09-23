@@ -1,7 +1,7 @@
 import { app, BrowserWindow, Menu, Tray, nativeImage, ipcMain, shell, Notification } from 'electron';
 import fs from 'node:fs';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { createPrintAgent } from '../server.mjs';
 
 const __dirname=path.dirname(fileURLToPath(import.meta.url));
@@ -131,7 +131,7 @@ function registerIpc(){
   ipcMain.handle('agent:restart',()=>restartAgent());
   ipcMain.handle('agent:open-data',()=>shell.openPath(agent.dataDir));
   ipcMain.handle('app:dashboard',()=>shell.openExternal(DASHBOARD_URL));
-  ipcMain.handle('app:settings',()=>({version:app.getVersion(),startWithWindows:desktopConfig.startWithWindows,packaged:app.isPackaged}));
+  ipcMain.handle('app:settings',()=>({version:app.getVersion(),startWithWindows:desktopConfig.startWithWindows,packaged:app.isPackaged,logoUrl:pathToFileURL(resourcePath('logo.png')).href}));
   ipcMain.handle('app:set-startup',(_e,value)=>setStartWithWindows(value));
   ipcMain.handle('app:check-update',()=>checkUpdates());
   ipcMain.handle('app:open-external',(_e,url)=>{
