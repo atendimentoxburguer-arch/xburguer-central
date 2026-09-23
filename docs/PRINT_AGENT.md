@@ -1,73 +1,131 @@
-# Print Agent — ETAPA 1
+# Print Agent — ETAPA 2
 
 ## Visão geral
 
-A ETAPA 1 adiciona uma ponte local entre o X Burguer Central e as impressoras térmicas do Windows.
+A ETAPA 2 transforma a ponte local da V19 em um **aplicativo Windows instalável e autônomo**.
 
-Quando o agente está instalado, pareado e o destino lógico está mapeado para uma impressora física, o sistema envia o job diretamente para a fila do Windows sem abrir a aba de impressão do navegador.
+O objetivo é permitir que a operação do restaurante use impressão silenciosa sem instalar Node.js, abrir PowerShell ou manter janelas técnicas abertas.
 
-## Componentes
+## Arquitetura
 
-- `assets/js/print-agent-client.js`: comunicação segura entre o painel web e o agente local.
-- `apps/print-agent/server.mjs`: API local, fila, retry, logs e descoberta de impressoras.
-- `apps/print-agent/lib/agent-core.mjs`: renderização RAW/ESC-POS.
-- `apps/print-agent/scripts/raw-print.ps1`: ponte com o spooler RAW do Windows.
-- `apps/print-agent/install-windows.ps1`: instalação/inicialização local.
+### Painel web
+`assets/js/print-agent-client.js`
+- detecta o aplicativo local;
+- faz pareamento;
+- envia jobs estruturados;
+- mostra status do agente;
+- mapeia destino lógico para impressora física;
+- mantém outbox local quando o agente estiver temporariamente indisponível.
 
-## Fluxo
+### Aplicativo Windows
+`apps/print-agent/desktop/`
+- Electron;
+- janela de administração;
+- bandeja do Windows;
+- inicialização automática;
+- diagnóstico;
+- teste de impressão;
+- fila/histórico;
+- verificação de atualização.
 
-1. Pedido muda de etapa.
-2. O roteamento identifica os destinos configurados.
-3. Cada destino precisa ter uma impressora física mapeada.
-4. O navegador envia um job estruturado ao agente em `127.0.0.1:17871`.
-5. O agente grava o job na fila local.
-6. O agente converte o documento em ESC/POS.
-7. O spooler do Windows recebe os bytes RAW.
-8. Em erro, o agente tenta novamente até 3 vezes.
-9. Jobs com falha permanecem disponíveis para nova tentativa.
+### Serviço de impressão
+`apps/print-agent/server.mjs`
+- API local;
+- pareamento;
+- fila persistente;
+- deduplicação;
+- retry;
+- logs;
+- descoberta de impressoras;
+- integração com spooler Windows.
 
-Se o agente estiver temporariamente offline, o navegador mantém uma pequena outbox local e tenta reenviar quando o agente voltar.
+### Renderização térmica
+`apps/print-agent/lib/agent-core.mjs`
+- validação do job;
+- layout ESC/POS;
+- 58 mm e 80 mm;
+- alto contraste;
+- corte de papel.
+
+### Spooler
+`apps/print-agent/scripts/raw-print.ps1`
+- ponte RAW com `winspool.drv`.
+
+## Experiência do usuário
+
+Depois de instalar o `.exe`:
+1. O Print Agent abre uma janela própria.
+2. O usuário vê status, versão e código de pareamento.
+3. O agente detecta as impressoras do Windows.
+4. O usuário conecta o navegador pelo código.
+5. Cada destino do X Burguer Central é mapeado para uma impressora física.
+6. Pedidos passam a imprimir silenciosamente conforme as regras configuradas.
+7. Fechar a janela deixa o agente ativo na bandeja.
+
+## Janela do aplicativo
+
+A interface do agente mostra:
+- agente online/offline;
+- tempo ativo;
+- código e estado de pareamento;
+- impressoras instaladas e offline;
+- contadores da fila;
+- último job;
+- histórico recente;
+- falhas;
+- logs;
+- teste de impressão;
+- reinício do agente;
+- pasta de dados;
+- iniciar com Windows;
+- verificação de atualização.
+
+## Deduplicação
+
+Impressões automáticas recebem uma chave determinística baseada em pedido, destino, evento e estação. O agente rejeita uma repetição equivalente já registrada recentemente.
+
+Reimpressões manuais continuam permitidas.
+
+## Build e distribuição
+
+O projeto usa:
+- Electron `44.3.0`;
+- electron-builder `26.15.3`;
+- NSIS para o instalador x64.
+
+O workflow `Print Agent Windows` roda em `windows-latest` e:
+1. instala dependências;
+2. valida sintaxe;
+3. gera o instalador;
+4. envia o `.exe` como artifact por 30 dias;
+5. em tags `print-agent-v*`, publica o instalador em GitHub Releases.
+
+Nenhum segredo precisa ser salvo no repositório para verificar atualizações. O aplicativo consulta releases públicas do próprio projeto.
+
+## SmartScreen e assinatura
+
+Esta etapa ainda não usa certificado de assinatura de código. O Windows pode exibir um aviso SmartScreen no primeiro download/execução.
+
+Antes de distribuição ampla, a próxima melhoria de segurança é assinar o instalador e o executável com certificado de code signing.
 
 ## Segurança
 
-- O agente escuta somente em `127.0.0.1`, não na rede local.
-- O pareamento usa um código de 6 dígitos exibido localmente.
-- Após o pareamento, o navegador recebe um token local.
-- O token é enviado no header `X-XB-Print-Token`.
-- O token não é versionado e é removido de backups exportados.
-- A URL do agente é restrita a `localhost` ou `127.0.0.1`.
-- CORS permite apenas o GitHub Pages oficial do projeto e origens locais de desenvolvimento.
+- loopback-only;
+- token local;
+- backup sem token;
+- CORS restrito;
+- preload Electron limitado;
+- `nodeIntegration: false`;
+- `contextIsolation: true`;
+- `sandbox: true`;
+- navegação externa bloqueada na janela;
+- atualização consulta apenas GitHub oficial do projeto.
 
-## Instalação da ETAPA 1
+## Limites atuais
 
-Pré-requisitos:
-- Windows 10/11;
-- Node.js 20 LTS ou superior;
-- impressora térmica 58/80 mm instalada no Windows;
-- suporte da impressora a RAW/ESC-POS.
-
-Procedimento:
-1. Obter a pasta `apps/print-agent` deste repositório.
-2. Dar duplo clique em `INSTALAR-AGENTE.cmd` (ou executar o `install-windows.ps1` pelo PowerShell).
-3. O navegador abrirá `http://127.0.0.1:17871/`.
-4. Copiar o código de pareamento exibido.
-5. No X Burguer Central: **Configurações → Impressoras → Gerenciar**.
-6. Conectar o agente com o código.
-7. Em cada destino, mapear a impressora física do Windows.
-8. Executar uma impressão de teste.
-9. Somente depois ativar os eventos automáticos desejados.
-
-## Impressoras suportadas nesta etapa
-
-A impressão silenciosa é focada em térmicas ESC/POS 58/80 mm. Muitas Epson, Elgin, Bematech e compatíveis trabalham nesse modelo, mas o comportamento depende do driver/firmware.
-
-A4 e impressoras que não aceitam RAW/ESC-POS não fazem parte da impressão silenciosa da ETAPA 1.
-
-## Limites conhecidos
-
-- Não foi executado teste físico neste ambiente com uma impressora real.
-- A versão inicial translitera caracteres acentuados no RAW para aumentar compatibilidade entre firmwares.
-- Ainda não existe instalador `.exe` assinado; a instalação atual usa PowerShell + Node.js.
-- Ainda não há servidor central: fila e mapeamento são locais a este computador.
-
-A próxima evolução é empacotar o agente como aplicativo Windows e, depois, conectar a fila ao backend central.
+- impressão silenciosa apenas térmica ESC/POS 58/80 mm;
+- A4 ainda usa fluxo não silencioso;
+- não houve teste físico com todos os modelos;
+- sem assinatura digital;
+- sem fila central multi-PC;
+- backend central continua pendente.
