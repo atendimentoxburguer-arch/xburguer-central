@@ -98,7 +98,7 @@ function detailsOrder(id){
  <div class="field"><label>Observações</label><textarea id="detailNotes" ${active?'':'readonly'}>${esc(o.notes||'')}</textarea></div>
  <div class="modal-foot order-detail-actions">
   <button class="btn btn-outline" onclick="printOrderMenu('${o.id}')">${icon('printer')}<span>Imprimir</span></button>
-  ${active?'<button class="btn btn-danger" onclick="cancelOrder(\''+o.id+'\')">'+icon('x-circle')+'<span>Cancelar</span></button><button class="btn btn-outline" onclick="oEdit(\''+o.id+'\')">'+icon('pencil')+'<span>Editar pedido</span></button>'+(o.status==='ready'?'<button class="btn btn-green" onclick="closeModal();openOrderCheckoutV22(\''+o.id+'\')">'+icon('cash-coin')+'<span>Fechar conta</span></button>':'')+'<button class="btn btn-primary" onclick="saveOrderNotesV21(\''+o.id+'\')">Salvar</button>':''}
+  ${active?'<button class="btn btn-danger" onclick="cancelOrder(\''+o.id+'\')">'+icon('x-circle')+'<span>Cancelar</span></button><button class="btn btn-outline" onclick="oEdit(\''+o.id+'\')">'+icon('pencil')+'<span>Editar pedido</span></button>'+(o.status==='ready'&&o.type!=='Delivery'?'<button class="btn btn-green" onclick="closeModal();openOrderCheckoutV22(\''+o.id+'\')">'+icon('cash-coin')+'<span>Fechar conta</span></button>':'')+'<button class="btn btn-primary" onclick="saveOrderNotesV21(\''+o.id+'\')">Salvar</button>':''}
   ${o.status==='cancelled'?'<button class="btn btn-danger" onclick="deleteOrderV21(\''+o.id+'\')">'+icon('trash')+'<span>Excluir definitivamente</span></button>':''}
   ${o.status==='done'?'<button class="btn btn-primary" onclick="closeModal()">Fechar</button>':''}
  </div>`);
