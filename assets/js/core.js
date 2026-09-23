@@ -149,6 +149,7 @@ function normalize(){
   o.status=ORDER_STATUSES.has(o.status)?o.status:'analysis';
   o.createdAt=o.createdAt||new Date().toISOString();
   o.customer=String(o.customer||'Não identificado');
+  o.customerId=SAFE_ID.test(String(o.customerId||''))?String(o.customerId):'';
   o.type=ORDER_TYPES.has(o.type)?o.type:'Balcão';
   o.payment=String(o.payment||'Não registrado');
   o.items=o.items.map(i=>({p:String(i.p||''),q:Math.max(0,Number(i.q)||0),price:Math.max(0,Number(i.price)||0)})).filter(i=>i.p&&i.q>0);
