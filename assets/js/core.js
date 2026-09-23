@@ -1,4 +1,4 @@
-/* X Burguer Central V22 — operação de salão, fechamento e relatórios */
+/* Núcleo — estado, persistência e regras compartilhadas */
 function icon(name,extra=''){
   return `<i class="bi bi-${name} ${extra}" aria-hidden="true"></i>`;
 }
@@ -25,7 +25,7 @@ function initThemeUI(){
   applyTheme(document.documentElement.getAttribute('data-bs-theme')||'light');
 }
 
-const APP_VERSION='27.0.0';
+const APP_VERSION='28.0.0';
 const SCHEMA_VERSION=11;
 const LOGO='assets/img/logo.png';
 const STORAGE='xburguer_gestor_pro_v3';
@@ -63,7 +63,7 @@ function defaultState(){return {schemaVersion:SCHEMA_VERSION,
   strongText:true,
   showLogo:false,
   footer:'Obrigado pela preferência!',
-  agent:{enabled:true,url:'http://127.0.0.1:17871',token:'',pairedAt:'',fallbackBrowser:false,lastSeen:'',lastVersion:''},
+  agent:{enabled:true,url:'',token:'',pairedAt:'',fallbackBrowser:false,lastSeen:'',lastVersion:''},
   profiles:[
    {id:'print-counter',name:'Balcão / Caixa',purpose:'receipt',paper:'80mm',copies:1,enabled:true,station:'all',autoEvents:[],deviceName:''},
    {id:'print-kitchen',name:'Cozinha',purpose:'kitchen',paper:'80mm',copies:1,enabled:true,station:'all',autoEvents:[],deviceName:''},
@@ -367,6 +367,13 @@ function load(){
  }else if(migrated){
   try{localStorage.setItem(STORAGE,JSON.stringify(state))}catch(e){console.warn('Falha ao persistir migração local',e)}
  }
+}
+function replaceState(nextState,options={}){
+ state=nextState;
+ normalize();
+ try{localStorage.setItem(STORAGE,JSON.stringify(state))}catch(e){console.warn('Falha ao persistir estado substituído',e)}
+ if(options.render!==false)renderAll();
+ return state;
 }
 function save(options={}){
  try{

@@ -1,4 +1,4 @@
-/* X Burguer Central V21 — gestão de cardápio e fotos */
+/* Cardápio — categorias, produtos e fotos */
 (function(){
   'use strict';
   let menuStatusV14='all';
@@ -184,7 +184,7 @@ function menuStatsV14(){
       {key:'cat',label:'Categoria',type:'select',value:selectedCat,options:cats,required:true},
       {key:'emoji',label:'Ícone de fallback',value:'🍔',help:'Aparece quando o item não possui foto.'},
       {key:'photo',label:'Foto do lanche',type:'file',accept:'image/jpeg,image/png,image/webp',full:true,help:'JPG, PNG ou WebP. A foto será comprimida para economizar espaço.'},
-      {key:'imageUrl',label:'Ou URL da foto',placeholder:'https://...',full:true}
+      {key:'imageUrl',label:'Ou URL da foto',placeholder:'Cole o endereço da imagem',full:true}
     ]});
     if(!v)return;
     let image='';
@@ -243,7 +243,7 @@ function menuStatsV14(){
     openModal(
       '<form id="productPhotoForm">'+
       '<div class="modal-head"><div><h2>Foto — '+esc(p.name)+'</h2><p class="dialog-subtitle">Use uma foto quadrada ou horizontal com o lanche bem centralizado.</p></div><button type="button" class="icon-btn" onclick="closeModal()" aria-label="Fechar">'+icon('x-lg')+'</button></div>'+
-      '<div class="product-photo-editor"><div class="product-photo-preview">'+productMedia(p,'product-photo-preview-media')+'</div><div class="product-photo-fields"><div class="field"><label for="productPhotoFile">Enviar foto</label><input id="productPhotoFile" type="file" accept="image/jpeg,image/png,image/webp"><small class="field-help">A imagem será redimensionada e comprimida automaticamente.</small></div><div class="field"><label for="productPhotoUrl">Ou usar uma URL</label><input id="productPhotoUrl" type="url" value="'+esc(remote)+'" placeholder="https://..."></div></div></div>'+
+      '<div class="product-photo-editor"><div class="product-photo-preview">'+productMedia(p,'product-photo-preview-media')+'</div><div class="product-photo-fields"><div class="field"><label for="productPhotoFile">Enviar foto</label><input id="productPhotoFile" type="file" accept="image/jpeg,image/png,image/webp"><small class="field-help">A imagem será redimensionada e comprimida automaticamente.</small></div><div class="field"><label for="productPhotoUrl">Ou usar uma URL</label><input id="productPhotoUrl" type="url" value="'+esc(remote)+'" placeholder="Cole o endereço da imagem"></div></div></div>'+
       '<div class="modal-foot">'+(p.image?'<button type="button" class="btn btn-danger" id="removeProductPhotoBtn">'+icon('trash')+'<span>Remover foto</span></button>':'')+'<button type="button" class="btn btn-outline" onclick="closeModal()">Cancelar</button><button type="submit" class="btn btn-primary">'+icon('check2')+'<span>Salvar foto</span></button></div>'+
       '</form>'
     );

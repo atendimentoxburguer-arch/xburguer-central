@@ -1,4 +1,4 @@
-/* X Burguer Central V22 — salão, comandas, garçons e configurações */
+/* Salão — mesas, comandas, garçons e configurações */
 (function(){
   'use strict';
   let tableSearchV14='';
@@ -343,8 +343,8 @@
   }
   globalThis.manageTableQrV22=function(){
     const cards=orderedTablesV14().map(function(t){
-      const data=encodeURIComponent(qrPayloadV22(t));
-      return '<article class="table-qr-card"><img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&margin=0&data='+data+'" alt="QR de identificação da '+esc(t.name)+'" loading="lazy"><div><b>'+esc(t.name)+'</b><span>'+esc(tableAreaNameV14(t))+'</span><small>Identificação interna da mesa nesta versão.</small></div><button class="btn btn-outline btn-sm" onclick="editTableV14(\''+t.id+'\')">'+icon('pencil')+'<span>Editar</span></button></article>';
+      const qrSrc=globalThis.XBIntegrations?.tableQrImageUrl?.(qrPayloadV22(t),180)||'';
+      return '<article class="table-qr-card"><img src="'+esc(qrSrc)+'" alt="QR de identificação da '+esc(t.name)+'" loading="lazy"><div><b>'+esc(t.name)+'</b><span>'+esc(tableAreaNameV14(t))+'</span><small>Identificação interna da mesa nesta versão.</small></div><button class="btn btn-outline btn-sm" onclick="editTableV14(\''+t.id+'\')">'+icon('pencil')+'<span>Editar</span></button></article>';
     }).join('');
     openModal('<div class="modal-head"><div><h2>Mesas — QR Code</h2><p class="dialog-subtitle">Identifique e organize as mesas visualmente. O pedido direto pelo QR será conectado ao backend em uma etapa futura.</p></div><button class="icon-btn" onclick="closeModal()" aria-label="Fechar">'+icon('x-lg')+'</button></div><div class="qr-manager-actions"><button class="btn btn-primary" onclick="createTableV14()">'+icon('plus-lg')+'<span>Criar mesa</span></button><button class="btn btn-outline" onclick="bulkCreateTablesV14()">'+icon('files')+'<span>Criar várias</span></button></div><div class="table-qr-grid">'+(cards||'<div class="empty">Nenhuma mesa cadastrada.</div>')+'</div><div class="modal-foot"><button class="btn btn-primary" onclick="closeModal()">Concluir</button></div>');
   };

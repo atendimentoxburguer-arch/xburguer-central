@@ -1,4 +1,4 @@
-/* X Burguer Central V16 — PWA */
+/* PWA — instalação e atualização */
 let deferredInstallPrompt=null;
 const installBtn=document.getElementById('installAppBtn');
 let swRegistration=null;

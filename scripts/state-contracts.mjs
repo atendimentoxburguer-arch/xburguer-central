@@ -26,7 +26,7 @@ context.globalThis=context;
 vm.runInContext(source,context,{filename:'assets/js/core.js'});
 
 const api=vm.runInContext('({APP_VERSION,SCHEMA_VERSION,defaultState,validateState,safeProductImageSrc})',context);
-assert.equal(api.APP_VERSION,'27.0.0');
+assert.equal(api.APP_VERSION,'28.0.0');
 assert.equal(api.SCHEMA_VERSION,11);
 
 const fresh=vm.runInContext('defaultState()',context);
@@ -48,7 +48,7 @@ assert.equal(fresh.settings.printing.strongText,true);
 assert.equal(fresh.settings.printing.showLogo,false);
 assert.ok(fresh.settings.printing.profiles.every(p=>Array.isArray(p.autoEvents)));
 assert.ok(fresh.settings.printing.profiles.every(p=>typeof p.deviceName==='string'));
-assert.equal(fresh.settings.printing.agent.url,'http://127.0.0.1:17871');
+assert.equal(fresh.settings.printing.agent.url,'');
 assert.equal(fresh.settings.printing.agent.token,'');
 assert.equal(fresh.settings.printing.agent.fallbackBrowser,false);
 assert.ok(Array.isArray(fresh.printOutbox));
@@ -77,7 +77,7 @@ assert.ok(Array.isArray(migrated.settings.printing.profiles));
 assert.ok(migrated.settings.printing.profiles.length>=1);
 assert.equal(migrated.settings.printing.orientation,'portrait');
 assert.ok(migrated.settings.printing.profiles.every(p=>Array.isArray(p.autoEvents)));
-assert.equal(migrated.settings.printing.agent.url,'http://127.0.0.1:17871');
+assert.equal(migrated.settings.printing.agent.url,'');
 assert.ok(Array.isArray(migrated.printOutbox));
 assert.ok(migrated.orders.every(o=>typeof o.cancelReason==='string'&&typeof o.stockRestored==='boolean'));
 assert.ok(migrated.orders.every(o=>typeof o.discount==='number'&&typeof o.surcharge==='number'&&Number(o.splitCount)>=1));
@@ -107,7 +107,7 @@ const maliciousAgent=structuredClone(migrated);
 maliciousAgent.settings.printing.agent.url='https://evil.example';
 context.__maliciousAgent=maliciousAgent;
 vm.runInContext('state=__maliciousAgent;normalize()',context);
-assert.equal(vm.runInContext('state.settings.printing.agent.url',context),'http://127.0.0.1:17871');
+assert.equal(vm.runInContext('state.settings.printing.agent.url',context),'');
 
 context.__mesa={type:'Mesa',items:[{p:'p1',q:1,price:100}]};
 assert.equal(vm.runInContext('orderSubtotal(__mesa)',context),100);

@@ -1,4 +1,4 @@
-/* X Burguer Central V20 — cliente do aplicativo de impressão */
+/* Cliente do agente local de impressão */
 (function(){
   'use strict';
 

@@ -48,16 +48,16 @@ function depthBefore(text,index){
 scanCss('app.css',app);
 scanCss('domain-management.css',domain);
 
-const marker='/* Checkout V24 — referência visual de fechamento de mesa */';
+const marker='/* Checkout de mesa — referência visual aprovada */';
 const markerIndex=app.indexOf(marker);
 if(markerIndex<0)throw new Error('Bloco visual do checkout V24 ausente.');
 if(app.indexOf(marker,markerIndex+1)>=0)throw new Error('Bloco visual do checkout V24 duplicado.');
 if(depthBefore(app,markerIndex)!==0)throw new Error('Checkout V24 está aninhado dentro de outra regra CSS; isso quebra a cascata global.');
 
-const v26Marker='/* ======================================================================\n   V26 — sistema visual unificado X Burguer';
+const v26Marker='/* ======================================================================\n   Sistema visual atual — X Burguer';
 const v26Index=app.indexOf(v26Marker);
-if(v26Index<0)throw new Error('Bloco visual V26 ausente.');
-if(depthBefore(app,v26Index)!==0)throw new Error('Sistema visual V26 está aninhado dentro de outra regra CSS.');
+if(v26Index<0)throw new Error('Bloco do sistema visual atual ausente.');
+if(depthBefore(app,v26Index)!==0)throw new Error('Sistema visual atual está aninhado dentro de outra regra CSS.');
 const checkout=app.slice(markerIndex,v26Index);
 for(const forbidden of ['.app{','.sidebar{','.content{','.page-head{','.orders-board{','.pdv-shell-v22{','.reports-shell-v22{']){
   if(checkout.includes(forbidden))throw new Error('Checkout V24 contém seletor global proibido: '+forbidden);
@@ -77,14 +77,14 @@ for(const selector of [
   if(!checkout.includes(selector))throw new Error('Seletor crítico do checkout ausente: '+selector);
 }
 
-const visualV26=app.slice(v26Index);
+const visualCurrent=app.slice(v26Index);
 for(const token of ['--primary:#1f5b78','--accent:#d2a53a','--sidebar:#111b27','font-size:16px','font-family:"Manrope"']){
-  if(!visualV26.includes(token))throw new Error('Token visual V26 ausente: '+token);
+  if(!visualCurrent.includes(token))throw new Error('Token visual V26 ausente: '+token);
 }
 for(const selector of ['.nav button.active{','.page-head{','.btn-primary,.btn-blue{','.metric::before{','.table-shell{','.product-tile{','.checkout-primary-payments-v24 button{']){
-  if(!visualV26.includes(selector))throw new Error('Componente V26 não padronizado: '+selector);
+  if(!visualCurrent.includes(selector))throw new Error('Componente V26 não padronizado: '+selector);
 }
-if(!domain.includes('V26 — acabamento visual dos módulos de gestão'))throw new Error('Acabamento dos módulos de gestão ausente.');
+if(!domain.includes('Acabamento visual dos módulos de gestão'))throw new Error('Acabamento dos módulos de gestão ausente.');
 if(!html.includes('family=Inter:wght@400;500;600;700;800;900&family=Manrope:wght@500;600;700;800'))throw new Error('Famílias tipográficas esperadas não estão carregadas.');
 
 const combined=app+'\n'+domain;

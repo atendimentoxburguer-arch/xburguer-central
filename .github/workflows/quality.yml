@@ -29,6 +29,8 @@ jobs:
           node --check apps/print-agent/desktop/preload.cjs
       - name: Run static project checks
         run: node scripts/check.mjs
+      - name: Architecture contract tests
+        run: node scripts/architecture-contracts.mjs
       - name: Visual contract tests
         run: node scripts/visual-contracts.mjs
       - name: State contract tests

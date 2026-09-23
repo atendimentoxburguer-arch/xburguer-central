@@ -1,85 +1,73 @@
 # X Burguer Central
 
-Central operacional da X Burguer publicada como aplicação web estática no GitHub Pages.
+Sistema operacional da X Burguer para pedidos, PDV, salão/mesas, cardápio, cozinha/KDS, delivery, clientes, caixa, estoque, financeiro, equipe, relatórios e impressão.
 
-## Módulos
+## Estado atual
 
-Pedidos, PDV, salão/comandas, cardápio, cozinha/KDS, entregas, desempenho, clientes, campanhas, atendimento, caixa, estoque, financeiro, equipe e configurações.
+A aplicação web continua funcionando como protótipo operacional instalável (PWA), publicada pelo GitHub Pages. Os dados de negócio ainda são persistidos localmente no navegador e, por isso, esta versão não deve ser tratada como backend transacional de produção.
+
+A impressão silenciosa já possui um agente Windows separado, com fila, retry, mapeamento de impressoras e suporte ao fluxo térmico.
 
 ## Estrutura
 
-- `index.html`: shell da aplicação e navegação.
-- `assets/css/app.css`: design system e responsividade.
-- `assets/js/core.js`: estado, persistência, backup e utilitários.
-- `assets/js/ui.js`: navegação, modais acessíveis, diálogos e toasts.
-- `assets/js/orders.js`: fluxo de pedidos.
-- `assets/js/sales.js`: PDV, salão e cardápio.
-- `assets/js/operations.js`: entregas, desempenho e KDS.
-- `assets/js/crm.js`: clientes, promoções e atendimento.
+- `index.html`: shell e regiões principais da aplicação.
+- `assets/css/app.css`: estilos globais e sistema visual consolidado.
+- `assets/css/domain-management.css`: estilos específicos de salão e cardápio.
+- `assets/css/print.css`: documentos de impressão.
+- `assets/js/core.js`: estado, persistência, migração, cálculos e utilitários.
+- `assets/js/ui.js`: navegação, modais, diálogos e feedback.
+- `assets/js/integrations.js`: adaptadores externos permitidos no frontend atual.
+- `assets/js/orders.js`: pedidos.
+- `assets/js/sales.js`: PDV e checkout.
+- `assets/js/operations.js`: delivery, desempenho e KDS.
+- `assets/js/crm.js`: clientes, campanhas e atendimento.
 - `assets/js/management.js`: caixa, estoque, financeiro, equipe e configurações.
-- `assets/js/app.js`: inicialização, roteamento e melhorias progressivas.
-- `assets/js/pwa.js`: instalação como app e service worker.
-- `assets/js/print-agent-client.js`: comunicação com o agente local de impressão.
-- `apps/print-agent/`: agente Windows de impressão silenciosa.
-- `manifest.webmanifest` e `service-worker.js`: PWA/offline.
+- `assets/js/reports.js`: relatórios.
+- `assets/js/salon-management.js`: salão, mesas, comandas e garçons.
+- `assets/js/menu-management.js`: categorias, produtos, fotos e estoque do cardápio.
+- `assets/js/printing.js`: documentos e roteamento de impressão.
+- `assets/js/print-agent-client.js`: único adaptador web autorizado a falar com o agente local.
+- `apps/print-agent/`: aplicativo Windows de impressão silenciosa.
+- `scripts/`: contratos automatizados de estado, negócio, arquitetura, visual e impressão.
 
-## Dados
+## Regras de engenharia
 
-A versão atual continua sendo um protótipo: os dados ficam no `localStorage` do navegador. Use **Configurações → Exportar backup** para salvar uma cópia. Limpar os dados do navegador pode apagar alterações locais.
+1. Persistência local pertence somente ao núcleo (`core.js`).
+2. Módulos de tela não acessam `localStorage` diretamente.
+3. URLs e provedores externos ficam em adaptadores explícitos; módulos de tela não conhecem fornecedor.
+4. Pagamento, fiscal, WhatsApp e demais provedores futuros devem ser integrados no backend por adaptadores próprios.
+5. CSS não deve crescer por blocos de versão sobrepostos. O CI aplica orçamento de tamanho e contratos de estabilidade.
+6. Mudanças grandes entram por branch + pull request; `main` deve permanecer estável.
+7. Segredos, certificados e tokens nunca entram no repositório.
 
-## Atalhos
+## Dados e backup
 
-- `Ctrl/Cmd + K`: buscar módulo.
-- `/`: focar a busca lateral.
-- `Esc`: fechar modal/menu.
+Enquanto o backend não estiver concluído, os dados ficam no `localStorage`. Use **Configurações → Exportar backup** para manter uma cópia. Limpar os dados do navegador pode apagar alterações locais.
 
-## Produção real
+## Qualidade
 
-Antes de usar como sistema transacional real, implementar backend, autenticação, autorização, PostgreSQL, logs, backup no servidor e integrações oficiais. Consulte `docs/ARQUITETURA.md`, `docs/AUDITORIA.md`, `docs/ROADMAP.md` e `SECURITY.md`.
+O workflow `Quality` valida:
 
-## Visual V12
+- sintaxe JavaScript;
+- estrutura estática do projeto;
+- limites e contratos de arquitetura;
+- estabilidade visual;
+- migração e estado;
+- regras de pedidos, caixa e estoque;
+- salão e checkout;
+- impressão;
+- agente local de impressão.
 
-A interface foi refinada com uma hierarquia tipográfica mais forte (Manrope + Inter), espaçamento consistente, cartões e tabelas mais bem enquadrados, ícones mais elegantes, estados semânticos mais suaves e responsividade revisada. O objetivo é manter alta legibilidade e velocidade operacional sem excesso de elementos decorativos.
+## Próxima evolução
 
-## Revisão V13
+A migração para produção deve ocorrer sem manter dois sistemas concorrentes. A ordem definida é:
 
-Foi realizada uma auditoria completa de consistência visual: alinhamento de toolbars, grids, cartões, tabelas, formulários, pedidos, PDV, mesas, cardápio, delivery, KDS, marketing, configurações e breakpoints. Estilos de layout que estavam inline foram convertidos para classes reutilizáveis. O service worker passou a buscar CSS/JS pela rede antes do cache para reduzir o risco de uma atualização visual antiga continuar aparecendo após novos deploys.
+1. criar backend autenticado e PostgreSQL;
+2. introduzir uma camada de acesso a dados no frontend;
+3. migrar pedidos, produtos, clientes, mesas, caixa e estoque por domínio;
+4. retirar o `localStorage` como fonte principal;
+5. integrar pagamentos, NFC-e e WhatsApp no backend;
+6. centralizar a fila de impressão e observabilidade;
+7. somente então considerar migração do shell para React/Next.js, se trouxer ganho real sem duplicar a aplicação.
 
-## Gestão V14
-
-A área de salão ganhou gestão por áreas/seções, capacidade, pessoas sentadas, responsável, ordenação, criação em lote, transferência e administração completa das mesas. O gestor de cardápio ganhou indicadores, filtros, ordenação, edição em massa, disponibilidade/86, estoque mínimo, custo, descrição e estação de preparo.
-
-## Engenharia V15
-
-A V15 consolidou migração de dados no núcleo, separou os módulos de salão e cardápio, adicionou validação de backup/importação, endureceu regras de estoque e delivery e incluiu testes automatizados de estado e regras críticas. Consulte `docs/AUDITORIA_V15.md`.
-
-## Revisão V16
-
-A V16 passou por revisão ponta a ponta de engenharia e QA: fluxo de pedidos e PDV, taxas históricas, caixa físico, estoque auditável, delivery, KDS por estação, clientes, equipe, acessibilidade, tratamento de falhas e testes automatizados. Consulte `docs/AUDITORIA_V16.md`.
-
-## Impressão V17
-
-O sistema agora possui impressão de comprovantes, cozinha e delivery com layouts 58 mm, 80 mm e A4, configuração de destinos e impressão de teste. Consulte `docs/IMPRESSAO.md`.
-
-## Impressão V18
-
-A impressão passou a usar layout vertical compacto, texto de alto contraste e roteamento automático configurável por destino, etapa do pedido e estação de preparo. É possível criar destinos como Caixa, Chapa, Fritadeira, Bebidas, Bar e Expedição. Consulte `docs/IMPRESSAO.md`.
-
-## Impressão gerenciada V19
-
-A ETAPA 1 adiciona um agente local Windows para impressão silenciosa em térmicas ESC/POS, com pareamento, descoberta de impressoras, mapeamento por destino, fila persistente, retry e logs. O navegador mantém uma outbox quando o agente está temporariamente indisponível. Consulte `docs/PRINT_AGENT.md`.
-
-## Print Agent V20
-
-A ETAPA 2 transforma o agente de impressão em aplicativo Windows instalável, com runtime embutido, bandeja, inicialização automática, janela própria de gerenciamento, fila/histórico, teste, diagnóstico, reinício e build `.exe` automatizada pelo GitHub Actions. O usuário final não precisa instalar Node.js. Consulte `docs/PRINT_AGENT.md`.
-
-## Operação V21
-
-A V21 amplia a operação diária: cada mesa passa a exibir e gerenciar seus pedidos individualmente, a tela de pedidos ganha histórico de concluídos/cancelados, cancelamento com motivo e exclusão definitiva segura de pedidos cancelados. O gestor de cardápio passa a aceitar fotos JPG/PNG/WebP ou URL, comprimir uploads para o armazenamento local e mostrar as imagens também no PDV.
-## Pagamentos de mesa V23
-
-O fechamento de mesas agora permite receber a conta inteira, dividir o valor em parcelas/pessoas, pagar produtos individualmente e fracionar o valor de uma unidade. Cada recebimento guarda forma de pagamento e alocação, permite estorno antes da conclusão e bloqueia edição/cancelamento enquanto houver valores recebidos. Pagamentos mistos são consolidados corretamente no caixa e nos relatórios.
-
-## Checkout visual V24
-
-O fechamento de mesas foi redesenhado para seguir a referência operacional escolhida: seletor da mesa e ações no topo, pedidos em cards com status/entrega/garçom/ações, painel financeiro fixo à direita, formas de pagamento em destaque, saldo “Falta”, divisão por pessoas e seleção de itens. Pagamentos podem ser registrados durante o preparo, mas a mesa só é liberada quando todos os pedidos estiverem prontos e o saldo estiver zerado.
+Consulte `docs/ARQUITETURA.md`, `docs/ROADMAP.md`, `docs/DESIGN_SYSTEM.md` e `SECURITY.md`.
