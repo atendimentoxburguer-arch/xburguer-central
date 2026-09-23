@@ -1,9 +1,55 @@
-/* X Burguer Central V16 — gestão de cardápio */
+/* X Burguer Central V21 — gestão de cardápio e fotos */
 (function(){
   'use strict';
   let menuStatusV14='all';
   let menuSortV14='name';
   let menuSelectedV14=new Set();
+
+  async function compressProductPhotoV21(file){
+    if(!file)return '';
+    if(!/^image\/(?:jpeg|png|webp)$/i.test(file.type||''))throw new Error('Use uma imagem JPG, PNG ou WebP.');
+    if(file.size>8*1024*1024)throw new Error('A foto original deve ter no máximo 8 MB.');
+    let source;
+    try{source=await createImageBitmap(file)}
+    catch{
+      source=await new Promise((resolve,reject)=>{
+        const img=new Image(),url=URL.createObjectURL(file);
+        img.onload=()=>{URL.revokeObjectURL(url);resolve(img)};
+        img.onerror=()=>{URL.revokeObjectURL(url);reject(new Error('Não foi possível abrir esta imagem.'))};
+        img.src=url;
+      });
+    }
+    const originalWidth=Number(source.width||source.naturalWidth)||1,originalHeight=Number(source.height||source.naturalHeight)||1;
+    const maxSide=560,ratio=Math.min(1,maxSide/Math.max(originalWidth,originalHeight));
+    let width=Math.max(1,Math.round(originalWidth*ratio)),height=Math.max(1,Math.round(originalHeight*ratio));
+    let canvas=document.createElement('canvas'),ctx;
+    const draw=()=>{
+      canvas.width=width;canvas.height=height;ctx=canvas.getContext('2d',{alpha:false});
+      ctx.fillStyle='#ffffff';ctx.fillRect(0,0,width,height);ctx.drawImage(source,0,0,width,height);
+    };
+    draw();
+    let quality=.82,data=canvas.toDataURL('image/webp',quality);
+    while(data.length>118000&&quality>.46){quality-=.08;data=canvas.toDataURL('image/webp',quality)}
+    if(data.length>138000){
+      width=Math.max(1,Math.round(width*.78));height=Math.max(1,Math.round(height*.78));draw();
+      quality=.7;data=canvas.toDataURL('image/webp',quality);
+      while(data.length>118000&&quality>.42){quality-=.07;data=canvas.toDataURL('image/webp',quality)}
+    }
+    source.close?.();
+    const safe=safeProductImageSrc(data);
+    if(!safe)throw new Error('A foto ficou grande demais para o armazenamento local. Tente outra imagem.');
+    return safe;
+  }
+  async function productImageFromDialogV21(values,current=''){
+    if(values?.photo)return compressProductPhotoV21(values.photo);
+    const typed=String(values?.imageUrl||'').trim();
+    if(typed){
+      const safe=safeProductImageSrc(typed);
+      if(!safe)throw new Error('Use uma URL http/https válida para a foto.');
+      return safe;
+    }
+    return current||'';
+  }
 
 function menuStatsV14(){
     return {
@@ -80,12 +126,12 @@ function menuStatsV14(){
     const search=(p.name+' '+(p.description||'')+' '+(p.station||'')).toLowerCase();
     return '<div class="menu-item-row" data-search="'+esc(search)+'">'+
       '<label class="menu-check"><input type="checkbox" '+(menuSelectedV14.has(p.id)?'checked':'')+' onchange="toggleMenuSelectedV14(\''+p.id+'\',this.checked)"><span></span></label>'+
-      '<div class="menu-item-main"><div class="item-thumb">'+esc(p.emoji||'🍔')+'</div><div><b>'+esc(p.name)+'</b><span>'+esc(p.description||'Sem descrição')+'</span></div></div>'+
+      '<div class="menu-item-main"><div class="item-thumb">'+productMedia(p,'menu-item-photo')+'</div><div><b>'+esc(p.name)+'</b><span>'+esc(p.description||'Sem descrição')+'</span></div></div>'+
       '<div class="menu-station">'+icon('fire')+'<span>'+esc(p.station||'Cozinha')+'</span></div>'+
       '<div class="menu-stock '+(status==='low'||status==='sold'?'attention':'')+'"><b>'+Number(p.stock||0)+'</b><span>mín. '+Number(p.min||0)+'</span></div>'+
       '<div class="menu-price"><b>'+money(p.price)+'</b><span>custo '+money(p.cost||0)+'</span></div>'+
       '<span class="badge '+statusClass+'">'+statusLabel+'</span>'+
-      '<div class="menu-item-actions"><button class="icon-btn" onclick="toggleSold(\''+p.id+'\')" title="'+(p.sold?'Disponibilizar':'Esgotar')+'">'+icon(p.sold?'check-circle':'slash-circle')+'</button><button class="icon-btn" onclick="editProductV14(\''+p.id+'\')" title="Editar">'+icon('pencil')+'</button></div>'+
+      '<div class="menu-item-actions"><button class="icon-btn" onclick="editProductPhotoV21(\''+p.id+'\')" title="Foto do produto">'+icon('camera')+'</button><button class="icon-btn" onclick="toggleSold(\''+p.id+'\')" title="'+(p.sold?'Disponibilizar':'Esgotar')+'">'+icon(p.sold?'check-circle':'slash-circle')+'</button><button class="icon-btn" onclick="editProductV14(\''+p.id+'\')" title="Editar">'+icon('pencil')+'</button></div>'+
     '</div>';
   }
 
@@ -135,11 +181,16 @@ function menuStatsV14(){
       {key:'min',label:'Estoque mínimo',type:'number',min:0,step:'1',value:5},
       {key:'station',label:'Estação de preparo',type:'select',value:'Cozinha',options:['Cozinha','Chapa','Fritadeira','Bebidas','Bar','Sem preparo']},
       {key:'cat',label:'Categoria',type:'select',value:selectedCat,options:cats,required:true},
-      {key:'emoji',label:'Ícone',value:'🍔'}
+      {key:'emoji',label:'Ícone de fallback',value:'🍔',help:'Aparece quando o item não possui foto.'},
+      {key:'photo',label:'Foto do lanche',type:'file',accept:'image/jpeg,image/png,image/webp',full:true,help:'JPG, PNG ou WebP. A foto será comprimida para economizar espaço.'},
+      {key:'imageUrl',label:'Ou URL da foto',placeholder:'https://...',full:true}
     ]});
     if(!v)return;
+    let image='';
+    try{image=await productImageFromDialogV21(v,'')}
+    catch(error){toast(String(error.message||error),'error');return}
     const price=Math.max(0,Number(v.price)||0),stock=Math.max(0,Number(v.stock)||0);
-    const item={id:uid('p'),cat:v.cat,name:v.name.trim(),description:(v.description||'').trim(),price:price,cost:Math.max(0,Number(v.cost)||0),emoji:v.emoji||'🍔',active:true,manualSold:false,sold:stock<=0,stock:stock,min:Math.max(0,Number(v.min)||0),station:v.station||'Cozinha'};
+    const item={id:uid('p'),cat:v.cat,name:v.name.trim(),description:(v.description||'').trim(),price:price,cost:Math.max(0,Number(v.cost)||0),emoji:v.emoji||'🍔',image,active:true,manualSold:false,sold:stock<=0,stock:stock,min:Math.max(0,Number(v.min)||0),station:v.station||'Cozinha'};
     state.products.push(item);
     if(stock)recordStockMovement(item.id,stock,'Estoque inicial','cadastro');
     selectedCat=v.cat;save();toast('Item criado.','success');
@@ -168,6 +219,33 @@ function menuStatsV14(){
     Object.assign(p,{name:v.name.trim(),description:(v.description||'').trim(),price:Math.max(0,Number(v.price)||0),cost:Math.max(0,Number(v.cost)||0),stock:stock,min:Math.max(0,Number(v.min)||0),station:v.station||'Cozinha',cat:v.cat,active:v.active==='1',manualSold:manualSold,sold:manualSold||stock<=0});
     if(stock!==beforeStock)recordStockMovement(p.id,stock-beforeStock,'Edição de produto','cardapio');
     selectedCat=v.cat;save();toast('Item atualizado.','success');
+  };
+
+  globalThis.editProductPhotoV21=function(id){
+    const p=product(id);if(!p)return;
+    const remote=/^https?:\/\//i.test(String(p.image||''))?p.image:'';
+    openModal(
+      '<form id="productPhotoForm">'+
+      '<div class="modal-head"><div><h2>Foto — '+esc(p.name)+'</h2><p class="dialog-subtitle">Use uma foto quadrada ou horizontal com o lanche bem centralizado.</p></div><button type="button" class="icon-btn" onclick="closeModal()" aria-label="Fechar">'+icon('x-lg')+'</button></div>'+
+      '<div class="product-photo-editor"><div class="product-photo-preview">'+productMedia(p,'product-photo-preview-media')+'</div><div class="product-photo-fields"><div class="field"><label for="productPhotoFile">Enviar foto</label><input id="productPhotoFile" type="file" accept="image/jpeg,image/png,image/webp"><small class="field-help">A imagem será redimensionada e comprimida automaticamente.</small></div><div class="field"><label for="productPhotoUrl">Ou usar uma URL</label><input id="productPhotoUrl" type="url" value="'+esc(remote)+'" placeholder="https://..."></div></div></div>'+
+      '<div class="modal-foot">'+(p.image?'<button type="button" class="btn btn-danger" id="removeProductPhotoBtn">'+icon('trash')+'<span>Remover foto</span></button>':'')+'<button type="button" class="btn btn-outline" onclick="closeModal()">Cancelar</button><button type="submit" class="btn btn-primary">'+icon('check2')+'<span>Salvar foto</span></button></div>'+
+      '</form>'
+    );
+    document.getElementById('removeProductPhotoBtn')?.addEventListener('click',()=>{
+      p.image='';if(save()){closeModal();toast('Foto removida.','success')}
+    });
+    document.getElementById('productPhotoForm')?.addEventListener('submit',async event=>{
+      event.preventDefault();
+      const file=document.getElementById('productPhotoFile')?.files?.[0]||null;
+      const imageUrl=document.getElementById('productPhotoUrl')?.value||'';
+      const before=p.image||'';
+      try{
+        const next=await productImageFromDialogV21({photo:file,imageUrl},before);
+        p.image=next;
+        if(!save()){p.image=before;return}
+        closeModal();toast('Foto do produto atualizada.','success');
+      }catch(error){toast(String(error.message||error),'error')}
+    });
   };
 
   globalThis.addCategory=function(){return addCategoryV14()};
