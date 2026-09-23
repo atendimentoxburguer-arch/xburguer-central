@@ -10,7 +10,7 @@ A identidade visual usa somente:
 - **Branco** para cartões e superfícies principais.
 - **Cinza** para fundos secundários, divisórias, textos auxiliares e estados neutros.
 
-Estados operacionais são diferenciados por texto, ícone, peso e variações de azul/cinza, evitando depender de múltiplas cores.
+Estados operacionais são diferenciados por texto, ícone, peso e variações de azul/cinza, evitando depender de múltiplas cores. No tema claro, o texto principal usa grafite profundo (#111827) e o texto secundário usa cinza-azulado mais escuro (#475569) para manter contraste durante uso prolongado.
 
 ## Tipografia
 
@@ -18,11 +18,11 @@ A fonte oficial é **Inter**, com fallback para Segoe UI, Roboto, Arial e sans-s
 
 Escala principal:
 
-- título de página: 20–22 px;
-- títulos internos: 14–16 px;
-- texto operacional: 12–15 px;
-- labels e metadados: 10–12 px;
-- valores financeiros: 16–24 px conforme prioridade.
+- título de página: 22–24 px;
+- títulos internos: 15–17 px;
+- texto operacional: 13–16 px;
+- labels e metadados: 11–13 px;
+- valores financeiros: 17–26 px conforme prioridade.
 
 A interface deve evitar textos pequenos demais e não deve usar mais de uma família tipográfica sem necessidade funcional.
 
