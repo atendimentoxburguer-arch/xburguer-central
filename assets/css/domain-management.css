@@ -304,3 +304,162 @@
 .commands-summary-v22 span,.commands-summary-v22 b{display:block}.commands-summary-v22 span{color:var(--muted);font-size:.65rem;font-weight:800;text-transform:uppercase}.commands-summary-v22 b{margin-top:3px;font-size:1rem}
 .commands-head-v22{margin-top:2px}
 @media(max-width:760px){.commands-summary-v22{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+/* ======================================================================
+   V26 — acabamento visual dos módulos de gestão
+   ====================================================================== */
+.page-head-actions{gap:7px}
+.salon-kpis,.menu-kpis{gap:8px;margin-bottom:12px}
+.salon-kpis>div,.menu-kpis>div{
+  padding:10px 11px;
+  border-radius:10px;
+  box-shadow:none;
+  background:var(--surface);
+}
+.salon-kpis span,.menu-kpis span{
+  font-size:.58rem;
+  font-weight:850;
+  letter-spacing:.06em;
+}
+.salon-kpis b,.menu-kpis b{
+  margin-top:3px;
+  font-size:1.02rem;
+  font-weight:900;
+  letter-spacing:-.035em;
+}
+.mesas-tabs{
+  gap:4px;
+  margin-bottom:10px;
+  padding:3px;
+  border-radius:10px;
+  box-shadow:none;
+}
+.mesas-tabs button{
+  min-height:34px;
+  padding:6px 10px;
+  border-radius:8px;
+  font-size:.68rem;
+  font-weight:800;
+}
+.mesas-tabs button span{font-size:.59rem}
+.mesas-tabs button.active{background:var(--primary)}
+.salon-toolbar{margin-bottom:10px}
+.table-zones{gap:10px}
+.table-zone{padding:10px;border-radius:12px;box-shadow:none}
+.table-zone-head{margin-bottom:8px;padding-bottom:8px}
+.table-zone-head h3{font-size:.79rem}
+.table-zone-head p{font-size:.63rem}
+.zone-icon{
+  width:32px;height:32px;flex-basis:32px;
+  border-radius:8px;
+  color:var(--primary);
+  background:var(--primary-soft);
+}
+.table-detail-grid{gap:6px}
+.table-detail-grid>div{padding:8px;border-radius:9px}
+.table-detail-grid span{font-size:.61rem}
+.table-detail-grid b{margin-top:2px;font-size:.76rem}
+.table-consumption{padding:10px 11px;border-radius:10px}
+.table-consumption span{font-size:.7rem}
+.table-consumption strong{font-size:1rem}
+.table-modal-actions{gap:6px}
+.area-manager-row,.table-manager-row,.category-manager-row{
+  gap:8px;
+  padding:8px 9px;
+  border-radius:9px;
+}
+.area-manager-row span,.table-manager-main span,.category-manager-row span{font-size:.64rem}
+.table-manager-icon{
+  width:31px;height:31px;flex-basis:31px;
+  border-radius:8px;
+}
+.panel-section-head{margin-bottom:8px}
+.panel-section-head>div{font-size:.74rem}
+.cat-row{grid-template-columns:28px minmax(0,1fr) auto;gap:6px}
+.cat-row-icon{width:28px;height:28px;border-radius:7px}
+.cat-count{font-size:.6rem}
+.menu-title-row{margin-bottom:10px}
+.menu-title-row p{margin-top:3px;font-size:.66rem}
+.menu-toolbar-v14{grid-template-columns:minmax(220px,1fr) 160px 150px;gap:6px;margin-bottom:8px}
+.bulk-bar{min-height:40px;margin-bottom:7px;padding:6px 8px;border-radius:9px;font-size:.68rem}
+.menu-items-head{
+  grid-template-columns:32px minmax(210px,1.5fr) minmax(105px,.75fr) 78px 102px 96px 110px;
+  gap:7px;
+  padding:5px 8px;
+  font-size:.56rem;
+}
+.menu-item-row{
+  grid-template-columns:32px minmax(210px,1.5fr) minmax(105px,.75fr) 78px 102px 96px 78px;
+  gap:7px;
+  min-height:62px;
+  margin-bottom:6px;
+  padding:7px 8px;
+  border-radius:9px;
+}
+.menu-item-row:hover{background:var(--surface-2)}
+.menu-item-photo{border-radius:8px}
+.menu-item-name b{font-size:.71rem}
+.menu-item-name span{font-size:.61rem}
+.menu-item-actions .icon-btn{width:31px;height:31px}
+.product-photo-editor{gap:12px}
+.product-photo-preview{border-radius:11px}
+.table-orders-section{border-radius:11px}
+.table-orders-head{padding:9px 10px}
+.table-orders-head b{font-size:.72rem}
+.table-orders-head span{font-size:.62rem}
+.table-order-row{
+  gap:8px;
+  padding:9px 10px;
+}
+.table-order-id b{font-size:.72rem}
+.table-order-copy b{font-size:.69rem}
+.table-order-copy span{font-size:.62rem}
+.salon-section-tabs{gap:5px;margin-bottom:10px}
+.salon-section-tabs button{
+  min-height:42px;
+  grid-template-columns:19px minmax(0,1fr) auto;
+  gap:6px;
+  padding:7px 9px;
+  border-radius:9px;
+  font-size:.67rem;
+}
+.salon-section-tabs button.active{
+  border-color:color-mix(in srgb,var(--primary) 34%,var(--border));
+  background:var(--primary-soft);
+  color:var(--primary);
+}
+.salon-subhead{margin-bottom:8px}
+.salon-subhead h2{font-size:.82rem}
+.salon-subhead p{font-size:.64rem}
+.waiters-table-wrap{border-radius:10px}
+.waiter-table-card{padding:8px 9px;border-radius:9px}
+.waiter-table-card span{font-size:.62rem}
+.qr-manager-actions{gap:6px;margin-bottom:8px}
+.table-qr-grid{gap:7px}
+.table-qr-card{grid-template-columns:80px minmax(0,1fr) auto;gap:8px;padding:8px;border-radius:9px}
+.table-qr-card img{width:80px;height:80px;border-radius:7px}
+.table-qr-card span{font-size:.62rem}
+.table-qr-card small{font-size:.58rem}
+.salon-settings-v22{gap:8px}
+.salon-settings-card{padding:11px;border-radius:11px}
+.salon-settings-title{margin-bottom:9px}
+.salon-settings-title span{font-size:.58rem}
+.salon-settings-title h2{font-size:.78rem}
+.salon-settings-grid,.salon-model-grid,.salon-mode-grid{gap:6px}
+.salon-number-box,.salon-model-card,.salon-mode-card{padding:8px;border-radius:8px}
+.salon-number-box>span{font-size:.61rem}
+.salon-number-box>b{font-size:.95rem}
+.salon-number-box>small,.salon-model-card small,.salon-mode-card>div>span{font-size:.59rem}
+.salon-model-card b{font-size:.69rem}
+.commands-summary-v22{gap:6px;margin-bottom:8px}
+.commands-summary-v22>div{padding:8px 9px;border-radius:9px}
+.commands-summary-v22 span{font-size:.57rem}
+.commands-summary-v22 b{font-size:.86rem}
+@media(max-width:1120px){
+  .menu-toolbar-v14{grid-template-columns:1fr 150px 140px}
+}
+@media(max-width:760px){
+  .salon-kpis,.menu-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .menu-toolbar-v14{grid-template-columns:1fr}
+}
+
