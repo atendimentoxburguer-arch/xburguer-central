@@ -1944,7 +1944,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
   min-height:84px;
   padding:9px 10px;
   border-radius:8px;
-  background:#fff;
+  background:var(--surface);
 }
 .report-kpis-v22 span{font-size:.56rem;letter-spacing:.05em}
 .report-kpis-v22 b{
