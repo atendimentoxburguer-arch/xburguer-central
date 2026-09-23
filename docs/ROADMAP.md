@@ -9,6 +9,7 @@
 - [x] Documentação técnica inicial.
 
 ## Fase 2 — Refinamento do protótipo
+- [x] Checkout visual V24: fechamento de mesa alinhado à referência, com cards de pedidos e painel de pagamento lateral.
 - [x] Pagamentos V23: conta inteira, divisão, pagamento por produto, fracionamento de unidade, estorno e meios mistos.
 - [x] Gestão V21: pedidos por mesa, histórico/cancelamento/exclusão segura e fotos de produtos no cardápio/PDV.
 - [x] Impressão V18: retrato econômico, alto contraste e roteamento automático por destino/estação.

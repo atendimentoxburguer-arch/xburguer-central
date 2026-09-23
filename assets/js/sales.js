@@ -1,4 +1,4 @@
-/* X Burguer Central V23 — PDV e fechamento de conta */
+/* X Burguer Central V24 — PDV e fechamento de conta */
 let pdvDiscountDraft=0;
 let pdvSurchargeDraft=0;
 let pdvSplitDraft=1;
@@ -6,6 +6,7 @@ let checkoutModeV23='total';
 let checkoutPaymentV23='PIX';
 let checkoutSelectedUnitsV23=new Set();
 let checkoutOpenKeyV23='';
+let checkoutActionOrderV24='';
 const CHECKOUT_METHODS_V23=['Dinheiro','PIX','Cartão (Débito)','Cartão (Crédito)'];
 
 function pdvBaseSubtotalV22(){return pdvCart.reduce((s,i)=>s+(Number(i.q)||0)*(Number(i.price)||0),0)}
@@ -212,29 +213,90 @@ function checkoutItemUnitsV23(orders){
  });
  return result;
 }
-function checkoutOrderListV22(orders){
+function checkoutStatusMetaV24(status){
+ const map={
+  analysis:{label:'Recebido',badge:'b-orange'},
+  production:{label:'Em preparo',badge:'b-orange'},
+  ready:{label:'Pronto',badge:'b-green'}
+ };
+ return map[status]||orderStatusMetaV21?.(status)||{label:'Pedido',badge:'b-gray'};
+}
+function checkoutContextLabelV24(context){
+ if(context.tableId){
+  const t=state.tables.find(x=>x.id===context.tableId);
+  return t?.name||'Mesa';
+ }
+ return 'Pedido #'+String(context.orderId||'');
+}
+function checkoutServerV24(context,order){
+ if(context.tableId){
+  const t=state.tables.find(x=>x.id===context.tableId);
+  return String(t?.server||'Sem garçom');
+ }
+ return String(state.tables.find(t=>t.name===order?.table)?.server||'Sem garçom');
+}
+function checkoutOrderActionMenuV24(o,context){
+ const open=checkoutActionOrderV24===o.id,locked=(o.settlements||[]).length>0;
+ return '<div class="checkout-order-actions-v24">'+
+  '<button class="checkout-order-action-btn-v24" onclick="checkoutToggleOrderActionsV24(\''+o.id+'\',\''+(context.tableId||'')+'\',\''+(context.orderId||'')+'\')">Ações '+icon('chevron-down')+'</button>'+
+  (open?'<div class="checkout-order-menu-v24">'+
+    '<button onclick="printOrderMenu(\''+o.id+'\')">'+icon('printer')+'<span>Imprimir</span></button>'+
+    '<button '+(locked?'disabled title="Estorne os pagamentos antes de editar"':'')+' onclick="checkoutEditOrderV24(\''+o.id+'\')">'+icon('pencil')+'<span>Editar</span></button>'+
+    '<button onclick="checkoutViewOrderV24(\''+o.id+'\')">'+icon('file-earmark-text')+'<span>Ver detalhes</span></button>'+
+    '<button class="danger" '+(locked?'disabled title="Estorne os pagamentos antes de excluir"':'')+' onclick="checkoutCancelOrderV24(\''+o.id+'\',\''+(context.tableId||'')+'\',\''+(context.orderId||'')+'\')">'+icon('trash')+'<span>Excluir</span></button>'+
+   '</div>':'')+
+ '</div>';
+}
+function checkoutOrderItemsV24(o,context,itemMode){
+ if(!itemMode){
+  return (o.items||[]).map(i=>'<div class="checkout-order-item-v24"><span><b>'+Number(i.q||0)+'x</b> '+esc(product(i.p)?.name||'Item')+'</span><strong>'+money((Number(i.q)||0)*(Number(i.price)||0))+'</strong></div>').join('');
+ }
+ const units=checkoutItemUnitsV23([o]);
+ return units.map(u=>{
+  const selected=checkoutSelectedUnitsV23.has(u.key)&&u.remainingCents>0,paid=u.remainingCents<=0;
+  return '<div class="checkout-order-item-v24 selectable '+(selected?'selected ':'')+(paid?'paid':'')+'">'+
+   '<button class="checkout-item-select-v23" '+(paid?'disabled':'')+' aria-pressed="'+selected+'" onclick="checkoutToggleItemV23(\''+u.key+'\',\''+(context.tableId||'')+'\',\''+(context.orderId||'')+'\')">'+(paid?icon('check-square-fill'):selected?icon('check-square-fill'):icon('square'))+'</button>'+
+   '<span><b>1x</b> '+esc(u.name)+(u.count>1?' <small>• unidade '+(u.unitIndex+1)+'/'+u.count+'</small>':'')+'</span>'+
+   '<strong>'+money(u.remainingCents/100)+'</strong>'+
+   '<button class="checkout-item-split-v24" '+(paid?'disabled':'')+' onclick="checkoutSplitItemValueV23(\''+u.orderId+'\','+u.itemIndex+','+u.unitIndex+',\''+(context.tableId||'')+'\',\''+(context.orderId||'')+'\')">Dividir</button>'+
+  '</div>';
+ }).join('');
+}
+function checkoutOrderListV22(orders,context={tableId:'',orderId:''}){
+ const itemMode=checkoutModeV23==='items';
  return orders.map(o=>{
-  const totalCents=Math.max(0,Math.round(orderTotal(o)*100)),paidCents=Math.min(totalCents,Math.round(orderSettlementTotal(o)*100)),payment=(o.settlements||[]).length?orderPaymentLabel(o):(o.payment||'Não registrado');
-  return `<article class="checkout-order-card"><div class="checkout-order-head"><div><b>Pedido #${esc(o.id)}</b><span class="badge ${orderStatusMetaV21?.(o.status)?.badge||'b-gray'}">${esc(orderStatusMetaV21?.(o.status)?.label||o.status)}</span></div><span>${orderTime(o)}</span></div><div class="checkout-order-items">${o.items.map(i=>`<div><span>${Number(i.q)||0}x ${esc(product(i.p)?.name||'Item')}</span><b>${money((Number(i.q)||0)*(Number(i.price)||0))}</b></div>`).join('')}</div><div class="checkout-order-foot"><span>${esc(payment)}</span><b>${money(orderTotal(o))}</b></div>${paidCents?'<div class="checkout-order-progress-v23"><span>Recebido '+money(paidCents/100)+'</span><span>Falta '+money(Math.max(0,totalCents-paidCents)/100)+'</span></div>':''}</article>`;
+  const meta=checkoutStatusMetaV24(o.status),totalCents=Math.max(0,Math.round(orderTotal(o)*100)),paidCents=Math.min(totalCents,Math.round(orderSettlementTotal(o)*100)),server=checkoutServerV24(context,o);
+  return '<article class="checkout-order-card v24">'+
+   '<div class="checkout-order-head-v24">'+
+    '<div class="checkout-order-identity-v24"><b>Pedido #'+esc(o.id)+'</b><span class="badge '+meta.badge+'">'+esc(meta.label)+'</span></div>'+
+    '<div class="checkout-order-controls-v24">'+
+     '<label class="checkout-served-v24 '+(o.servedAt?'checked':'')+'"><input type="checkbox" '+(o.servedAt?'checked':'')+' onchange="checkoutToggleServedV24(\''+o.id+'\',\''+(context.tableId||'')+'\',\''+(context.orderId||'')+'\')"><span>Entregar</span></label>'+
+     '<span class="checkout-time-v24">'+icon('clock')+' '+orderTime(o)+'</span>'+
+     '<span class="checkout-server-v24">'+icon('person-badge')+' '+esc(server)+'</span>'+
+     checkoutOrderActionMenuV24(o,context)+
+    '</div>'+
+   '</div>'+
+   '<div class="checkout-order-items-v24">'+checkoutOrderItemsV24(o,context,itemMode)+'</div>'+
+   '<div class="checkout-order-total-v24"><span>Total</span><b>'+money(orderTotal(o))+'</b></div>'+
+   (paidCents?'<div class="checkout-order-progress-v23"><span>Recebido '+money(paidCents/100)+'</span><span>Falta '+money(Math.max(0,totalCents-paidCents)/100)+'</span></div>':'')+
+  '</article>';
  }).join('');
 }
 function checkoutItemsPanelV23(orders,context){
- const units=checkoutItemUnitsV23(orders);
- if(!units.length)return '<div class="empty">Nenhum item disponível para pagamento.</div>';
- return '<section class="checkout-items-v23"><div class="checkout-items-head-v23"><div><b>Pagamento por produto</b><span>Selecione unidades inteiras ou use “Dividir” para pagar somente uma parte do valor de uma unidade.</span></div></div><div class="checkout-item-list-v23">'+units.map(u=>{
-  const selected=checkoutSelectedUnitsV23.has(u.key)&&u.remainingCents>0,paid=u.remainingCents<=0,p=product(u.product);
-  return `<div class="checkout-item-row-v23 ${selected?'selected':''} ${paid?'paid':''}"><button class="checkout-item-select-v23" ${paid?'disabled':''} aria-pressed="${selected}" onclick="checkoutToggleItemV23('${u.key}','${context.tableId}','${context.orderId}')">${paid?icon('check-circle-fill'):selected?icon('check-square-fill'):icon('square')}</button><div class="checkout-item-product-v23">${productMedia(p,'checkout-item-photo-v23')}<div><b>${esc(u.name)}</b><span>Pedido #${esc(u.orderId)} • unidade ${u.unitIndex+1} de ${u.count}</span></div></div><div class="checkout-item-value-v23"><b>${money(u.amountCents/100)}</b><span>${paid?'Pago':u.paidCents?'Falta '+money(u.remainingCents/100):'Em aberto'}</span></div><button class="btn btn-outline btn-sm" ${paid?'disabled':''} onclick="checkoutSplitItemValueV23('${u.orderId}',${u.itemIndex},${u.unitIndex},'${context.tableId}','${context.orderId}')">Dividir</button></div>`;
- }).join('')+'</div></section>';
+ return '<div class="checkout-orders-list">'+checkoutOrderListV22(orders,context)+'</div>';
 }
 function checkoutPaymentHistoryV23(orders,context){
  const groups=checkoutPaymentGroupsV23(orders);
  if(!groups.length)return '';
- return '<div class="checkout-history-v23"><div class="checkout-history-head-v23"><b>Pagamentos registrados</b><span>'+groups.length+' recebimento(s)</span></div>'+groups.map(g=>'<div class="checkout-history-row-v23"><div><b>'+money(g.amountCents/100)+'</b><span>'+esc(g.method)+' • '+(g.kind==='items'?'produtos':g.kind==='item-part'?'produto dividido':g.kind==='split'?'parcela':'conta')+'</span></div><button class="btn btn-outline btn-sm" onclick="checkoutUndoPaymentV23(\''+g.id+'\',\''+context.tableId+'\',\''+context.orderId+'\')">Estornar</button></div>').join('')+'</div>';
+ return '<details class="checkout-history-v24"><summary><span>Pagamentos registrados</span><b>'+groups.length+'</b></summary><div class="checkout-history-v23">'+groups.map(g=>'<div class="checkout-history-row-v23"><div><b>'+money(g.amountCents/100)+'</b><span>'+esc(g.method)+' • '+(g.kind==='items'?'produtos':g.kind==='item-part'?'produto dividido':g.kind==='split'?'parcela':'conta')+'</span></div><button class="btn btn-outline btn-sm" onclick="checkoutUndoPaymentV23(\''+g.id+'\',\''+(context.tableId||'')+'\',\''+(context.orderId||'')+'\')">Estornar</button></div>').join('')+'</div></details>';
 }
 function checkoutCanReceiveV23(orders,notify=true){
- const ok=orders.length&&orders.every(o=>o.status==='ready'&&o.type!=='Delivery');
- if(!ok&&notify)toast('Para receber a conta, todos os pedidos precisam estar prontos.','warning');
+ const ok=orders.length&&orders.every(o=>!['done','cancelled'].includes(o.status)&&o.type!=='Delivery');
+ if(!ok&&notify)toast('Esta conta não está disponível para recebimento.','warning');
  return ok;
+}
+function checkoutReadyToCloseV24(orders){
+ return orders.length&&orders.every(o=>o.status==='ready'&&o.type!=='Delivery');
 }
 function checkoutContextOrdersV23(tableId='',orderId=''){
  if(tableId){
@@ -245,6 +307,65 @@ function checkoutContextOrdersV23(tableId='',orderId=''){
 }
 function reopenCheckoutV23(tableId='',orderId=''){
  if(tableId)openTableCheckoutV22(tableId,true);else openOrderCheckoutV22(orderId,true);
+}
+function checkoutChangeTableV24(tableId){
+ if(!tableId)return;
+ checkoutActionOrderV24='';
+ openTableCheckoutV22(tableId,false);
+}
+function checkoutToggleServedV24(id,tableId='',orderId=''){
+ const o=state.orders.find(x=>x.id===id);if(!o||['done','cancelled'].includes(o.status))return;
+ o.servedAt=o.servedAt?'':new Date().toISOString();
+ save({render:false});reopenCheckoutV23(tableId,orderId);
+}
+function checkoutToggleOrderActionsV24(id,tableId='',orderId=''){
+ checkoutActionOrderV24=checkoutActionOrderV24===id?'':id;
+ reopenCheckoutV23(tableId,orderId);
+}
+function checkoutEditOrderV24(id){
+ const o=state.orders.find(x=>x.id===id);if(!o)return;
+ checkoutActionOrderV24='';oEdit(id);
+}
+function checkoutViewOrderV24(id){
+ checkoutActionOrderV24='';detailsOrder(id);
+}
+async function checkoutCancelOrderV24(id,tableId='',orderId=''){
+ checkoutActionOrderV24='';
+ await cancelOrder(id);
+ const o=state.orders.find(x=>x.id===id);
+ if(o?.status!=='cancelled')return;
+ const remaining=checkoutContextOrdersV23(tableId,orderId);
+ if(remaining.length)reopenCheckoutV23(tableId,orderId);
+}
+function checkoutNewTableOrderV24(tableId){
+ closeModal();newTableOrderV14(tableId);
+}
+async function checkoutQuickPayV24(method,tableId='',orderId=''){
+ checkoutPaymentV23=method;
+ const orders=checkoutContextOrdersV23(tableId,orderId);if(!orders.length)return;
+ const split=Math.max(1,Number(orders[0]?.splitCount)||1);
+ const kind=checkoutModeV23==='items'?'items':split>1?'split':'total';
+ await checkoutReceiveV23(tableId,orderId,kind);
+}
+async function checkoutChooseCardV24(tableId='',orderId=''){
+ const v=await formDialog({title:'Pagamento com cartão',subtitle:'Escolha o tipo de cartão para registrar corretamente no caixa.',submitLabel:'Continuar',fields:[{key:'method',label:'Tipo do cartão',type:'select',value:'Cartão (Débito)',options:['Cartão (Débito)','Cartão (Crédito)'],required:true}]});
+ if(!v)return;
+ await checkoutQuickPayV24(v.method,tableId,orderId);
+}
+function checkoutSelectItemsV24(tableId='',orderId=''){
+ checkoutModeV23=checkoutModeV23==='items'?'total':'items';
+ checkoutSelectedUnitsV23=new Set();
+ reopenCheckoutV23(tableId,orderId);
+}
+function checkoutTopbarV24(orders,context){
+ const table=context.tableId?state.tables.find(x=>x.id===context.tableId):null;
+ const activeTables=state.tables.filter(t=>state.orders.some(o=>o.table===t.name&&!['done','cancelled'].includes(o.status)));
+ const selector=table?'<select class="checkout-table-select-v24" onchange="checkoutChangeTableV24(this.value)">'+activeTables.map(t=>'<option value="'+esc(t.id)+'" '+(t.id===table.id?'selected':'')+'>'+esc(t.name)+'</option>').join('')+'</select>':'<div class="checkout-order-title-v24">Pedido #'+esc(context.orderId)+'</div>';
+ return '<header class="checkout-topbar-v24"><div>'+selector+'</div><div class="checkout-top-actions-v24">'+
+  '<button class="btn btn-outline" onclick="printOrderMenu(\''+orders[0].id+'\')">'+icon('printer')+'<span>Imprimir conferência</span>'+icon('chevron-down')+'</button>'+
+  (table?'<button class="btn btn-outline" onclick="tableMenuV14(\''+table.id+'\')">'+icon('gear')+'<span>Ações</span>'+icon('chevron-down')+'</button><button class="btn btn-primary" onclick="checkoutNewTableOrderV24(\''+table.id+'\')">'+icon('plus-lg')+'<span>Novo pedido</span></button>':'')+
+  '<button class="btn btn-danger-outline" onclick="closeModal()">'+icon('x-lg')+'<span>Fechar</span></button>'+
+ '</div></header>';
 }
 function openOrderCheckoutV22(id,preserve=false){
  const o=editableCheckoutOrderV22(id);if(!o)return;
@@ -257,21 +378,44 @@ function openTableCheckoutV22(id,preserve=false){
  openCheckoutV22(orders,{title:'Fechar conta — '+t.name,orderId:'',tableId:id},preserve);
 }
 function openCheckoutV22(orders,context,preserve=false){
- const summary=checkoutSummaryV22(orders),totalCents=Math.max(0,Math.round(summary.total*100)),paidCents=Math.min(totalCents,checkoutPaidCentsV23(orders)),remainingCents=Math.max(0,totalCents-paidCents),split=Math.max(1,Number(orders[0]?.splitCount)||1),key=context.tableId?'table:'+context.tableId:'order:'+context.orderId,ready=checkoutCanReceiveV23(orders,false);
+ const summary=checkoutSummaryV22(orders),totalCents=Math.max(0,Math.round(summary.total*100)),paidCents=Math.min(totalCents,checkoutPaidCentsV23(orders)),remainingCents=Math.max(0,totalCents-paidCents),split=Math.max(1,Number(orders[0]?.splitCount)||1),key=context.tableId?'table:'+context.tableId:'order:'+context.orderId,canReceive=checkoutCanReceiveV23(orders,false),readyToClose=checkoutReadyToCloseV24(orders);
  if(!preserve||checkoutOpenKeyV23!==key){
-  checkoutOpenKeyV23=key;checkoutModeV23='total';checkoutSelectedUnitsV23=new Set();
+  checkoutOpenKeyV23=key;checkoutModeV23='total';checkoutSelectedUnitsV23=new Set();checkoutActionOrderV24='';
   const latest=checkoutPaymentGroupsV23(orders)[0]?.method,legacy=orders[0]?.payment;
   checkoutPaymentV23=CHECKOUT_METHODS_V23.includes(latest)?latest:CHECKOUT_METHODS_V23.includes(legacy)?legacy:'PIX';
  }
- [...checkoutSelectedUnitsV23].forEach(unitKey=>{if(!checkoutItemUnitsV23(orders).some(u=>u.key===unitKey&&u.remainingCents>0))checkoutSelectedUnitsV23.delete(unitKey)});
- const selectedCents=checkoutItemUnitsV23(orders).filter(u=>checkoutSelectedUnitsV23.has(u.key)).reduce((sum,u)=>sum+u.remainingCents,0);
+ const units=checkoutItemUnitsV23(orders);
+ [...checkoutSelectedUnitsV23].forEach(unitKey=>{if(!units.some(u=>u.key===unitKey&&u.remainingCents>0))checkoutSelectedUnitsV23.delete(unitKey)});
+ const selectedCents=units.filter(u=>checkoutSelectedUnitsV23.has(u.key)).reduce((sum,u)=>sum+u.remainingCents,0);
  const suggestedCents=Math.min(remainingCents,Math.max(1,Math.floor(totalCents/split)));
- const modePanel=checkoutModeV23==='split'
-  ?`<div class="checkout-mode-panel-v23"><div class="checkout-split-v22"><span>Dividir por</span><button onclick="${context.tableId?`checkoutSplitTableV22('${context.tableId}',-1)`:`checkoutSplitOrderV22('${context.orderId}',-1)`}">−</button><b>${split}</b><button onclick="${context.tableId?`checkoutSplitTableV22('${context.tableId}',1)`:`checkoutSplitOrderV22('${context.orderId}',1)`}">+</button><strong>${money(suggestedCents/100)}</strong></div><small>Cada recebimento usa a parcela sugerida; a última absorve os centavos restantes.</small><button class="btn btn-primary btn-block" ${!ready||!remainingCents?'disabled':''} onclick="checkoutReceiveV23('${context.tableId}','${context.orderId}','split')">Receber parcela • ${money(suggestedCents/100)}</button></div>`
-  :checkoutModeV23==='items'
-   ?`<div class="checkout-mode-panel-v23"><div class="checkout-selected-v23"><span>Selecionado</span><b>${money(selectedCents/100)}</b></div><small>Marque os produtos à esquerda. Para fracionar um único produto, use o botão “Dividir” ao lado dele.</small><button class="btn btn-primary btn-block" ${!ready||!selectedCents?'disabled':''} onclick="checkoutReceiveV23('${context.tableId}','${context.orderId}','items')">Receber selecionados</button></div>`
-   :`<div class="checkout-mode-panel-v23"><div class="checkout-selected-v23"><span>Valor a receber</span><b>${money(remainingCents/100)}</b></div><small>Recebe todo o saldo restante da conta na forma escolhida.</small><button class="btn btn-primary btn-block" ${!ready||!remainingCents?'disabled':''} onclick="checkoutReceiveV23('${context.tableId}','${context.orderId}','total')">Receber saldo • ${money(remainingCents/100)}</button></div>`;
- openModal(`<div class="checkout-shell-v22"><section class="checkout-main-v22"><div class="checkout-toolbar"><div><h2>${esc(context.title)}</h2><p>${orders.length} pedido(s) • recebimento flexível por conta, parcela ou produto</p></div><div><button class="btn btn-outline" onclick="printOrderMenu('${orders[0].id}')">${icon('printer')}<span>Imprimir conferência</span></button><button class="icon-btn" onclick="closeModal()" aria-label="Fechar">${icon('x-lg')}</button></div></div>${!ready?'<div class="checkout-warning-v23">'+icon('info-circle')+'<span>Você pode conferir a conta agora, mas os recebimentos ficam liberados quando todos os pedidos estiverem prontos.</span></div>':''}<div class="checkout-customer">${icon('person')}<b>${esc(orders[0].customer||'Cliente não identificado')}</b></div>${checkoutModeV23==='items'?checkoutItemsPanelV23(orders,context):'<div class="checkout-orders-list">'+checkoutOrderListV22(orders)+'</div>'}</section><aside class="checkout-side-v22"><div class="checkout-pay-modes-v23"><button class="${checkoutModeV23==='total'?'active':''}" onclick="checkoutSetModeV23('total','${context.tableId}','${context.orderId}')">${icon('cash-stack')}<span>Conta inteira</span></button><button class="${checkoutModeV23==='split'?'active':''}" onclick="checkoutSetModeV23('split','${context.tableId}','${context.orderId}')">${icon('people')}<span>Dividir conta</span></button><button class="${checkoutModeV23==='items'?'active':''}" onclick="checkoutSetModeV23('items','${context.tableId}','${context.orderId}')">${icon('bag-check')}<span>Por produto</span></button></div><div class="checkout-adjust-grid"><button ${paidCents?'disabled title="Estorne os pagamentos antes de alterar o desconto"':''} onclick="${context.tableId?`checkoutAdjustTableV22('${context.tableId}','discount')`:`checkoutAdjustOrderV22('${context.orderId}','discount')`}">Desconto</button><button ${paidCents?'disabled title="Estorne os pagamentos antes de alterar o acréscimo"':''} onclick="${context.tableId?`checkoutAdjustTableV22('${context.tableId}','surcharge')`:`checkoutAdjustOrderV22('${context.orderId}','surcharge')`}">Acréscimo</button></div><div class="checkout-summary-v22"><div><span>Subtotal</span><b>${money(summary.subtotal)}</b></div><div><span>Taxas</span><b>${money(summary.fees)}</b></div>${summary.discount?'<div><span>Desconto</span><b>− '+money(summary.discount)+'</b></div>':''}${summary.surcharge?'<div><span>Acréscimo</span><b>+ '+money(summary.surcharge)+'</b></div>':''}<div class="grand"><span>Valor total</span><b>${money(summary.total)}</b></div><div class="paid-v23"><span>Já recebido</span><b>${money(paidCents/100)}</b></div><div class="remaining-v23"><span>Falta receber</span><b>${money(remainingCents/100)}</b></div></div><div class="checkout-payment-v22"><b>Forma deste pagamento</b><div class="checkout-payment-grid">${CHECKOUT_METHODS_V23.map(v=>`<button class="${checkoutPaymentV23===v?'active':''}" onclick="checkoutSetPaymentV23('${v}','${context.tableId}','${context.orderId}')">${esc(v)}</button>`).join('')}</div></div>${modePanel}${checkoutPaymentHistoryV23(orders,context)}<button class="btn btn-green btn-block checkout-close-btn" ${!ready||remainingCents?'disabled':''} onclick="${context.tableId?`closeTableCheckoutV22('${context.tableId}')`:`closeOrderCheckoutV22('${context.orderId}')`}">${icon('check2-circle')}<span>${context.tableId?'Concluir e liberar mesa':'Concluir pedido'}</span></button></aside></div>`);
+ const paymentTitle=paidCents?'Escolha a próxima forma de pagamento:':'Escolha a 1ª forma de pagamento:';
+ const splitControl='<div class="checkout-split-row-v24"><span>Dividir por:</span><div class="checkout-stepper-v24"><button onclick="'+(context.tableId?'checkoutSplitTableV22(\''+context.tableId+'\',-1)':'checkoutSplitOrderV22(\''+context.orderId+'\',-1)')+'">−</button><b>'+split+'</b><button onclick="'+(context.tableId?'checkoutSplitTableV22(\''+context.tableId+'\',1)':'checkoutSplitOrderV22(\''+context.orderId+'\',1)')+'">+</button></div><strong>'+money((split>1?suggestedCents:remainingCents)/100)+'</strong></div>';
+ const contextArgs='\''+(context.tableId||'')+'\',\''+(context.orderId||'')+'\'';
+ const paymentButtons='<div class="checkout-primary-payments-v24">'+
+  '<button '+(!canReceive||!remainingCents?'disabled':'')+' onclick="checkoutQuickPayV24(\'Dinheiro\','+contextArgs+')">'+icon('currency-dollar')+'<span>Dinheiro</span></button>'+
+  '<button '+(!canReceive||!remainingCents?'disabled':'')+' onclick="checkoutChooseCardV24('+contextArgs+')">'+icon('credit-card')+'<span>Cartão</span></button>'+
+ '</div><button class="checkout-pix-v24" '+(!canReceive||!remainingCents?'disabled':'')+' onclick="checkoutQuickPayV24(\'PIX\','+contextArgs+')">'+icon('qr-code')+'<span>PIX</span></button>';
+ const closeDisabled=!readyToClose||remainingCents;
+ openModal('<div class="checkout-shell-v22 checkout-shell-v24">'+
+  checkoutTopbarV24(orders,context)+
+  '<section class="checkout-main-v22 checkout-main-v24">'+
+   '<div class="checkout-customer v24">'+icon('person')+'<b>'+esc(orders[0].customer||'Cliente não identificado')+'</b></div>'+
+   '<div class="checkout-orders-scroll-v24"><div class="checkout-orders-list">'+checkoutOrderListV22(orders,context)+'</div></div>'+
+  '</section>'+
+  '<aside class="checkout-side-v22 checkout-side-v24">'+
+   '<div class="checkout-adjust-grid"><button '+(paidCents?'disabled title="Estorne os pagamentos antes de alterar o desconto"':'')+' onclick="'+(context.tableId?'checkoutAdjustTableV22(\''+context.tableId+'\',\'discount\')':'checkoutAdjustOrderV22(\''+context.orderId+'\',\'discount\')')+'">'+icon('percent')+'<span>Desconto</span></button><button '+(paidCents?'disabled title="Estorne os pagamentos antes de alterar o acréscimo"':'')+' onclick="'+(context.tableId?'checkoutAdjustTableV22(\''+context.tableId+'\',\'surcharge\')':'checkoutAdjustOrderV22(\''+context.orderId+'\',\'surcharge\')')+'">'+icon('plus-lg')+'<span>Acréscimo</span></button></div>'+
+   '<div class="checkout-summary-v24"><div><span>Subtotal</span><b>'+money(summary.subtotal)+'</b></div>'+(summary.fees?'<div><span>Taxas</span><b>'+money(summary.fees)+'</b></div>':'')+(summary.discount?'<div><span>Desconto</span><b>− '+money(summary.discount)+'</b></div>':'')+(summary.surcharge?'<div><span>Acréscimo</span><b>+ '+money(summary.surcharge)+'</b></div>':'')+'<div class="grand"><span>Valor total:</span><b>'+money(summary.total)+'</b></div></div>'+
+   '<div class="checkout-payment-v24"><b>'+paymentTitle+'</b>'+paymentButtons+'</div>'+
+   '<div class="checkout-settlement-bottom-v24">'+
+    '<div class="checkout-missing-v24"><span>Falta</span><b>'+money(remainingCents/100)+'</b></div>'+
+    splitControl+
+    '<button class="checkout-select-items-v24 '+(checkoutModeV23==='items'?'active':'')+'" onclick="checkoutSelectItemsV24('+contextArgs+')">'+icon('list-task')+'<span>'+(checkoutModeV23==='items'?'Voltar para conta':'Selecionar itens para pagamento')+'</span>'+(checkoutModeV23==='items'&&selectedCents?'<b>'+money(selectedCents/100)+'</b>':'')+'</button>'+
+    checkoutPaymentHistoryV23(orders,context)+
+    '<button class="btn btn-block checkout-close-btn v24" '+(closeDisabled?'disabled':'')+' onclick="'+(context.tableId?'closeTableCheckoutV22(\''+context.tableId+'\')':'closeOrderCheckoutV22(\''+context.orderId+'\')')+'"><span>'+(context.tableId?'Fechar conta':'Fechar pedido')+'</span></button>'+
+    (!readyToClose?'<small class="checkout-close-help-v24">A conta pode ser paga agora; a mesa só é liberada quando todos os pedidos estiverem prontos.</small>':'')+
+   '</div>'+
+  '</aside>'+
+ '</div>');
 }
 function checkoutSetModeV23(mode,tableId='',orderId=''){
  if(!['total','split','items'].includes(mode))return;
@@ -368,8 +512,8 @@ async function checkoutAdjustTableV22(id,kind){
 }
 function checkoutSetOrderPaymentV22(id,payment){const o=editableCheckoutOrderV22(id);if(!o)return;o.payment=payment;checkoutPaymentV23=CHECKOUT_METHODS_V23.includes(payment)?payment:checkoutPaymentV23;save({render:false});openOrderCheckoutV22(id,true)}
 function checkoutSetTablePaymentV22(id,payment){const t=state.tables.find(x=>x.id===id);if(!t)return;state.orders.filter(o=>o.table===t.name&&!['done','cancelled'].includes(o.status)).forEach(o=>o.payment=payment);checkoutPaymentV23=CHECKOUT_METHODS_V23.includes(payment)?payment:checkoutPaymentV23;save({render:false});openTableCheckoutV22(id,true)}
-function checkoutSplitOrderV22(id,delta){const o=editableCheckoutOrderV22(id);if(!o)return;o.splitCount=Math.min(20,Math.max(1,(Number(o.splitCount)||1)+delta));save({render:false});openOrderCheckoutV22(id,true)}
-function checkoutSplitTableV22(id,delta){const t=state.tables.find(x=>x.id===id);if(!t)return;const orders=state.orders.filter(o=>o.table===t.name&&!['done','cancelled'].includes(o.status)),next=Math.min(20,Math.max(1,(Number(orders[0]?.splitCount)||1)+delta));orders.forEach(o=>o.splitCount=next);save({render:false});openTableCheckoutV22(id,true)}
+function checkoutSplitOrderV22(id,delta){const o=editableCheckoutOrderV22(id);if(!o)return;const next=Math.min(20,Math.max(1,(Number(o.splitCount)||1)+delta));o.splitCount=next;if(checkoutModeV23!=='items')checkoutModeV23=next>1?'split':'total';save({render:false});openOrderCheckoutV22(id,true)}
+function checkoutSplitTableV22(id,delta){const t=state.tables.find(x=>x.id===id);if(!t)return;const orders=state.orders.filter(o=>o.table===t.name&&!['done','cancelled'].includes(o.status)),next=Math.min(20,Math.max(1,(Number(orders[0]?.splitCount)||1)+delta));orders.forEach(o=>o.splitCount=next);if(checkoutModeV23!=='items')checkoutModeV23=next>1?'split':'total';save({render:false});openTableCheckoutV22(id,true)}
 async function closeOrderCheckoutV22(id){
  const o=state.orders.find(x=>x.id===id);if(!o)return;
  if(o.type==='Delivery'){toast('Pedidos delivery devem ser finalizados pelo fluxo de Entregas.','warning');return}

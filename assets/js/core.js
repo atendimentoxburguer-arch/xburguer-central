@@ -25,7 +25,7 @@ function initThemeUI(){
   applyTheme(document.documentElement.getAttribute('data-bs-theme')||'light');
 }
 
-const APP_VERSION='23.0.0';
+const APP_VERSION='24.0.0';
 const SCHEMA_VERSION=11;
 const LOGO='assets/img/logo.png';
 const STORAGE='xburguer_gestor_pro_v3';
@@ -261,6 +261,7 @@ function normalize(){
   o.cancelReason=String(o.cancelReason||'').trim().slice(0,240);
   o.cancelledAt=o.cancelledAt?String(o.cancelledAt):'';
   o.completedAt=o.completedAt?String(o.completedAt):'';
+  o.servedAt=o.servedAt?String(o.servedAt):'';
   if(o.stockRestored===undefined&&o.status==='cancelled')o.stockRestored=true;
   o.stockRestored=Boolean(o.stockRestored);
   o.deliveryFee=Math.max(0,Number(o.deliveryFee ?? state.settings.deliveryFee)||0);
