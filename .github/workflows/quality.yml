@@ -1,0 +1,32 @@
+name: Quality
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  static-checks:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check JavaScript syntax
+        run: |
+          set -e
+          for file in assets/js/*.js; do
+            node --check "$file"
+          done
+
+      - name: Check required files
+        run: |
+          test -f index.html
+          test -f assets/css/app.css
+          test -f assets/img/logo.png
+          test -f assets/js/core.js
+          test -f assets/js/app.js
