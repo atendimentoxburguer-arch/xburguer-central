@@ -54,7 +54,7 @@ if(markerIndex<0)throw new Error('Bloco visual do checkout V24 ausente.');
 if(app.indexOf(marker,markerIndex+1)>=0)throw new Error('Bloco visual do checkout V24 duplicado.');
 if(depthBefore(app,markerIndex)!==0)throw new Error('Checkout V24 está aninhado dentro de outra regra CSS; isso quebra a cascata global.');
 
-const v26Marker='/* ======================================================================\n   Sistema visual atual — X Burguer';
+const v26Marker='/* ======================================================================\n   Sistema visual atual — desktop blue / white / gray';
 const v26Index=app.indexOf(v26Marker);
 if(v26Index<0)throw new Error('Bloco do sistema visual atual ausente.');
 if(depthBefore(app,v26Index)!==0)throw new Error('Sistema visual atual está aninhado dentro de outra regra CSS.');
@@ -78,14 +78,22 @@ for(const selector of [
 }
 
 const visualCurrent=app.slice(v26Index);
-for(const token of ['--primary:#1f5b78','--accent:#d2a53a','--sidebar:#111b27','font-size:16px','font-family:"Manrope"']){
+for(const token of ['--primary:#2563eb','--accent:#3b82f6','--sidebar:#0f172a','font-size:16px','font-family:"Inter"']){
   if(!visualCurrent.includes(token))throw new Error('Token visual V26 ausente: '+token);
 }
 for(const selector of ['.nav button.active{','.page-head{','.btn-primary,.btn-blue{','.metric::before{','.table-shell{','.product-tile{','.checkout-primary-payments-v24 button{']){
   if(!visualCurrent.includes(selector))throw new Error('Componente V26 não padronizado: '+selector);
 }
 if(!domain.includes('Acabamento visual dos módulos de gestão'))throw new Error('Acabamento dos módulos de gestão ausente.');
-if(!html.includes('family=Inter:wght@400;500;600;700;800;900&family=Manrope:wght@500;600;700;800'))throw new Error('Famílias tipográficas esperadas não estão carregadas.');
+if(!html.includes('family=Inter:wght@400;500;600;700;800&display=swap'))throw new Error('Fonte Inter esperada não está carregada.');\nif(/family=Manrope|font-family:\"Manrope\"/.test(html+app+domain))throw new Error('Manrope não deve voltar à interface V29.');
+
+const bannedInterfaceColors=[
+  '#22c55e','#16a34a','#dc2626','#b91c1c','#ef4444',
+  '#f97316','#f59e0b','#d2a53a','#ad8120','#e2b74f','#c99529'
+];
+for(const color of bannedInterfaceColors){
+  if((app+'\\n'+domain).toLowerCase().includes(color))throw new Error('Cor fora da identidade azul/branco/cinza: '+color);
+}
 
 const combined=app+'\n'+domain;
 for(const selector of [
