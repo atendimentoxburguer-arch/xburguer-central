@@ -178,7 +178,7 @@ function normalize(){
  state.settings.printing.footer=String(state.settings.printing.footer??printDefaults.footer).slice(0,180);
  if(!state.settings.printing.agent||typeof state.settings.printing.agent!=='object'||Array.isArray(state.settings.printing.agent))state.settings.printing.agent={...printDefaults.agent};
  state.settings.printing.agent.enabled=state.settings.printing.agent.enabled!==false;
- state.settings.printing.agent.url=String(state.settings.printing.agent.url||printDefaults.agent.url).trim().slice(0,180)||printDefaults.agent.url;
+ const candidateAgentUrl=String(state.settings.printing.agent.url||printDefaults.agent.url).trim().slice(0,180);state.settings.printing.agent.url=/^http:\/\/(?:127\.0\.0\.1|localhost)(?::\d{1,5})?$/.test(candidateAgentUrl)?candidateAgentUrl:printDefaults.agent.url;
  state.settings.printing.agent.token=String(state.settings.printing.agent.token||'').trim().slice(0,160);
  state.settings.printing.agent.pairedAt=String(state.settings.printing.agent.pairedAt||'').slice(0,40);
  state.settings.printing.agent.fallbackBrowser=Boolean(state.settings.printing.agent.fallbackBrowser);
