@@ -1,4 +1,4 @@
-/* X Burguer Central V15 — gestão de salão */
+/* X Burguer Central V16 — gestão de salão */
 (function(){
   'use strict';
   let tableSearchV14='';
@@ -109,7 +109,7 @@
     return '<article class="mesa" data-name="'+esc(search)+'" data-status="'+t.status+'" data-area="'+esc(t.area||'')+'">'+
       '<div class="mesa-main">'+
         '<div class="mesa-top"><div class="mesa-name-wrap"><span class="mesa-name">'+esc(t.name)+'</span><span class="mesa-area">'+esc(tableAreaNameV14(t))+'</span></div>'+
-        '<div class="mesa-actions"><button onclick="newTableOrderV14(\''+esc(t.name)+'\')" title="Novo pedido">'+icon('plus-lg')+'<span>Pedido</span></button><button onclick="tableMenuV14(\''+t.id+'\')" title="Mais ações">'+icon('three-dots')+'</button></div></div>'+
+        '<div class="mesa-actions"><button onclick="newTableOrderV14(\''+t.id+'\')" title="Novo pedido">'+icon('plus-lg')+'<span>Pedido</span></button><button onclick="tableMenuV14(\''+t.id+'\')" title="Mais ações">'+icon('three-dots')+'</button></div></div>'+
         '<div class="mesa-meta">'+icon('people')+'<span>'+esc(meta||'Sem detalhes')+'</span></div>'+
       '</div>'+
       '<div class="mesa-strip '+t.status+'">'+strip+'</div>'+
@@ -132,13 +132,15 @@
     });
   };
 
-  globalThis.newTableOrder=function(name){newTableOrderV14(name)};
-  globalThis.newTableOrderV14=function(name){
+  globalThis.newTableOrder=function(ref){newTableOrderV14(ref)};
+  globalThis.newTableOrderV14=function(ref){
+    const t=state.tables.find(function(x){return x.id===ref||x.name===ref});
+    if(!t){toast('Mesa não encontrada.','error');return}
     pdvType='Mesa';
-    pdvDraftTable=name;
+    pdvDraftTable=t.name;
     go('pdv');
     renderPdv();
-    toast('Novo pedido vinculado a '+name+'.','info');
+    toast('Novo pedido vinculado a '+t.name+'.','info');
   };
 
   globalThis.tableMenu=function(id){tableMenuV14(id)};
@@ -159,7 +161,7 @@
       '<div class="table-consumption"><span>Consumo atual</span><strong>'+money(total)+'</strong></div>'+
       '<div class="modal-foot table-modal-actions">'+
         '<button class="btn btn-outline" onclick="editTableV14(\''+id+'\')">'+icon('pencil')+'<span>Editar mesa</span></button>'+
-        (t.status!=='free'?'<button class="btn btn-outline" onclick="transferTableV14(\''+id+'\')">'+icon('arrow-left-right')+'<span>Transferir</span></button><button class="btn btn-outline" onclick="tSetV14(\''+id+'\',\'closing\')">'+icon('receipt')+'<span>Fechar conta</span></button><button class="btn btn-green" onclick="tFinishV14(\''+id+'\')">'+icon('check2-circle')+'<span>Receber e liberar</span></button>':'<button class="btn btn-primary" onclick="closeModal();newTableOrderV14(\''+esc(t.name)+'\')">'+icon('plus-lg')+'<span>Novo pedido</span></button>')+
+        (t.status!=='free'?'<button class="btn btn-outline" onclick="transferTableV14(\''+id+'\')">'+icon('arrow-left-right')+'<span>Transferir</span></button><button class="btn btn-outline" onclick="tSetV14(\''+id+'\',\'closing\')">'+icon('receipt')+'<span>Fechar conta</span></button><button class="btn btn-green" onclick="tFinishV14(\''+id+'\')">'+icon('check2-circle')+'<span>Receber e liberar</span></button>':'<button class="btn btn-primary" onclick="closeModal();newTableOrderV14(\''+id+'\')">'+icon('plus-lg')+'<span>Novo pedido</span></button>')+
       '</div>'
     );
   };
