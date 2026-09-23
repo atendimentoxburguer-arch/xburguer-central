@@ -1,9 +1,10 @@
-/* X Burguer Central V19 — cliente do agente local de impressão */
+/* X Burguer Central V20 — cliente do aplicativo de impressão */
 (function(){
   'use strict';
 
   const DEFAULT_AGENT_URL='http://127.0.0.1:17871';
   let agentHealth={online:false,authorized:false,version:'',queue:null,error:'',checkedAt:''};
+  let physicalPrinters=[];
   let flushBusy=false;
 
   function agentConfig(){
@@ -56,7 +57,7 @@
   async function pairPrintAgent(){
     const online=await probePrintAgent({silent:true});
     if(!online.online){
-      openModal('<div class="modal-head"><div><h2>Conectar agente de impressão</h2><p class="dialog-subtitle">O agente local precisa estar instalado e em execução neste computador.</p></div><button class="icon-btn" onclick="closeModal()" aria-label="Fechar">'+icon('x-lg')+'</button></div><div class="print-agent-help"><b>1.</b><span>Instale e inicie o X Burguer Print Agent no Windows.</span><b>2.</b><span>Abra <strong>http://127.0.0.1:17871</strong> para ver o código.</span><b>3.</b><span>Volte aqui e informe o código de 6 dígitos.</span></div><div class="modal-foot"><button class="btn btn-outline" onclick="openLocalPrintAgentPage()">'+icon('box-arrow-up-right')+'<span>Abrir agente local</span></button><button class="btn btn-primary" onclick="closeModal()">Entendi</button></div>');
+      openModal('<div class="modal-head"><div><h2>Conectar aplicativo de impressão</h2><p class="dialog-subtitle">Instale o X Burguer Print Agent para imprimir sem abrir janelas.</p></div><button class="icon-btn" onclick="closeModal()" aria-label="Fechar">'+icon('x-lg')+'</button></div><div class="print-agent-help"><b>1.</b><span>Baixe e instale o <strong>X Burguer Print Agent</strong> no Windows.</span><b>2.</b><span>Abra o aplicativo pela bandeja do Windows e copie o código de pareamento.</span><b>3.</b><span>Volte aqui e informe o código de 6 dígitos.</span></div><div class="modal-foot"><button class="btn btn-outline" onclick="openPrintAgentDownload()">'+icon('download')+'<span>Baixar aplicativo</span></button><button class="btn btn-outline" onclick="openLocalPrintAgentPage()">'+icon('box-arrow-up-right')+'<span>Abrir agente local</span></button><button class="btn btn-primary" onclick="closeModal()">Entendi</button></div>');
       return false;
     }
     const v=await formDialog({title:'Parear agente local',subtitle:'Informe o código de 6 dígitos exibido pelo X Burguer Print Agent.',fields:[{key:'code',label:'Código de pareamento',placeholder:'000000',required:true}]});
@@ -78,13 +79,15 @@
     const cfg=agentConfig();cfg.token='';cfg.pairedAt='';cfg.lastSeen='';agentHealth={online:false,authorized:false,version:'',queue:null,error:'',checkedAt:''};save({render:false});globalThis.printerCenter?.();
   }
   function openLocalPrintAgentPage(){window.open(agentBase()+'/','_blank','noopener,noreferrer')}
+  function openPrintAgentDownload(){window.open('https://github.com/atendimentoxburguer-arch/xburguer-central/releases/latest','_blank','noopener,noreferrer')}
   async function fetchPhysicalPrinters(){
     if(!agentConfig().token){toast('Pareie o agente antes de buscar impressoras.','warning');return []}
     try{
       const data=await agentRequest('/printers',{timeout:7000});
+      physicalPrinters=Array.isArray(data.printers)?data.printers:[];
       setHealth({online:true,authorized:true,error:'',version:agentHealth.version});
-      return Array.isArray(data.printers)?data.printers:[];
-    }catch(error){setHealth({online:false,authorized:false,error:String(error.message||error)});toast('Não foi possível listar as impressoras: '+String(error.message||error),'error');return []}
+      return physicalPrinters;
+    }catch(error){physicalPrinters=[];setHealth({online:false,authorized:false,error:String(error.message||error)});toast('Não foi possível listar as impressoras: '+String(error.message||error),'error');return []}
   }
   async function mapPrinterDevice(profileId){
     const profile=(state.settings.printing.profiles||[]).find(p=>p.id===profileId);if(!profile)return;
@@ -98,12 +101,15 @@
   }
 
   function agentJob(profile,document,event='manual'){
+    const automatic=event!=='manual'&&event!=='test';
+    const station=profile.station||'all';
     return {
       id:uid('pj'),
+      dedupeKey:automatic?[document.id,profile.id,event,station].join(':'):'',
       profileId:profile.id,
       printerName:profile.deviceName,
       purpose:profile.purpose,
-      station:profile.station||'all',
+      station,
       event,
       paper:profile.paper,
       copies:profile.copies,
@@ -176,6 +182,26 @@
     const data=await getAgentJobs(),local=state.printOutbox||[];
     openModal('<div class="modal-head"><div><h2>Fila de impressão</h2><p class="dialog-subtitle">Jobs do agente local e impressões aguardando conexão.</p></div><button class="icon-btn" onclick="closeModal()" aria-label="Fechar">'+icon('x-lg')+'</button></div><div class="print-queue-summary"><div><span>No agente</span><b>'+Number(data.queue?.queued||0)+'</b></div><div><span>Falhas</span><b>'+Number(data.queue?.failed||0)+'</b></div><div><span>Aguardando conexão</span><b>'+local.length+'</b></div></div><div class="managed-print-jobs">'+(data.jobs||[]).map(j=>'<div class="managed-print-job"><span class="print-job-state '+esc(j.status)+'">'+esc(j.status)+'</span><div><b>#'+esc(j.orderId||j.id)+' • '+esc(j.printerName)+'</b><span>'+esc(j.purpose||'')+(j.lastError?' • '+esc(j.lastError):'')+'</span></div>'+(j.status==='failed'?'<button class="btn btn-outline btn-sm" onclick="retryAgentJob(\''+j.id+'\')">Tentar novamente</button>':'')+'</div>').join('')+(local.map(j=>'<div class="managed-print-job"><span class="print-job-state queued">local</span><div><b>#'+esc(j.document?.id||j.id)+' • '+esc(j.printerName)+'</b><span>Aguardando o agente ficar disponível.</span></div></div>').join('')||'<div class="empty">Nenhum job recente.</div>')+'</div><div class="modal-foot"><button class="btn btn-outline" onclick="flushPrintOutbox();closeModal()">'+icon('arrow-repeat')+'<span>Reenviar pendentes</span></button><button class="btn btn-primary" onclick="closeModal()">Fechar</button></div>');
   }
+  function printerDeviceState(name){
+    if(!name)return {state:'unmapped',label:'Não mapeada'};
+    const printer=physicalPrinters.find(p=>p.name===name);
+    if(!printer)return {state:'unknown',label:'Não encontrada no Windows'};
+    if(printer.offline)return {state:'offline',label:'Offline'};
+    return {state:'online',label:'Online'};
+  }
+  async function refreshPrinterDeviceBadges(){
+    if(!agentConfig().token||!agentHealth.online||!agentHealth.authorized)return;
+    try{
+      await fetchPhysicalPrinters();
+      document.querySelectorAll('[data-printer-device]').forEach(el=>{
+        const info=printerDeviceState(el.dataset.printerDevice||'');
+        el.dataset.deviceState=info.state;
+        el.textContent=(el.dataset.devicePrefix||'Windows')+': '+(el.dataset.printerDevice||'—')+' • '+info.label;
+        el.classList.toggle('device-mapped',info.state==='online');
+        el.classList.toggle('device-unmapped',info.state!=='online');
+      });
+    }catch{}
+  }
   function agentStatusCard(){
     const cfg=agentConfig(),status=!cfg.enabled?'disabled':agentHealth.online&&agentHealth.authorized?'ready':agentHealth.online?'pair':'offline';
     const label=status==='ready'?'Agente conectado':status==='pair'?'Agente encontrado':status==='disabled'?'Agente desativado':'Agente offline';
@@ -202,8 +228,11 @@
   globalThis.pairPrintAgent=pairPrintAgent;
   globalThis.unpairPrintAgent=unpairPrintAgent;
   globalThis.openLocalPrintAgentPage=openLocalPrintAgentPage;
+  globalThis.openPrintAgentDownload=openPrintAgentDownload;
   globalThis.fetchPhysicalPrinters=fetchPhysicalPrinters;
   globalThis.mapPrinterDevice=mapPrinterDevice;
+  globalThis.printerDeviceState=printerDeviceState;
+  globalThis.refreshPrinterDeviceBadges=refreshPrinterDeviceBadges;
   globalThis.sendManagedPrint=sendManagedPrint;
   globalThis.flushPrintOutbox=flushPrintOutbox;
   globalThis.showManagedPrintQueue=showManagedPrintQueue;
