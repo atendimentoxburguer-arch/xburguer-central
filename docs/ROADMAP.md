@@ -34,7 +34,9 @@
 - [ ] WhatsApp Business oficial.
 - [ ] Pagamentos.
 - [x] Impressão web e roteamento lógico.
-- [ ] Impressão silenciosa com ponte local/desktop.
+- [x] ETAPA 1: impressão silenciosa com agente local Windows, fila, retry e mapeamento físico.
+- [ ] Empacotar Print Agent como aplicativo/instalador Windows assinado.
+- [ ] Integrar fila de impressão ao backend central.
 - [ ] NFC-e/fiscal.
 - [ ] QR Code por mesa.
 
