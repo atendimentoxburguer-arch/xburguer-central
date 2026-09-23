@@ -63,3 +63,11 @@ O estado persistido usa esquema local versão 4. Migrações e normalização pe
 ## Contratos financeiros V16
 
 Pedidos passam a preservar snapshots de preço, custo, taxa de entrega e percentual de serviço. Isso evita que mudanças futuras nas configurações ou custos alterem retrospectivamente vendas já registradas. O estoque mantém uma trilha local de movimentações em `inventoryMovements`, limitada para proteger o armazenamento do navegador.
+
+## Módulo de impressão V17
+
+- `assets/js/printing.js`: geração dos documentos, perfis lógicos e abertura do diálogo de impressão.
+- `assets/css/print.css`: layouts térmicos 58/80 mm e A4.
+- `scripts/printing-contracts.mjs`: contratos do payload de impressão e normalização de perfis.
+
+A seleção da impressora física pertence ao navegador/sistema operacional. Impressão silenciosa exigirá uma ponte local/desktop no futuro.
