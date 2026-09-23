@@ -200,11 +200,13 @@ function normalize(){
 }
 function load(){
  const defaults=defaultState();
+ let migrated=false;
  try{
   const raw=localStorage.getItem(STORAGE);
   if(raw){
    const parsed=JSON.parse(raw);
-   if(Number(parsed?.schemaVersion||0)<SCHEMA_VERSION)snapshotLocal('pre_migration');
+   migrated=Number(parsed?.schemaVersion||0)<SCHEMA_VERSION;
+   if(migrated)snapshotLocal('pre_migration');
    state=mergeDefaults(defaults,parsed);
   }else state=defaults;
  }catch(e){
@@ -214,7 +216,14 @@ function load(){
  }
  normalize();
  const issue=validateState(state);
- if(issue){console.error('Estado local inconsistente:',issue);snapshotLocal('inconsistente');state=defaults;normalize();try{localStorage.setItem(STORAGE,JSON.stringify(state))}catch(e){console.warn('Falha ao restaurar estado padrão',e)}}
+ if(issue){
+  console.error('Estado local inconsistente:',issue);
+  snapshotLocal('inconsistente');
+  state=defaults;normalize();
+  try{localStorage.setItem(STORAGE,JSON.stringify(state))}catch(e){console.warn('Falha ao restaurar estado padrão',e)}
+ }else if(migrated){
+  try{localStorage.setItem(STORAGE,JSON.stringify(state))}catch(e){console.warn('Falha ao persistir migração local',e)}
+ }
 }
 function save(options={}){
  try{
