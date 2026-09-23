@@ -1,9 +1,11 @@
-/* X Burguer Central V16 — pedidos */
+/* X Burguer Central V17 — pedidos e impressão */
 function advanceOrder(id){
  const o=state.orders.find(o=>o.id===id);if(!o)return;
- if(o.status==='analysis')o.status='production';
+ let enteredProduction=false;
+ if(o.status==='analysis'){o.status='production';enteredProduction=true}
  else if(o.status==='production')o.status='ready';
  else if(o.status==='ready'){if(o.type==='Delivery'&&!o.courier){toast('Atribua um entregador antes de finalizar a entrega.','warning');return}o.status='done';o.completedAt=new Date().toISOString();if(o.courier&&!o.deliveryCounted){const d=state.couriers.find(d=>d.id===o.courier);if(d)d.deliveries=(Number(d.deliveries)||0)+1;o.deliveryCounted=true}}
+ if(enteredProduction)maybePrintKitchen?.(o);
  syncTables();save();toast('Pedido atualizado.','success');
 }
 async function cancelOrder(id){
@@ -15,8 +17,8 @@ async function cancelOrder(id){
 function detailsOrder(id){
  const o=state.orders.find(o=>o.id===id);if(!o)return;
  const subtotal=orderSubtotal(o),fees=orderFeeTotal(o);
- const feeLabel=o.type==='Delivery'?'Taxa de entrega':o.type==='Mesa'?'Serviço ('+Number(state.settings.serviceFee||0)+'%)':'Taxas';
- openModal(`<div class="modal-head"><div><h2>Pedido #${esc(o.id)}</h2><div class="muted order-meta"><span class="type-badge sm">${typeIcon(o.type)}<span>${esc(o.type)}</span></span><span class="meta-sep">•</span><span><i class="bi bi-clock" aria-hidden="true"></i> ${orderTime(o)}</span></div></div><button class="icon-btn" onclick="closeModal()" aria-label="Fechar">${icon('x-lg')}</button></div><div class="form2"><div class="card"><b>Cliente</b><p>${esc(o.customer)}<br><span class="muted">${esc(o.phone||'Sem telefone')}</span></p><b>Entrega/Mesa</b><p>${esc(o.address||o.table||'Balcão')}</p></div><div class="card"><b>Itens</b><p>${orderItemsText(o)}</p><div class="order-summary"><div><span>Subtotal</span><b>${money(subtotal)}</b></div>${fees?'<div><span>'+esc(feeLabel)+'</span><b>'+money(fees)+'</b></div>':''}<div class="order-summary-total"><span>Total</span><b>${money(orderTotal(o))}</b></div></div></div></div><div class="field"><label>Observações</label><textarea id="detailNotes">${esc(o.notes||'')}</textarea></div><div class="modal-foot"><button class="btn btn-danger" onclick="closeModal();cancelOrder('${o.id}')">Cancelar pedido</button><button class="btn btn-outline" onclick="oEdit('${o.id}')">Editar</button><button class="btn btn-primary" onclick="document.querySelector('#detailNotes')&&(state.orders.find(o=>o.id==='${o.id}').notes=document.querySelector('#detailNotes').value);closeModal();save()">Salvar</button></div>`);
+ const feeLabel=o.type==='Delivery'?'Taxa de entrega':o.type==='Mesa'?'Serviço ('+Number(o.serviceFeePct??state.settings.serviceFee||0)+'%)':'Taxas';
+ openModal(`<div class="modal-head"><div><h2>Pedido #${esc(o.id)}</h2><div class="muted order-meta"><span class="type-badge sm">${typeIcon(o.type)}<span>${esc(o.type)}</span></span><span class="meta-sep">•</span><span><i class="bi bi-clock" aria-hidden="true"></i> ${orderTime(o)}</span></div></div><button class="icon-btn" onclick="closeModal()" aria-label="Fechar">${icon('x-lg')}</button></div><div class="form2"><div class="card"><b>Cliente</b><p>${esc(o.customer)}<br><span class="muted">${esc(o.phone||'Sem telefone')}</span></p><b>Entrega/Mesa</b><p>${esc(o.address||o.table||'Balcão')}</p></div><div class="card"><b>Itens</b><p>${orderItemsText(o)}</p><div class="order-summary"><div><span>Subtotal</span><b>${money(subtotal)}</b></div>${fees?'<div><span>'+esc(feeLabel)+'</span><b>'+money(fees)+'</b></div>':''}<div class="order-summary-total"><span>Total</span><b>${money(orderTotal(o))}</b></div></div></div></div><div class="field"><label>Observações</label><textarea id="detailNotes">${esc(o.notes||'')}</textarea></div><div class="modal-foot"><button class="btn btn-outline" onclick="printOrderMenu('${o.id}')">${icon('printer')}<span>Imprimir</span></button><button class="btn btn-danger" onclick="closeModal();cancelOrder('${o.id}')">Cancelar pedido</button><button class="btn btn-outline" onclick="oEdit('${o.id}')">Editar</button><button class="btn btn-primary" onclick="document.querySelector('#detailNotes')&&(state.orders.find(o=>o.id==='${o.id}').notes=document.querySelector('#detailNotes').value);closeModal();save()">Salvar</button></div>`);
 }
 function oEdit(id){closeModal();const o=state.orders.find(x=>x.id===id);pdvCart=o.items.map(i=>({...i}));pdvType=o.type||'Balcão';go('pdv');renderPdv(o)}
 function setOrderFilterV16(filter){
