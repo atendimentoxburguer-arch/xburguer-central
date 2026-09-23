@@ -1,4 +1,4 @@
-/* X Burguer Central V16 — gestão de salão */
+/* X Burguer Central V21 — gestão de salão, mesas e pedidos */
 (function(){
   'use strict';
   let tableSearchV14='';
@@ -109,7 +109,7 @@
     return '<article class="mesa" data-name="'+esc(search)+'" data-status="'+t.status+'" data-area="'+esc(t.area||'')+'">'+
       '<div class="mesa-main">'+
         '<div class="mesa-top"><div class="mesa-name-wrap"><span class="mesa-name">'+esc(t.name)+'</span><span class="mesa-area">'+esc(tableAreaNameV14(t))+'</span></div>'+
-        '<div class="mesa-actions"><button onclick="newTableOrderV14(\''+t.id+'\')" title="Novo pedido">'+icon('plus-lg')+'<span>Pedido</span></button><button onclick="tableMenuV14(\''+t.id+'\')" title="Mais ações">'+icon('three-dots')+'</button></div></div>'+
+        '<div class="mesa-actions"><button onclick="newTableOrderV14(\''+t.id+'\')" title="Novo pedido">'+icon('plus-lg')+'<span>Pedido</span></button><button onclick="tableMenuV14(\''+t.id+'\')" title="Gerenciar mesa">'+icon('sliders2')+'<span>Gerenciar</span></button></div></div>'+
         '<div class="mesa-meta">'+icon('people')+'<span>'+esc(meta||'Sem detalhes')+'</span></div>'+
       '</div>'+
       '<div class="mesa-strip '+t.status+'">'+strip+'</div>'+
@@ -154,15 +154,23 @@
     const os=openOrdersV14(t);
     const total=os.reduce(function(s,o){return s+orderTotal(o)},0);
     const items=os.reduce(function(s,o){return s+o.items.reduce(function(a,i){return a+(Number(i.q)||0)},0)},0);
+    const history=state.orders.filter(function(o){return o.table===t.name&&['done','cancelled'].includes(o.status)}).sort(function(a,b){return new Date(b.completedAt||b.cancelledAt||b.createdAt)-new Date(a.completedAt||a.cancelledAt||a.createdAt)}).slice(0,5);
+    function row(o){
+      const meta=o.status==='analysis'?['Em análise','b-orange']:o.status==='production'?['Em produção','b-orange']:o.status==='ready'?['Pronto','b-green']:o.status==='done'?['Concluído','b-green']:['Cancelado','b-red'];
+      const qty=o.items.reduce(function(sum,i){return sum+(Number(i.q)||0)},0);
+      return '<div class="table-order-row"><div class="table-order-id"><b>#'+esc(o.id)+'</b><span class="badge '+meta[1]+'">'+meta[0]+'</span></div><div class="table-order-copy"><b>'+qty+' item(ns) • '+money(orderTotal(o))+'</b><span>'+esc(o.customer||'Não identificado')+' • '+esc(o.payment||'Não registrado')+'</span>'+(o.cancelReason?'<small>'+icon('info-circle')+' '+esc(o.cancelReason)+'</small>':'')+'</div><button class="btn btn-outline btn-sm" onclick="detailsOrder(\''+o.id+'\')">Gerenciar</button></div>';
+    }
     openModal(
       '<div class="modal-head"><div><h2>'+esc(t.name)+'</h2><p class="dialog-subtitle">'+esc(tableAreaNameV14(t))+' • '+Number(t.seats||0)+' lugares'+(t.server?' • '+esc(t.server):'')+'</p></div><button class="icon-btn" onclick="closeModal()" aria-label="Fechar">'+icon('x-lg')+'</button></div>'+
       '<div class="table-detail-grid">'+
         '<div><span>Status</span><b class="badge '+(t.status==='free'?'b-green':t.status==='closing'?'b-orange':'b-red')+'">'+tableStatusLabelV14(t.status)+'</b></div>'+
         '<div><span>Pessoas</span><b>'+Number(t.guests||0)+' / '+Number(t.seats||0)+'</b></div>'+
-        '<div><span>Pedidos</span><b>'+os.length+'</b></div>'+
+        '<div><span>Pedidos abertos</span><b>'+os.length+'</b></div>'+
         '<div><span>Itens</span><b>'+items+'</b></div>'+
       '</div>'+
       '<div class="table-consumption"><span>Consumo atual</span><strong>'+money(total)+'</strong></div>'+
+      '<section class="table-orders-section"><div class="table-orders-head"><div><b>Pedidos desta mesa</b><span>Abra qualquer pedido para editar, imprimir ou cancelar.</span></div><button class="btn btn-primary btn-sm" onclick="closeModal();newTableOrderV14(\''+id+'\')">'+icon('plus-lg')+'<span>Adicionar pedido</span></button></div><div class="table-orders-list">'+(os.map(row).join('')||'<div class="empty compact-empty">Nenhum pedido aberto nesta mesa.</div>')+'</div></section>'+
+      (history.length?'<section class="table-orders-section history"><div class="table-orders-head"><div><b>Histórico recente</b><span>Últimos pedidos concluídos ou cancelados nesta mesa.</span></div></div><div class="table-orders-list">'+history.map(row).join('')+'</div></section>':'')+
       '<div class="modal-foot table-modal-actions">'+
         '<button class="btn btn-outline" onclick="editTableV14(\''+id+'\')">'+icon('pencil')+'<span>Editar mesa</span></button>'+
         (t.status!=='free'?'<button class="btn btn-outline" onclick="transferTableV14(\''+id+'\')">'+icon('arrow-left-right')+'<span>Transferir</span></button><button class="btn btn-outline" onclick="tSetV14(\''+id+'\',\'closing\')">'+icon('receipt')+'<span>Fechar conta</span></button><button class="btn btn-green" onclick="tFinishV14(\''+id+'\')">'+icon('check2-circle')+'<span>Receber e liberar</span></button>':'<button class="btn btn-primary" onclick="closeModal();newTableOrderV14(\''+id+'\')">'+icon('plus-lg')+'<span>Novo pedido</span></button>')+
