@@ -1433,7 +1433,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 .report-kpis-v22 span{font-size:.57rem}
 .report-kpis-v22 b{font-size:.9rem}
 .report-kpis-v22 small{font-size:.59rem}
-/* Checkout V24 integrado ao novo sistema visual */
+/* Checkout integrado ao sistema visual atual */
 .modal-card:has(.checkout-shell-v24){border-radius:12px}
 .checkout-shell-v24{background:var(--surface-2)}
 .checkout-topbar-v24{min-height:58px;padding:8px 12px}
