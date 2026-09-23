@@ -1820,3 +1820,146 @@ button:disabled,.btn:disabled{
   .managed-print-job{grid-template-columns:64px minmax(0,1fr)}
   .managed-print-job>.btn{grid-column:2;justify-self:start}
 }
+
+
+/* ======================================================================
+   V21 — gestão de pedidos e fotos no PDV
+   ====================================================================== */
+.orders-view-tabs{
+  display:flex;
+  width:max-content;
+  max-width:100%;
+  gap:4px;
+  margin:0 0 12px;
+  padding:4px;
+  overflow:auto;
+  border:1px solid var(--border);
+  border-radius:13px;
+  background:var(--surface);
+  box-shadow:var(--shadow-sm);
+}
+.orders-view-tabs button{
+  min-height:36px;
+  display:inline-flex;
+  align-items:center;
+  gap:7px;
+  padding:0 13px;
+  border:0;
+  border-radius:9px;
+  background:transparent;
+  color:var(--muted);
+  font-weight:800;
+  white-space:nowrap;
+}
+.orders-view-tabs button span{
+  min-width:22px;
+  padding:2px 6px;
+  border-radius:999px;
+  background:var(--surface-3);
+  font-size:.67rem;
+}
+.orders-view-tabs button.active{
+  background:var(--primary);
+  color:#fff;
+}
+.orders-view-tabs button.active span{background:rgba(255,255,255,.18)}
+.order-history-list{
+  display:grid;
+  gap:8px;
+  margin-top:2px;
+}
+.order-history-card{
+  display:grid;
+  grid-template-columns:145px minmax(0,1fr) auto auto;
+  gap:12px;
+  align-items:center;
+  min-height:78px;
+  padding:11px 12px;
+  border:1px solid var(--border);
+  border-radius:14px;
+  background:var(--surface);
+  box-shadow:var(--shadow-sm);
+}
+.order-history-card:hover{
+  border-color:color-mix(in srgb,var(--primary) 25%,var(--border));
+  box-shadow:var(--shadow);
+}
+.order-history-status{display:grid;gap:4px;justify-items:start}
+.order-history-status small{color:var(--muted);font-size:.68rem}
+.order-history-main{min-width:0}
+.order-history-main>div:first-child b,.order-history-main>div:first-child span{display:block}
+.order-history-main>div:first-child b{font-size:.84rem}
+.order-history-main>div:first-child span{
+  margin-top:2px;
+  color:var(--muted);
+  font-size:.72rem;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.order-history-meta{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  flex-wrap:wrap;
+  margin-top:6px;
+  color:var(--muted);
+  font-size:.68rem;
+}
+.order-history-meta>span{
+  display:inline-flex;
+  align-items:center;
+  gap:4px;
+}
+.order-history-meta .cancel-reason{color:var(--danger)}
+.order-history-card>strong{font-size:.9rem;white-space:nowrap}
+.order-detail-alert{
+  display:grid;
+  grid-template-columns:34px minmax(0,1fr);
+  gap:9px;
+  align-items:center;
+  margin-bottom:10px;
+  padding:10px 11px;
+  border:1px solid var(--border);
+  border-radius:12px;
+}
+.order-detail-alert>.bi{font-size:1.05rem}
+.order-detail-alert b,.order-detail-alert span{display:block}
+.order-detail-alert span{margin-top:2px;font-size:.7rem}
+.order-detail-alert.success{
+  border-color:color-mix(in srgb,var(--success) 28%,var(--border));
+  background:var(--success-soft);
+  color:var(--success);
+}
+.order-detail-alert.danger{
+  border-color:color-mix(in srgb,var(--danger) 28%,var(--border));
+  background:var(--danger-soft);
+  color:var(--danger);
+}
+.order-detail-actions{flex-wrap:wrap}
+.product-tile .photo{
+  overflow:hidden;
+  padding:0;
+}
+.pdv-product-image{
+  width:100%;
+  height:100%;
+  display:block;
+  object-fit:cover;
+}
+.product-tile .photo .product-emoji{
+  font-size:2rem;
+}
+@media(max-width:820px){
+  .order-history-card{grid-template-columns:120px minmax(0,1fr) auto}
+  .order-history-card>.btn{grid-column:2/4;justify-self:start}
+}
+@media(max-width:560px){
+  .orders-view-tabs{width:100%}
+  .orders-view-tabs button{flex:1 0 auto;justify-content:center}
+  .order-history-card{grid-template-columns:1fr auto;gap:8px}
+  .order-history-status{grid-column:1}
+  .order-history-main{grid-column:1/-1;grid-row:2}
+  .order-history-card>strong{grid-column:2;grid-row:1}
+  .order-history-card>.btn{grid-column:1/-1;grid-row:3;justify-self:stretch}
+}
