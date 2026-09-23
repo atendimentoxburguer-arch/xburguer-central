@@ -1540,3 +1540,147 @@ button:disabled,.btn:disabled{
   .printer-profile-actions{grid-column:2;justify-content:flex-start}
   .delivery-actions{justify-content:flex-start}
 }
+
+
+/* ======================================================================
+   V18 — impressão vertical, compacta e roteada
+   ====================================================================== */
+.print-config-grid{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(0,1.25fr);
+  gap:9px;
+  margin-bottom:14px;
+}
+.print-layout-card{
+  display:grid;
+  grid-template-columns:40px minmax(0,1fr) auto;
+  align-items:center;
+  gap:10px;
+  min-height:58px;
+  padding:10px 12px;
+  border:1px solid var(--border);
+  border-radius:13px;
+  background:var(--surface-2);
+  color:var(--text);
+  text-align:left;
+}
+.print-layout-card:hover{
+  border-color:color-mix(in srgb,var(--primary) 35%,var(--border));
+  background:var(--primary-soft);
+}
+.print-layout-card>div{min-width:0}
+.print-layout-card b,.print-layout-card span{display:block}
+.print-layout-card>div>span{
+  margin-top:3px;
+  color:var(--muted);
+  font-size:.7rem;
+  line-height:1.35;
+}
+.printer-section-head{
+  display:flex;
+  align-items:flex-end;
+  justify-content:space-between;
+  gap:12px;
+  margin:14px 0 8px;
+}
+.printer-section-head>div{min-width:0}
+.printer-section-head b,.printer-section-head span{display:block}
+.printer-section-head b{font-size:.86rem}
+.printer-section-head span{
+  margin-top:2px;
+  color:var(--muted);
+  font-size:.7rem;
+  line-height:1.4;
+}
+.printer-profile-copy small{
+  display:block;
+  margin-top:4px;
+  color:var(--primary);
+  font-size:.66rem;
+  font-weight:700;
+  line-height:1.35;
+}
+.danger-soft{color:var(--danger)!important}
+.print-routing-note{
+  display:grid;
+  grid-template-columns:36px minmax(0,1fr);
+  gap:10px;
+  align-items:start;
+  margin-top:12px;
+  padding:11px 12px;
+  border:1px dashed color-mix(in srgb,var(--primary) 32%,var(--border));
+  border-radius:13px;
+  background:color-mix(in srgb,var(--primary-soft) 45%,var(--surface));
+}
+.print-routing-note>.bi{color:var(--primary);font-size:1.05rem;margin-top:1px}
+.print-routing-note b,.print-routing-note span{display:block}
+.print-routing-note span{
+  margin-top:3px;
+  color:var(--muted);
+  font-size:.71rem;
+  line-height:1.4;
+}
+.automation-list{
+  display:grid;
+  gap:8px;
+}
+.automation-row{
+  display:grid;
+  grid-template-columns:34px minmax(0,1fr) auto;
+  align-items:center;
+  gap:10px;
+  min-height:60px;
+  padding:10px 11px;
+  border:1px solid var(--border);
+  border-radius:13px;
+  background:var(--surface);
+  color:var(--text);
+  text-align:left;
+}
+.automation-row:hover,
+.automation-row.active{
+  border-color:color-mix(in srgb,var(--primary) 34%,var(--border));
+  background:var(--primary-soft);
+}
+.automation-icon{
+  width:34px;height:34px;
+  display:grid;place-items:center;
+  border-radius:10px;
+  background:var(--surface-3);
+  color:var(--muted);
+}
+.automation-row.active .automation-icon{
+  background:var(--success-soft);
+  color:var(--success);
+}
+.automation-row b,.automation-row span{display:block}
+.automation-row>div>span{
+  margin-top:2px;
+  color:var(--muted);
+  font-size:.69rem;
+  line-height:1.35;
+}
+.print-routing-example{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin-top:12px;
+  padding:10px 12px;
+  border:1px solid var(--border);
+  border-radius:12px;
+  background:var(--surface-2);
+  font-size:.75rem;
+}
+.print-routing-example span{color:var(--muted);text-align:right}
+@media(max-width:760px){
+  .print-config-grid{grid-template-columns:1fr}
+  .printer-section-head{align-items:stretch;flex-direction:column}
+  .printer-section-head .btn{align-self:flex-start}
+}
+@media(max-width:560px){
+  .automation-row{grid-template-columns:32px minmax(0,1fr)}
+  .automation-row>.badge{grid-column:2;justify-self:start}
+  .print-routing-example{align-items:flex-start;flex-direction:column}
+  .print-routing-example span{text-align:left}
+}
