@@ -1,4 +1,4 @@
-# Impressão — X Burguer Central V19
+# Impressão — X Burguer Central V20
 
 ## Padrão de impressão
 
@@ -57,7 +57,7 @@ Se vários destinos corresponderem ao mesmo evento, o sistema cria um job separa
 
 ## Impressão física gerenciada
 
-A ETAPA 1 adiciona o **X Burguer Print Agent**, uma ponte local para Windows. Com o agente pareado e o destino mapeado, impressões térmicas 58/80 mm são enviadas diretamente ao spooler do Windows em RAW/ESC-POS, sem abrir a aba de impressão do navegador.
+A ETAPA 2 utiliza o **X Burguer Print Agent**, agora distribuído como aplicativo Windows instalável e executado em segundo plano. Com o agente pareado e o destino mapeado, impressões térmicas 58/80 mm são enviadas diretamente ao spooler do Windows em RAW/ESC-POS, sem abrir a aba de impressão do navegador.
 
 Cada destino lógico pode ser vinculado a uma impressora física instalada no computador. Exemplo:
 - Caixa → EPSON TM-T20;
@@ -86,3 +86,9 @@ Em **Layout da impressão** é possível configurar:
 - mostrar/ocultar logo.
 
 A orientação permanece vertical para manter consistência e reduzir desperdício.
+
+## Aplicativo Windows
+
+O usuário final instala o arquivo `X-Burguer-Print-Agent-Setup-<versão>.exe`. O aplicativo inclui o runtime necessário, inicia com o Windows por padrão e permanece ativo na bandeja. A janela própria permite acompanhar impressoras, fila, falhas, último job, logs e executar testes.
+
+O instalador ainda não é assinado digitalmente nesta etapa; por isso o Windows SmartScreen pode exibir um aviso inicial.
