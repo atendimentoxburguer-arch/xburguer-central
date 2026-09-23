@@ -35,7 +35,8 @@
 - [ ] Pagamentos.
 - [x] Impressão web e roteamento lógico.
 - [x] ETAPA 1: impressão silenciosa com agente local Windows, fila, retry e mapeamento físico.
-- [ ] Empacotar Print Agent como aplicativo/instalador Windows assinado.
+- [x] ETAPA 2: empacotar Print Agent como aplicativo/instalador Windows com runtime embutido.
+- [ ] Assinar digitalmente o instalador e o executável Windows.
 - [ ] Integrar fila de impressão ao backend central.
 - [ ] NFC-e/fiscal.
 - [ ] QR Code por mesa.

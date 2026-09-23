@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' file: data:; style-src 'self'; script-src 'self'; connect-src 'none';">
+<title>X Burguer Print Agent</title>
+<link rel="stylesheet" href="ui.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <img id="brandLogo" alt="X Burguer">
+    <div><strong>X Burguer Print Agent</strong><span id="versionText">Inicializando...</span></div>
+  </div>
+  <div class="top-actions">
+    <button id="dashboardBtn" class="btn secondary">Abrir X Burguer Central</button>
+    <button id="refreshBtn" class="icon-btn" title="Atualizar" aria-label="Atualizar">↻</button>
+  </div>
+</header>
+
+<main>
+  <section class="hero">
+    <div>
+      <span class="eyebrow">IMPRESSÃO GERENCIADA</span>
+      <h1>Impressoras, fila e diagnóstico em um só lugar.</h1>
+      <p>O agente roda em segundo plano e envia pedidos diretamente para impressoras térmicas configuradas no X Burguer Central.</p>
+    </div>
+    <div class="status-card" id="statusCard">
+      <span class="status-dot"></span>
+      <div><small>STATUS</small><strong id="statusText">Carregando...</strong><span id="uptimeText"></span><span id="lastJobText"></span></div>
+    </div>
+  </section>
+
+  <section class="metrics">
+    <article><span>Na fila</span><strong id="queuedMetric">0</strong></article>
+    <article><span>Imprimindo</span><strong id="printingMetric">0</strong></article>
+    <article><span>Falhas</span><strong id="failedMetric">0</strong></article>
+    <article><span>Impressos</span><strong id="printedMetric">0</strong></article>
+  </section>
+
+  <section class="grid">
+    <article class="panel pairing">
+      <div class="panel-head"><div><h2>Pareamento</h2><p>Use este código no X Burguer Central.</p></div><span class="pill success">Local</span></div>
+      <div class="pair-state"><div class="pair-code" id="pairingCode">------</div><span id="pairState" class="pill">Aguardando pareamento</span></div>
+      <p class="hint">O código é alterado depois que um navegador é autorizado.</p>
+    </article>
+
+    <article class="panel settings">
+      <div class="panel-head"><div><h2>Aplicativo</h2><p>Inicialização e manutenção do agente.</p></div></div>
+      <label class="switch-row"><span><b>Iniciar com o Windows</b><small>O agente ficará disponível automaticamente.</small></span><input id="startupToggle" type="checkbox"></label>
+      <div class="action-row">
+        <button id="restartBtn" class="btn secondary">Reiniciar agente</button>
+        <button id="dataBtn" class="btn ghost">Abrir pasta de dados</button>
+        <button id="updateBtn" class="btn ghost">Verificar atualização</button>
+      </div>
+      <div id="updateStatus" class="inline-message" hidden></div>
+    </article>
+  </section>
+
+  <section class="panel">
+    <div class="panel-head">
+      <div><h2>Impressoras instaladas</h2><p>Detectadas pelo Windows. Faça o mapeamento de setores no painel X Burguer Central.</p></div>
+      <button id="reloadPrintersBtn" class="btn ghost">Atualizar lista</button>
+    </div>
+    <div id="printers" class="printer-list"><div class="empty">Carregando impressoras...</div></div>
+  </section>
+
+  <section class="panel test-panel">
+    <div class="panel-head"><div><h2>Teste de impressão</h2><p>Envie uma ficha curta diretamente para uma térmica antes de ativar automações.</p></div></div>
+    <div class="test-controls">
+      <label><span>Impressora</span><select id="testPrinter"></select></label>
+      <label><span>Papel</span><select id="testPaper"><option value="80mm">80 mm</option><option value="58mm">58 mm</option></select></label>
+      <button id="testBtn" class="btn primary">Imprimir teste</button>
+    </div>
+    <div id="testMessage" class="inline-message" hidden></div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-head">
+      <div><h2>Fila e histórico</h2><p>Últimos jobs recebidos pelo agente.</p></div>
+      <button id="reloadJobsBtn" class="btn ghost">Atualizar</button>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Status</th><th>Pedido</th><th>Impressora</th><th>Tipo</th><th>Atualização</th><th></th></tr></thead>
+        <tbody id="jobsBody"><tr><td colspan="6"><div class="empty">Carregando fila...</div></td></tr></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="panel logs-panel">
+    <div class="panel-head"><div><h2>Diagnóstico</h2><p>Erros e eventos recentes do agente.</p></div></div>
+    <div id="logs" class="logs"><div class="empty">Sem eventos.</div></div>
+  </section>
+</main>
+
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+<script src="ui.js"></script>
+</body>
+</html>

@@ -30,3 +30,7 @@ A impressão usa documentos gerados localmente e o diálogo nativo do navegador.
 ## Print Agent V19
 
 O agente de impressão escuta somente em `127.0.0.1`, exige pareamento e token local para rotas protegidas, restringe CORS ao GitHub Pages oficial/origens locais e rejeita URLs de agente que não sejam loopback. O token não é versionado e é removido de backups exportados. Logs, fila e token ficam em `%APPDATA%\X Burguer Central\Print Agent`.
+
+## Desktop Print Agent V20
+
+A interface desktop usa Electron com `nodeIntegration: false`, `contextIsolation: true` e sandbox. O renderer só acessa operações autorizadas via preload/IPC. Navegação externa é bloqueada na janela do agente e a verificação de atualização consulta apenas releases públicas do repositório oficial. O instalador atual não possui assinatura digital; para distribuição ampla, code signing é uma pendência de segurança operacional.

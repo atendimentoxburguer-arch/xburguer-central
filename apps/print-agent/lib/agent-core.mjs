@@ -116,6 +116,7 @@ export function renderEscPosJob(job){
 export function validateJob(input){
   if(!input||typeof input!=='object')return 'Job invalido.';
   if(!/^[A-Za-z0-9._:-]{1,96}$/.test(String(input.id||'')))return 'ID do job invalido.';
+  if(input.dedupeKey&&!/^[A-Za-z0-9._:-]{1,180}$/.test(String(input.dedupeKey)))return 'Chave de deduplicacao invalida.';
   if(!String(input.printerName||'').trim())return 'Impressora fisica nao informada.';
   if(String(input.printerName).length>180)return 'Nome da impressora muito longo.';
   if(!['receipt','kitchen','delivery'].includes(input.document?.purpose))return 'Tipo de documento invalido.';

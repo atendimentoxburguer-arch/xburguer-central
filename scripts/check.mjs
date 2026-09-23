@@ -22,6 +22,12 @@ const required=[
   'apps/print-agent/install-windows.ps1',
   'apps/print-agent/package.json',
   'apps/print-agent/INSTALAR-AGENTE.cmd',
+  'apps/print-agent/desktop/main.mjs',
+  'apps/print-agent/desktop/preload.cjs',
+  'apps/print-agent/desktop/ui.html',
+  'apps/print-agent/desktop/ui.css',
+  'apps/print-agent/desktop/ui.js',
+  '.github/workflows/print-agent-windows.yml',
   ...js.map(f=>path.relative(root,f))
 ];
 
@@ -106,6 +112,7 @@ if(duplicates.length){
 }
 
 JSON.parse(fs.readFileSync(path.join(root,'manifest.webmanifest'),'utf8'));
-JSON.parse(fs.readFileSync(path.join(root,'apps/print-agent/package.json'),'utf8'));
+const agentPkg=JSON.parse(fs.readFileSync(path.join(root,'apps/print-agent/package.json'),'utf8'));
+if(!agentPkg.devDependencies?.electron||!agentPkg.devDependencies?.['electron-builder']){console.error('Dependências de build desktop ausentes no Print Agent');process.exitCode=1}
 
 if(!process.exitCode)console.log('Static checks OK');

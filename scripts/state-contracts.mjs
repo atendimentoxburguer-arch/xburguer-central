@@ -26,7 +26,7 @@ context.globalThis=context;
 vm.runInContext(source,context,{filename:'assets/js/core.js'});
 
 const api=vm.runInContext('({APP_VERSION,SCHEMA_VERSION,defaultState,validateState})',context);
-assert.equal(api.APP_VERSION,'19.0.0');
+assert.equal(api.APP_VERSION,'20.0.0');
 assert.equal(api.SCHEMA_VERSION,8);
 
 const fresh=vm.runInContext('defaultState()',context);
@@ -48,6 +48,7 @@ assert.equal(fresh.settings.printing.agent.url,'http://127.0.0.1:17871');
 assert.equal(fresh.settings.printing.agent.token,'');
 assert.equal(fresh.settings.printing.agent.fallbackBrowser,false);
 assert.ok(Array.isArray(fresh.printOutbox));
+assert.ok(fresh.printOutbox.every(j=>typeof j.dedupeKey==='string'));
 
 context.__legacy=JSON.stringify({
   ...fresh,

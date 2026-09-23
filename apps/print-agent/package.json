@@ -1,12 +1,69 @@
 {
   "name": "xburguer-print-agent",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "private": true,
-  "description": "Agente local de impressao silenciosa do X Burguer Central",
+  "description": "Aplicativo Windows para impressão silenciosa do X Burguer Central",
   "type": "module",
-  "engines": {"node": ">=20"},
+  "main": "desktop/main.mjs",
+  "author": "X Burguer",
+  "license": "UNLICENSED",
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
-    "start": "node server.mjs",
-    "check": "node --check server.mjs && node --check lib/agent-core.mjs"
+    "start": "electron .",
+    "start:server": "node server.mjs",
+    "check": "node --check server.mjs && node --check lib/agent-core.mjs && node --check desktop/main.mjs && node --check desktop/ui.js && node --check desktop/preload.cjs",
+    "prepare:icon": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/prepare-build-icon.ps1",
+    "pack": "npm run prepare:icon && electron-builder --dir --win --x64",
+    "dist": "npm run prepare:icon && electron-builder --win nsis --x64"
+  },
+  "devDependencies": {
+    "electron": "44.3.0",
+    "electron-builder": "26.15.3"
+  },
+  "build": {
+    "appId": "com.xburguer.printagent",
+    "productName": "X Burguer Print Agent",
+    "asar": true,
+    "files": [
+      "desktop/**/*",
+      "server.mjs",
+      "lib/**/*",
+      "scripts/**/*",
+      "package.json",
+      "README.md"
+    ],
+    "asarUnpack": [
+      "scripts/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "../../assets/img/logo.png",
+        "to": "logo.png"
+      }
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "build/icon.png",
+      "artifactName": "X-Burguer-Print-Agent-Setup-${version}.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": false,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "X Burguer Print Agent",
+      "runAfterFinish": true,
+      "deleteAppDataOnUninstall": false
+    }
   }
 }

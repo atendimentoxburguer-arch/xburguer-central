@@ -23,9 +23,10 @@ jobs:
       - name: Check JavaScript syntax
         run: |
           set -e
-          for file in assets/js/*.js service-worker.js scripts/*.mjs apps/print-agent/*.mjs apps/print-agent/lib/*.mjs; do
+          for file in assets/js/*.js service-worker.js scripts/*.mjs apps/print-agent/*.mjs apps/print-agent/lib/*.mjs apps/print-agent/desktop/*.mjs apps/print-agent/desktop/*.js; do
             node --check "$file"
           done
+          node --check apps/print-agent/desktop/preload.cjs
       - name: Run static project checks
         run: node scripts/check.mjs
       - name: State contract tests
@@ -36,3 +37,5 @@ jobs:
         run: node scripts/printing-contracts.mjs
       - name: Print agent contract tests
         run: node scripts/print-agent-contracts.mjs
+      - name: Print agent service contract tests
+        run: node scripts/print-agent-service-contracts.mjs
