@@ -1,4 +1,4 @@
-/* X Burguer Central V15 — core, estado e persistência */
+/* X Burguer Central V16 — core, estado e persistência */
 function icon(name,extra=''){
   return `<i class="bi bi-${name} ${extra}" aria-hidden="true"></i>`;
 }
@@ -25,14 +25,15 @@ function initThemeUI(){
   applyTheme(document.documentElement.getAttribute('data-bs-theme')||'light');
 }
 
-const APP_VERSION='15.0.0';
-const SCHEMA_VERSION=4;
+const APP_VERSION='16.0.0';
+const SCHEMA_VERSION=5;
 const LOGO='assets/img/logo.png';
 const STORAGE='xburguer_gestor_pro_v3';
 const BACKUP_PREFIX='xburguer_backup_';
 const MAX_IMPORT_BYTES=5*1024*1024;
 const SAFE_ID=/^[A-Za-z0-9._:-]{1,96}$/;
 const ORDER_STATUSES=new Set(['analysis','production','ready','done','cancelled']);
+const ORDER_TYPES=new Set(['Balcão','Retirada','Delivery','Mesa']);
 const now=()=>new Date();
 const isoAgo=m=>new Date(Date.now()-m*60000).toISOString();
 const money=v=>(Number(v)||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
@@ -78,27 +79,40 @@ function defaultState(){return {schemaVersion:SCHEMA_VERSION,
  promos:[{id:'pr1',name:'Cupom XB10',type:'Cupom',value:'10%',active:true},{id:'pr2',name:'Cashback padrão',type:'Cashback',value:'3%',active:true},{id:'pr3',name:'Fidelidade 8 pedidos',type:'Fidelidade',value:'1 recompensa',active:true}],
  finance:[{id:'f1',kind:'pay',desc:'Fornecedor de bebidas',value:720,due:'2026-09-25',paid:false},{id:'f2',kind:'pay',desc:'Fornecedor de carnes',value:1280,due:'2026-09-27',paid:false},{id:'f3',kind:'receive',desc:'Vendas cartão D+1',value:1860,due:'2026-09-23',paid:false}],
  team:[{id:'u1',name:'Administrador',role:'Administrador',active:true},{id:'u2',name:'Caixa 01',role:'Caixa',active:true},{id:'u3',name:'Garçom João',role:'Garçom',active:true},{id:'u4',name:'Cozinha',role:'KDS',active:true}],
- chats:[{id:'w1',name:'Patrícia',phone:'(62) 99444-1212',messages:[['c','Oi, gostaria de ver o cardápio'],['b','Olá! 👋 Aqui está o cardápio digital da X Burguer. Posso te ajudar com seu pedido?']],unread:1}]
+ chats:[{id:'w1',name:'Patrícia',phone:'(62) 99444-1212',messages:[['c','Oi, gostaria de ver o cardápio'],['b','Olá! 👋 Aqui está o cardápio digital da X Burguer. Posso te ajudar com seu pedido?']],unread:1}],
+ inventoryMovements:[]
 }}
 let state;
 let currentPage='pedidos';
-let orderFilter='all';let orderSearch='';let selectedCat='cat1';let pdvCat='all';let pdvCart=[];let pdvType='Balcão';let pdvDraftTable='';let salaoTab='mesas';let chatId='w1';let performanceRange='today';
+let orderFilter='all';let orderSearch='';let selectedCat='cat1';let pdvCat='all';let pdvCart=[];let pdvType='Balcão';let pdvDraftTable='';let pdvEditingId='';let pdvCustomerDraft='';let pdvPayDraft='PIX';let salaoTab='mesas';let chatId='w1';let performanceRange='today';let kdsStation='all';
 function mergeDefaults(base,value){
  if(Array.isArray(base)) return Array.isArray(value)?value:base;
  if(base&&typeof base==='object'){const out={...base};if(value&&typeof value==='object'&&!Array.isArray(value))Object.keys(value).forEach(k=>out[k]=k in base?mergeDefaults(base[k],value[k]):value[k]);return out}
  return value===undefined||value===null?base:value;
 }
+function pruneSnapshots(limit=6){
+ try{
+  const keys=[];
+  for(let i=0;i<localStorage.length;i++){
+   const key=localStorage.key(i);
+   if(key?.startsWith(BACKUP_PREFIX))keys.push(key);
+  }
+  keys.sort((a,b)=>(Number(b.split('_').at(-1))||0)-(Number(a.split('_').at(-1))||0));
+  keys.slice(limit).forEach(key=>localStorage.removeItem(key));
+ }catch(e){console.warn('Não foi possível limpar snapshots antigos',e)}
+}
 function snapshotLocal(label='manual'){
  try{
   const raw=localStorage.getItem(STORAGE);
   if(raw)localStorage.setItem(BACKUP_PREFIX+label+'_'+Date.now(),raw);
+  pruneSnapshots();
  }catch(e){console.warn('Não foi possível criar snapshot local',e)}
 }
 function validateState(candidate){
  if(!candidate||typeof candidate!=='object')return 'Estado inválido.';
- const required=['orders','products','categories','tables','couriers','promos','finance','team','chats','customers','diningAreas'];
+ const required=['orders','products','categories','tables','couriers','promos','finance','team','chats','customers','diningAreas','inventoryMovements'];
  for(const key of required)if(!Array.isArray(candidate[key]))return 'Coleção inválida: '+key+'.';
- const idGroups=[candidate.orders,candidate.products,candidate.categories,candidate.tables,candidate.couriers,candidate.promos,candidate.finance,candidate.team,candidate.chats,candidate.customers,candidate.diningAreas];
+ const idGroups=[candidate.orders,candidate.products,candidate.categories,candidate.tables,candidate.couriers,candidate.promos,candidate.finance,candidate.team,candidate.chats,candidate.customers,candidate.diningAreas,candidate.inventoryMovements];
  for(const group of idGroups){
   const seen=new Set();
   for(const item of group){
@@ -116,12 +130,19 @@ function validateState(candidate){
  }
  const cats=new Set(candidate.categories.map(c=>c.id));
  if(candidate.products.some(p=>!cats.has(p.cat)))return 'Existe produto ligado a uma categoria inexistente.';
+ const productIds=new Set(candidate.products.map(p=>p.id));
+ if(candidate.inventoryMovements.some(m=>!productIds.has(m.productId)))return 'Existe movimentação ligada a produto inexistente.';
+ const customerIds=new Set(candidate.customers.map(c=>c.id));
+ if(candidate.orders.some(o=>o.customerId&&!customerIds.has(o.customerId)))return 'Existe pedido ligado a cliente inexistente.';
+ if(candidate.orders.some(o=>!ORDER_STATUSES.has(o.status)))return 'Existe pedido com status inválido.';
+ if(candidate.orders.some(o=>!ORDER_TYPES.has(o.type)))return 'Existe pedido com tipo inválido.';
+ if(candidate.tables.some(t=>String(t.name||'').length>120)||candidate.products.some(p=>String(p.name||'').length>180)||candidate.categories.some(cat=>String(cat.name||'').length>120))return 'Há textos estruturais acima do limite permitido.';
  return '';
 }
 function normalize(){
  const d=defaultState();
  state=mergeDefaults(d,state||{});
- ['orders','products','categories','tables','couriers','promos','finance','team','chats','customers','diningAreas'].forEach(k=>{if(!Array.isArray(state[k]))state[k]=[]});
+ ['orders','products','categories','tables','couriers','promos','finance','team','chats','customers','diningAreas','inventoryMovements'].forEach(k=>{if(!Array.isArray(state[k]))state[k]=[]});
  if(!state.diningAreas.length)state.diningAreas=d.diningAreas.map(x=>({...x}));
  if(!state.cash||typeof state.cash!=='object')state.cash=d.cash;
  if(!Array.isArray(state.cash.movements))state.cash.movements=[];
@@ -131,9 +152,15 @@ function normalize(){
   o.status=ORDER_STATUSES.has(o.status)?o.status:'analysis';
   o.createdAt=o.createdAt||new Date().toISOString();
   o.customer=String(o.customer||'Não identificado');
-  o.type=String(o.type||'Balcão');
+  o.customerId=SAFE_ID.test(String(o.customerId||''))?String(o.customerId):'';
+  o.type=ORDER_TYPES.has(o.type)?o.type:'Balcão';
   o.payment=String(o.payment||'Não registrado');
-  o.items=o.items.map(i=>({p:String(i.p||''),q:Math.max(0,Number(i.q)||0),price:Math.max(0,Number(i.price)||0)})).filter(i=>i.p&&i.q>0);
+  o.deliveryFee=Math.max(0,Number(o.deliveryFee ?? state.settings.deliveryFee)||0);
+  o.serviceFeePct=Math.max(0,Number(o.serviceFeePct ?? state.settings.serviceFee)||0);
+  o.items=o.items.map(i=>{
+   const pid=String(i.p||''),p=state.products.find(x=>x.id===pid);
+   return {p:pid,q:Math.max(0,Number(i.q)||0),price:Math.max(0,Number(i.price)||0),cost:Math.max(0,Number(i.cost ?? p?.cost)||0)};
+  }).filter(i=>i.p&&i.q>0);
  });
  const firstCat=state.categories[0]?.id||'';
  state.products.forEach(p=>{
@@ -160,13 +187,28 @@ function normalize(){
   t.server=String(t.server||'');
   t.order=Number.isFinite(Number(t.order))?Number(t.order):i;
  });
+ state.inventoryMovements=state.inventoryMovements.map(m=>({
+  id:SAFE_ID.test(String(m?.id||''))?String(m.id):uid('im'),
+  productId:String(m?.productId||''),
+  delta:Number(m?.delta)||0,
+  reason:String(m?.reason||'Ajuste'),
+  ref:String(m?.ref||''),
+  at:m?.at||new Date().toISOString(),
+  balance:Math.max(0,Number(m?.balance)||0)
+ })).filter(m=>m.productId&&state.products.some(p=>p.id===m.productId));
  state.schemaVersion=SCHEMA_VERSION;
 }
 function load(){
  const defaults=defaultState();
+ let migrated=false;
  try{
   const raw=localStorage.getItem(STORAGE);
-  state=raw?mergeDefaults(defaults,JSON.parse(raw)):defaults;
+  if(raw){
+   const parsed=JSON.parse(raw);
+   migrated=Number(parsed?.schemaVersion||0)<SCHEMA_VERSION;
+   if(migrated)snapshotLocal('pre_migration');
+   state=mergeDefaults(defaults,parsed);
+  }else state=defaults;
  }catch(e){
   console.error('Falha ao ler dados locais',e);
   try{const raw=localStorage.getItem(STORAGE);if(raw)localStorage.setItem(BACKUP_PREFIX+'corrompido_'+Date.now(),raw)}catch(_){}
@@ -174,7 +216,14 @@ function load(){
  }
  normalize();
  const issue=validateState(state);
- if(issue){console.error('Estado local inconsistente:',issue);snapshotLocal('inconsistente');state=defaults;normalize();try{localStorage.setItem(STORAGE,JSON.stringify(state))}catch(e){console.warn('Falha ao restaurar estado padrão',e)}}
+ if(issue){
+  console.error('Estado local inconsistente:',issue);
+  snapshotLocal('inconsistente');
+  state=defaults;normalize();
+  try{localStorage.setItem(STORAGE,JSON.stringify(state))}catch(e){console.warn('Falha ao restaurar estado padrão',e)}
+ }else if(migrated){
+  try{localStorage.setItem(STORAGE,JSON.stringify(state))}catch(e){console.warn('Falha ao persistir migração local',e)}
+ }
 }
 function save(options={}){
  try{
@@ -220,11 +269,26 @@ function importBackup(){
  input.click();
 }
 function product(id){return state.products.find(p=>p.id===id)}
-function orderTotal(o){return o.items.reduce((s,i)=>s+(Number(i.price)||0)*(Number(i.q)||0),0)+(o.type==='Delivery'?Number(state.settings.deliveryFee||0):0)}
+function recordStockMovement(productId,delta,reason='Ajuste',ref=''){
+ const p=product(productId),amount=Number(delta)||0;
+ if(!p||!amount)return;
+ state.inventoryMovements.push({id:uid('im'),productId:p.id,delta:amount,reason:String(reason||'Ajuste'),ref:String(ref||''),at:new Date().toISOString(),balance:Number(p.stock)||0});
+ if(state.inventoryMovements.length>1000)state.inventoryMovements=state.inventoryMovements.slice(-1000);
+}
+function paymentIsCash(payment){return String(payment||'').toLowerCase().includes('dinheiro')}
+function orderSubtotal(o){return o.items.reduce((s,i)=>s+(Number(i.price)||0)*(Number(i.q)||0),0)}
+function orderFeeTotal(o){
+ const subtotal=orderSubtotal(o);
+ const delivery=o.type==='Delivery'?Math.max(0,Number(o.deliveryFee ?? state.settings.deliveryFee)||0):0;
+ const service=o.type==='Mesa'?subtotal*Math.max(0,Number(o.serviceFeePct ?? state.settings.serviceFee)||0)/100:0;
+ return delivery+service;
+}
+function orderTotal(o){return orderSubtotal(o)+orderFeeTotal(o)}
+function orderCost(o){return o.items.reduce((s,i)=>s+(Number(i.cost ?? product(i.p)?.cost)||0)*(Number(i.q)||0),0)}
 function orderAge(o){const ts=new Date(o.createdAt).getTime();return Number.isFinite(ts)?Math.max(0,Math.floor((Date.now()-ts)/60000)):0}
 function orderTime(o){const d=new Date(o.createdAt);return Number.isFinite(d.getTime())?d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}):'—'}
 function orderItemsText(o){return o.items.map(i=>`${i.q}x ${esc(product(i.p)?.name||'Item')}`).join('<br>')}
 function typeIcon(t){return t==='Delivery'?icon('scooter'):t==='Mesa'?icon('table'):t==='Balcão'?icon('shop-window'):icon('shop')}
 function syncTables(){state.tables.forEach(t=>{const open=state.orders.some(o=>o.table===t.name&&!['done','cancelled'].includes(o.status));if(t.status!=='closing')t.status=open?'busy':'free'})}
 function toggleStore(){state.settings.storeOpen=!state.settings.storeOpen;save();toast(state.settings.storeOpen?'Loja aberta para pedidos.':'Loja pausada para novos pedidos.')}
-function setHeader(){const on=state.settings.storeOpen;document.getElementById('storeToggle')?.classList.toggle('on',on);const st=document.getElementById('storeText');if(st)st.textContent=on?'Loja aberta':'Loja fechada';const foot=document.getElementById('footStore');if(foot){foot.textContent=on?'ABERTO':'FECHADO';foot.style.background=on?'#20be6a':'#c74444'}const count=document.getElementById('sideNewCount');if(count)count.textContent=state.orders.filter(o=>o.status==='analysis').length;globalThis.updateConnectionStatus?.()}
+function setHeader(){const on=state.settings.storeOpen,toggle=document.getElementById('storeToggle');toggle?.classList.toggle('on',on);toggle?.setAttribute('aria-checked',String(on));const st=document.getElementById('storeText');if(st)st.textContent=on?'Loja aberta':'Loja fechada';const foot=document.getElementById('footStore');if(foot){foot.textContent=on?'ABERTO':'FECHADO';foot.style.background=on?'#20be6a':'#c74444'}const count=document.getElementById('sideNewCount');if(count)count.textContent=state.orders.filter(o=>o.status==='analysis').length;globalThis.updateConnectionStatus?.()}

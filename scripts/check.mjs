@@ -27,6 +27,7 @@ for(const file of required){
 
 for(const file of js){
   const text=fs.readFileSync(file,'utf8');
+  const htmlish=text.replace(/\\"/g,'"');
   if(/(?<!\.)\b(prompt|confirm)\s*\(/.test(text)){
     console.error('Diálogo nativo encontrado:',path.relative(root,file));
     process.exitCode=1;
@@ -45,6 +46,14 @@ for(const file of js){
   }
   if(/^\s{2}[A-Za-z_$][\w$]*V14\s*=\s*(?:async\s+)?function/m.test(text)){
     console.error('Handler V14 global implícito encontrado:',path.relative(root,file));
+    process.exitCode=1;
+  }
+  if(/(?:onclick|onchange)="[^"]*(?:menuSelectedV14|menuStatusV14|menuSortV14)/.test(htmlish)){
+    console.error('Handler HTML referencia estado privado do módulo de cardápio:',path.relative(root,file));
+    process.exitCode=1;
+  }
+  if(/onclick="[^"]*esc\(/.test(htmlish)){
+    console.error('Valor escapado para HTML usado dentro de JavaScript inline:',path.relative(root,file));
     process.exitCode=1;
   }
 }

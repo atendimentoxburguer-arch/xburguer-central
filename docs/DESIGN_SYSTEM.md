@@ -52,3 +52,11 @@ A organização de espaçamento e densidade segue princípios comuns em design s
 - Cardápio usa uma visão de gestão com KPIs, filtros de disponibilidade/estoque, ordenação, seleção múltipla e ações em massa.
 - Produto concentra nome, descrição, preço, custo, estoque, mínimo, estação de preparo, categoria, visibilidade e status de esgotado.
 - Cores de status continuam acompanhadas de texto e não são usadas como único indicador.
+
+## Estados operacionais V16
+
+- Valores financeiros exibem subtotal, taxas e total quando isso afeta a decisão do operador.
+- Estados de bloqueio usam texto e botão desabilitado, não apenas cor.
+- Alertas operacionais devem indicar ação de destino.
+- Foco de teclado deve permanecer visível e animações devem respeitar prefers-reduced-motion.
+- Em telas estreitas, ações críticas permanecem legíveis antes de detalhes secundários.

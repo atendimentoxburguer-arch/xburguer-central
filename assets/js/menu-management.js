@@ -1,4 +1,4 @@
-/* X Burguer Central V15 — gestão de cardápio */
+/* X Burguer Central V16 — gestão de cardápio */
 (function(){
   'use strict';
   let menuStatusV14='all';
@@ -28,6 +28,21 @@ function menuStatsV14(){
     return items;
   }
 
+  globalThis.selectMenuCategoryV16=function(id){
+    if(!state.categories.some(c=>c.id===id))return;
+    selectedCat=id;
+    menuSelectedV14.clear();
+    renderCardapio();
+  };
+  globalThis.setMenuStatusV16=function(value){
+    menuStatusV14=['all','visible','sold','low','paused'].includes(value)?value:'all';
+    renderCardapio();
+  };
+  globalThis.setMenuSortV16=function(value){
+    menuSortV14=['name','priceAsc','priceDesc','stock'].includes(value)?value:'name';
+    renderCardapio();
+  };
+
   globalThis.renderCardapio=function(){
     const root=document.getElementById('cardapio');
     if(!state.categories.some(function(c){return c.id===selectedCat}))selectedCat=state.categories[0]?.id||'';
@@ -43,12 +58,12 @@ function menuStatsV14(){
         '<div class="searchbox compact"><span class="search-icon">'+icon('search')+'</span><input placeholder="Buscar categoria" oninput="filterCats(this.value)"></div>'+
         '<div class="cat-list" id="catList">'+state.categories.map(function(c){
           const count=state.products.filter(function(p){return p.cat===c.id}).length;
-          return '<button type="button" class="cat-row '+(c.id===selectedCat?'active':'')+'" data-name="'+esc(c.name.toLowerCase())+'" onclick="selectedCat=\''+c.id+'\';menuSelectedV14.clear();renderCardapio()"><span class="cat-row-icon">'+icon('folder2')+'</span><span class="cat-row-name">'+esc(c.name)+'</span><span class="cat-count">'+count+'</span></button>';
+          return '<button type="button" class="cat-row '+(c.id===selectedCat?'active':'')+'" data-name="'+esc(c.name.toLowerCase())+'" onclick="selectMenuCategoryV16(\''+c.id+'\')"><span class="cat-row-icon">'+icon('folder2')+'</span><span class="cat-row-name">'+esc(c.name)+'</span><span class="cat-count">'+count+'</span></button>';
         }).join('')+'</div></aside>'+
-        '<section class="items-panel"><div class="menu-title-row"><div><h2 class="panel-title"><span class="title-icon">'+icon('journal-richtext')+'</span><span>'+esc(cat?.name||'Categoria')+'</span></h2><p>'+state.products.filter(function(p){return p.cat===selectedCat}).length+' item(ns) nesta categoria</p></div><button class="btn btn-outline btn-sm" onclick="editCategoryV14(\''+esc(selectedCat)+'\')">'+icon('pencil')+'<span>Editar categoria</span></button></div>'+
+        '<section class="items-panel"><div class="menu-title-row"><div><h2 class="panel-title"><span class="title-icon">'+icon('journal-richtext')+'</span><span>'+esc(cat?.name||'Categoria')+'</span></h2><p>'+state.products.filter(function(p){return p.cat===selectedCat}).length+' item(ns) nesta categoria</p></div><button class="btn btn-outline btn-sm" onclick="editCategoryV14(\''+selectedCat+'\')">'+icon('pencil')+'<span>Editar categoria</span></button></div>'+
         '<div class="menu-toolbar-v14"><div class="searchbox"><span class="search-icon">'+icon('search')+'</span><input id="productSearch" placeholder="Buscar produto, descrição ou estação" oninput="filterProductRowsV14(this.value)"></div>'+
-        '<select class="select" onchange="menuStatusV14=this.value;renderCardapio()"><option value="all" '+(menuStatusV14==='all'?'selected':'')+'>Todos</option><option value="visible" '+(menuStatusV14==='visible'?'selected':'')+'>Disponíveis</option><option value="sold" '+(menuStatusV14==='sold'?'selected':'')+'>Esgotados</option><option value="low" '+(menuStatusV14==='low'?'selected':'')+'>Estoque baixo</option><option value="paused" '+(menuStatusV14==='paused'?'selected':'')+'>Pausados</option></select>'+
-        '<select class="select" onchange="menuSortV14=this.value;renderCardapio()"><option value="name" '+(menuSortV14==='name'?'selected':'')+'>Nome A–Z</option><option value="priceAsc" '+(menuSortV14==='priceAsc'?'selected':'')+'>Menor preço</option><option value="priceDesc" '+(menuSortV14==='priceDesc'?'selected':'')+'>Maior preço</option><option value="stock" '+(menuSortV14==='stock'?'selected':'')+'>Menor estoque</option></select></div>'+
+        '<select class="select" aria-label="Filtrar produtos" onchange="setMenuStatusV16(this.value)"><option value="all" '+(menuStatusV14==='all'?'selected':'')+'>Todos</option><option value="visible" '+(menuStatusV14==='visible'?'selected':'')+'>Disponíveis</option><option value="sold" '+(menuStatusV14==='sold'?'selected':'')+'>Esgotados</option><option value="low" '+(menuStatusV14==='low'?'selected':'')+'>Estoque baixo</option><option value="paused" '+(menuStatusV14==='paused'?'selected':'')+'>Pausados</option></select>'+
+        '<select class="select" aria-label="Ordenar produtos" onchange="setMenuSortV16(this.value)"><option value="name" '+(menuSortV14==='name'?'selected':'')+'>Nome A–Z</option><option value="priceAsc" '+(menuSortV14==='priceAsc'?'selected':'')+'>Menor preço</option><option value="priceDesc" '+(menuSortV14==='priceDesc'?'selected':'')+'>Maior preço</option><option value="stock" '+(menuSortV14==='stock'?'selected':'')+'>Menor estoque</option></select></div>'+
         '<div class="bulk-bar" id="menuBulkBar"><span><b id="menuBulkCount">'+menuSelectedV14.size+'</b> selecionado(s)</span><div><button class="btn btn-outline btn-sm" onclick="bulkMenuV14(\'available\')">Disponibilizar</button><button class="btn btn-outline btn-sm" onclick="bulkMenuV14(\'sold\')">Esgotar</button><button class="btn btn-outline btn-sm" onclick="bulkMenuV14(\'pause\')">Pausar</button><button class="btn btn-outline btn-sm" onclick="bulkMoveMenuV14()">Mover</button></div></div>'+
         '<div class="menu-items-head"><span></span><span>Item</span><span>Estação</span><span>Estoque</span><span>Preço</span><span>Status</span><span></span></div>'+
         '<div id="itemRows">'+(items.map(function(p){return itemRowV14(p)}).join('')||'<div class="empty">Nenhum item corresponde ao filtro.</div>')+'</div>'+
@@ -124,7 +139,9 @@ function menuStatsV14(){
     ]});
     if(!v)return;
     const price=Math.max(0,Number(v.price)||0),stock=Math.max(0,Number(v.stock)||0);
-    state.products.push({id:uid('p'),cat:v.cat,name:v.name.trim(),description:(v.description||'').trim(),price:price,cost:Math.max(0,Number(v.cost)||0),emoji:v.emoji||'🍔',active:true,manualSold:false,sold:stock<=0,stock:stock,min:Math.max(0,Number(v.min)||0),station:v.station||'Cozinha'});
+    const item={id:uid('p'),cat:v.cat,name:v.name.trim(),description:(v.description||'').trim(),price:price,cost:Math.max(0,Number(v.cost)||0),emoji:v.emoji||'🍔',active:true,manualSold:false,sold:stock<=0,stock:stock,min:Math.max(0,Number(v.min)||0),station:v.station||'Cozinha'};
+    state.products.push(item);
+    if(stock)recordStockMovement(item.id,stock,'Estoque inicial','cadastro');
     selectedCat=v.cat;save();toast('Item criado.','success');
   };
 
@@ -142,12 +159,14 @@ function menuStatsV14(){
       {key:'station',label:'Estação de preparo',type:'select',value:p.station||'Cozinha',options:['Cozinha','Chapa','Fritadeira','Bebidas','Bar','Sem preparo']},
       {key:'cat',label:'Categoria',type:'select',value:p.cat,options:cats,required:true},
       {key:'active',label:'Visibilidade',type:'select',value:p.active?'1':'0',options:[{value:'1',label:'Visível no cardápio'},{value:'0',label:'Pausado'}]},
-      {key:'sold',label:'Disponibilidade',type:'select',value:p.sold?'1':'0',options:[{value:'0',label:'Disponível'},{value:'1',label:'Esgotado'}]}
+      {key:'sold',label:'Esgotamento manual',type:'select',value:p.manualSold?'1':'0',options:[{value:'0',label:'Automático pelo estoque'},{value:'1',label:'Esgotado manualmente'}]}
     ]});
     if(!v)return;
+    const beforeStock=Number(p.stock)||0;
     const stock=Math.max(0,Number(v.stock)||0);
     const manualSold=v.sold==='1';
     Object.assign(p,{name:v.name.trim(),description:(v.description||'').trim(),price:Math.max(0,Number(v.price)||0),cost:Math.max(0,Number(v.cost)||0),stock:stock,min:Math.max(0,Number(v.min)||0),station:v.station||'Cozinha',cat:v.cat,active:v.active==='1',manualSold:manualSold,sold:manualSold||stock<=0});
+    if(stock!==beforeStock)recordStockMovement(p.id,stock-beforeStock,'Edição de produto','cardapio');
     selectedCat=v.cat;save();toast('Item atualizado.','success');
   };
 

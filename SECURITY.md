@@ -18,3 +18,7 @@ O repositório está público no momento; trate todo conteúdo versionado como p
 ## Validações V15
 
 Backups importados passam por limite de tamanho, validação de estrutura, IDs seguros, unicidade e integridade mínima de referências. Campos dinâmicos identificados na auditoria passam por escape antes de renderização. Ainda assim, esta é uma aplicação estática sem servidor: autenticação, autorização e proteção de dados precisam ser implementadas no backend antes da produção.
+
+## Hardening V16
+
+A validação local cobre referências entre pedidos/clientes e movimentos/produtos, tipos/status de pedido, limites básicos de conteúdo e importações. A interface reduz inserção de valores editáveis dentro de handlers inline. A CSP ainda permite `unsafe-inline` por compatibilidade com a arquitetura atual; remover essa exceção requer a migração dos handlers HTML para listeners/event delegation.

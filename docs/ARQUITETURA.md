@@ -59,3 +59,7 @@ Quando os fluxos estiverem aprovados:
 - `scripts/business-contracts.mjs`: regras críticas de pedido e estoque.
 
 O estado persistido usa esquema local versão 4. Migrações e normalização pertencem exclusivamente ao núcleo, evitando overrides de persistência em módulos de interface.
+
+## Contratos financeiros V16
+
+Pedidos passam a preservar snapshots de preço, custo, taxa de entrega e percentual de serviço. Isso evita que mudanças futuras nas configurações ou custos alterem retrospectivamente vendas já registradas. O estoque mantém uma trilha local de movimentações em `inventoryMovements`, limitada para proteger o armazenamento do navegador.
