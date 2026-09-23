@@ -54,6 +54,13 @@ assert.equal(vm.runInContext("state.inventoryMovements.at(-1).delta",context),2)
 assert.equal(vm.runInContext("state.inventoryMovements.at(-1).reason",context),'Cancelamento de pedido');
 assert.equal(vm.runInContext("state.orders.find(x=>x.id==='test-cancel').cancelReason",context),'Teste de cancelamento');
 
+// Pedido com recebimento parcial exige estorno antes do cancelamento.
+vm.runInContext(`
+ state.orders.push({id:'test-paid',type:'Mesa',table:'Mesa 1',customer:'Teste',payment:'Misto',status:'analysis',createdAt:new Date().toISOString(),items:[{p:'p1',q:1,price:20}],settlements:[{id:'st-paid',groupId:'pay-paid',method:'PIX',kind:'item-part',amountCents:1000,at:new Date().toISOString(),allocations:[{unitKey:'test-paid:0:0',amountCents:1000}]}]});
+`,context);
+await vm.runInContext("cancelOrder('test-paid')",context);
+assert.equal(vm.runInContext("state.orders.find(x=>x.id==='test-paid').status",context),'analysis');
+
 // Exclusão permanente só remove pedidos já cancelados.
 vm.runInContext(`
   state.orders.push({id:'test-delete',type:'Balcão',table:'',customer:'Teste',customerId:'',payment:'PIX',status:'cancelled',createdAt:new Date().toISOString(),items:[{p:'p1',q:1,price:10}],stockRestored:true,cancelReason:'Duplicado'});
@@ -75,6 +82,17 @@ vm.runInContext(`
 assert.equal(vm.runInContext('cashSalesTotal()',context),130);
 assert.equal(vm.runInContext('cashCashSales()',context),50);
 assert.equal(vm.runInContext('cashDrawerBalance()',context),160);
+
+// Recebimentos mistos preservam o valor exato por forma.
+vm.runInContext(`
+ state.orders.push({id:'mix1',type:'Mesa',table:'Mesa 1',customer:'C',payment:'Misto',status:'done',createdAt:new Date().toISOString(),completedAt:new Date().toISOString(),items:[{p:'p1',q:1,price:100}],settlements:[
+  {id:'st-m1',groupId:'pay-m1',method:'Dinheiro',kind:'split',amountCents:4000,at:new Date().toISOString(),allocations:[{unitKey:'mix1:0:0',amountCents:4000}]},
+  {id:'st-m2',groupId:'pay-m2',method:'PIX',kind:'split',amountCents:6000,at:new Date().toISOString(),allocations:[{unitKey:'mix1:0:0',amountCents:6000}]}
+ ]});
+`,context);
+assert.equal(vm.runInContext("orderPaymentLabel(state.orders.find(x=>x.id==='mix1'))",context),'Misto');
+assert.equal(vm.runInContext("orderCashAmount(state.orders.find(x=>x.id==='mix1'))",context),40);
+assert.equal(vm.runInContext('cashCashSales()',context),90);
 
 // Taxas configuradas precisam entrar no total.
 vm.runInContext("state.settings.deliveryFee=7;state.settings.serviceFee=10",context);
