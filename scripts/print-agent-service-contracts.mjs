@@ -1,0 +1,43 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import { createPrintAgent } from '../apps/print-agent/server.mjs';
+
+const dataDir=fs.mkdtempSync(path.join(os.tmpdir(),'xb-print-agent-'));
+const port=17879;
+const agent=createPrintAgent({port,dataDir,version:'2.0.0-test'});
+await agent.start();
+
+try{
+  const health=await fetch('http://127.0.0.1:'+port+'/health').then(r=>r.json());
+  assert.equal(health.ok,true);
+  assert.equal(health.version,'2.0.0-test');
+  assert.match(health.pairingCode,/^\d{6}$/);
+
+  const denied=await fetch('http://127.0.0.1:'+port+'/jobs?limit=1');
+  assert.equal(denied.status,401);
+
+  const pair=await fetch('http://127.0.0.1:'+port+'/pair',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({code:health.pairingCode})
+  });
+  assert.equal(pair.status,200);
+  const paired=await pair.json();
+  assert.equal(paired.ok,true);
+  assert.ok(paired.token.length>=32);
+
+  const jobs=await fetch('http://127.0.0.1:'+port+'/jobs?limit=10',{
+    headers:{'X-XB-Print-Token':paired.token}
+  });
+  assert.equal(jobs.status,200);
+  const data=await jobs.json();
+  assert.equal(data.ok,true);
+  assert.deepEqual(data.jobs,[]);
+}finally{
+  await agent.stop();
+  fs.rmSync(dataDir,{recursive:true,force:true});
+}
+
+console.log('Print agent service contracts OK');
