@@ -1,4 +1,4 @@
-/* X Burguer Central V18 — impressão vertical, econômica e roteada */
+/* X Burguer Central V19 — impressão gerenciada, silenciosa e roteada */
 (function(){
   'use strict';
 
@@ -61,6 +61,7 @@
       fees,
       feeLabel:order.type==='Delivery'?'Taxa de entrega':order.type==='Mesa'?'Serviço ('+Number((order.serviceFeePct??state.settings.serviceFee)||0)+'%)':'Taxas',
       total:orderTotal(order),
+      footer:String(printSettings().footer||''),
       store:{
         name:String(state.settings.storeName||'X Burguer'),
         city:String(state.settings.city||''),
@@ -117,7 +118,7 @@
     return true;
   }
 
-  function printOrderWithProfile(orderId,purpose,profileId='',station='all'){
+  async function printOrderWithProfile(orderId,purpose,profileId='',station='all',event='manual'){
     const order=state.orders.find(o=>o.id===orderId);
     if(!order){toast('Pedido não encontrado.','error');return false}
     if(!printSettings()?.enabled){toast('A impressão está desativada nas configurações.','warning');return false}
@@ -126,6 +127,17 @@
     const effectiveStation=purpose==='kitchen'?(station!=='all'?station:(profile.station||'all')):'all';
     const payload=buildPrintPayload(order,purpose,effectiveStation);
     if(purpose==='kitchen'&&!payload.items.length)return false;
+
+    const agent=globalThis.agentConfig?.();
+    if(profile.paper!=='a4'&&globalThis.sendManagedPrint&&agent?.enabled){
+      const managed=await globalThis.sendManagedPrint(profile,payload,event,{silent:event!=='manual'});
+      if(managed||!agent.fallbackBrowser)return managed;
+    }
+    if(event!=='manual')return false;
+    if(agent?.enabled&&!agent.fallbackBrowser&&profile.paper!=='a4'){
+      toast('Impressão silenciosa não enviada. Verifique o agente e o mapeamento da impressora.','warning');
+      return false;
+    }
     return openPrintWindow({
       title:(PURPOSE_LABEL[purpose]||'Impressão')+' #'+order.id,
       body:renderPrintBody(payload),
@@ -143,30 +155,36 @@
   function autoProfilesForEvent(event,order){
     return (printSettings()?.profiles||[]).filter(p=>profileMatchesEvent(p,event,order));
   }
-  function dispatchAutoPrintEvent(event,order){
+  async function dispatchAutoPrintEvent(event,order){
     if(!printSettings()?.enabled||!order)return 0;
     const targets=autoProfilesForEvent(event,order);
     if(!targets.length)return 0;
-    let opened=0,blocked=0;
-    targets.forEach(profile=>{
-      const ok=printOrderWithProfile(order.id,profile.purpose,profile.id,profile.station||'all');
-      if(ok)opened++;else blocked++;
-    });
-    if(blocked)toast('Uma ou mais impressões automáticas foram bloqueadas. Libere pop-ups para o X Burguer Central.','warning');
-    return opened;
+    let sent=0,unmapped=0;
+    for(const profile of targets){
+      if(!profile.deviceName&&profile.paper!=='a4'){unmapped++;continue}
+      const ok=await printOrderWithProfile(order.id,profile.purpose,profile.id,profile.station||'all',event);
+      if(ok)sent++;
+    }
+    if(unmapped)toast(unmapped+' destino(s) automático(s) ainda não possuem impressora física mapeada.','warning');
+    return sent;
   }
 
-  function printTestProfile(id){
+  async function printTestProfile(id){
     const p=profileById(id);if(!p)return;
     const sample={
       purpose:p.purpose,station:p.station||'all',id:'TESTE',type:p.purpose==='delivery'?'Delivery':'Balcão',table:'Mesa 01',
       customer:'Cliente de teste',phone:'(62) 99999-9999',address:'Rua de exemplo, 123',payment:'PIX',notes:'Impressão de teste do X Burguer Central.',
-      createdAt:formatPrintDate(new Date()),completedAt:'',subtotal:37,fees:0,feeLabel:'Taxas',total:37,
+      createdAt:formatPrintDate(new Date()),completedAt:'',subtotal:37,fees:0,feeLabel:'Taxas',total:37,footer:String(printSettings().footer||''),
       store:{name:state.settings.storeName||'X Burguer',city:state.settings.city||'',phone:state.settings.phone||''},
       items:[{qty:1,name:'X-Burguer de teste',station:p.station==='all'?'Cozinha':p.station,unit:31,total:31},{qty:1,name:'Refrigerante',station:'Bebidas',unit:6,total:6}]
     };
     if(p.purpose==='kitchen'&&p.station!=='all')sample.items=sample.items.filter(i=>i.station===p.station);
-    openPrintWindow({title:'Teste — '+p.name,body:renderPrintBody(sample),paper:p.paper,copies:1});
+    const agent=globalThis.agentConfig?.();
+    if(globalThis.sendManagedPrint&&agent?.enabled&&p.paper!=='a4'){
+      if(!p.deviceName){toast('Mapeie uma impressora física antes do teste.','warning');return false}
+      return globalThis.sendManagedPrint(p,sample,'test',{silent:false});
+    }
+    return openPrintWindow({title:'Teste — '+p.name,body:renderPrintBody(sample),paper:p.paper,copies:1});
   }
 
   function printOrderMenu(id){
@@ -196,14 +214,15 @@
 
   function printerCenter(){
     const cfg=printSettings(),profiles=cfg.profiles||[];
-    openModal(`<div class="modal-head"><div><h2>Central de impressão</h2><p class="dialog-subtitle">Impressão vertical, econômica e com roteamento por setor.</p></div><button class="icon-btn" onclick="closeModal()" aria-label="Fechar">${icon('x-lg')}</button></div>
-    <div class="print-info">${icon('info-circle')}<div><b>Impressão física pelo navegador</b><span>O sistema define conteúdo, papel, cópias e quando abrir a impressão. A impressora física continua sendo escolhida no diálogo do Windows/navegador.</span></div></div>
+    openModal(`<div class="modal-head"><div><h2>Central de impressão</h2><p class="dialog-subtitle">Gerenciamento silencioso por impressora física, setor e evento.</p></div><button class="icon-btn" onclick="closeModal()" aria-label="Fechar">${icon('x-lg')}</button></div>
+    ${globalThis.agentStatusCard?.()||''}
+    <div class="print-info">${icon('shield-check')}<div><b>Sem aba de impressão</b><span>Com o agente local pareado e o destino mapeado, pedidos são enviados diretamente para a fila da impressora térmica do Windows. O navegador não abre a janela de impressão.</span></div></div>
     <div class="print-config-grid">
       <div class="print-master-row"><div><b>Impressão no sistema</b><span>Ativa ações manuais e automações.</span></div><span class="toggle ${cfg.enabled?'on':''}" role="switch" aria-checked="${cfg.enabled?'true':'false'}" tabindex="0" onclick="togglePrintingEnabled()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();togglePrintingEnabled()}"></span></div>
       <button class="print-layout-card" onclick="editPrintAppearance()"><span class="printer-profile-icon">${icon('file-earmark-text')}</span><div><b>Layout da impressão</b><span>${esc(appearanceSummary())}</span></div>${icon('chevron-right')}</button>
     </div>
     <div class="printer-section-head"><div><b>Destinos de impressão</b><span>Crie um destino por local: caixa, cozinha, chapa, fritadeira, bebidas, bar ou expedição.</span></div><button class="btn btn-primary btn-sm" onclick="addPrinterProfile()">${icon('plus-lg')}<span>Destino</span></button></div>
-    <div class="printer-profiles">${profiles.map(p=>`<div class="printer-profile"><span class="printer-profile-icon">${icon(p.purpose==='kitchen'?'printer':p.purpose==='delivery'?'truck':'receipt')}</span><div class="printer-profile-copy"><b>${esc(p.name)}</b><span>${esc(PURPOSE_LABEL[p.purpose]||p.purpose)} • ${esc(PAPER_LABEL[p.paper]||p.paper)} • ${p.copies} cópia(s)${p.purpose==='kitchen'&&p.station!=='all'?' • '+esc(p.station):''}</span><small>${esc(autoSummary(p))}</small></div><span class="badge ${p.enabled?'b-green':'b-gray'}">${p.enabled?'Ativo':'Inativo'}</span><div class="printer-profile-actions"><button class="icon-btn" onclick="printTestProfile('${p.id}')" title="Impressão de teste">${icon('printer')}</button><button class="icon-btn" onclick="editPrinterAutomation('${p.id}')" title="Automação">${icon('lightning-charge')}</button><button class="icon-btn" onclick="editPrinterProfile('${p.id}')" title="Editar">${icon('pencil')}</button><button class="icon-btn" onclick="togglePrinterProfile('${p.id}')" title="${p.enabled?'Desativar':'Ativar'}">${icon(p.enabled?'pause-circle':'play-circle')}</button><button class="icon-btn danger-soft" onclick="deletePrinterProfile('${p.id}')" title="Excluir">${icon('trash')}</button></div></div>`).join('')||'<div class="empty">Nenhum destino configurado.</div>'}</div>
+    <div class="printer-profiles">${profiles.map(p=>`<div class="printer-profile"><span class="printer-profile-icon">${icon(p.purpose==='kitchen'?'printer':p.purpose==='delivery'?'truck':'receipt')}</span><div class="printer-profile-copy"><b>${esc(p.name)}</b><span>${esc(PURPOSE_LABEL[p.purpose]||p.purpose)} • ${esc(PAPER_LABEL[p.paper]||p.paper)} • ${p.copies} cópia(s)${p.purpose==='kitchen'&&p.station!=='all'?' • '+esc(p.station):''}</span><small>${esc(autoSummary(p))}</small><small class="${p.deviceName?'device-mapped':'device-unmapped'}">${p.paper==='a4'?'A4 usa modo do navegador':p.deviceName?'Windows: '+esc(p.deviceName):'Impressora física não mapeada'}</small></div><span class="badge ${p.enabled?'b-green':'b-gray'}">${p.enabled?'Ativo':'Inativo'}</span><div class="printer-profile-actions"><button class="icon-btn" onclick="mapPrinterDevice('${p.id}')" title="Mapear impressora física">${icon('link-45deg')}</button><button class="icon-btn" onclick="printTestProfile('${p.id}')" title="Impressão de teste">${icon('printer')}</button><button class="icon-btn" onclick="editPrinterAutomation('${p.id}')" title="Automação">${icon('lightning-charge')}</button><button class="icon-btn" onclick="editPrinterProfile('${p.id}')" title="Editar">${icon('pencil')}</button><button class="icon-btn" onclick="togglePrinterProfile('${p.id}')" title="${p.enabled?'Desativar':'Ativar'}">${icon(p.enabled?'pause-circle':'play-circle')}</button><button class="icon-btn danger-soft" onclick="deletePrinterProfile('${p.id}')" title="Excluir">${icon('trash')}</button></div></div>`).join('')||'<div class="empty">Nenhum destino configurado.</div>'}</div>
     <div class="print-routing-note">${icon('diagram-3')}<div><b>Como configurar a impressão automática</b><span>Abra o raio de cada destino e escolha em qual etapa ele deve imprimir. Ex.: Chapa → “Ao entrar em produção”; Expedição → “Ao ficar pronto”.</span></div></div>
     <div class="modal-foot"><button class="btn btn-outline" onclick="editPrintFooter()">${icon('card-text')}<span>Rodapé</span></button><button class="btn btn-primary" onclick="closeModal()">Concluir</button></div>`);
   }
@@ -230,7 +249,8 @@
       copies:Math.min(3,Math.max(1,Number(v.copies)||1)),
       enabled:true,
       station:v.purpose==='kitchen'?(v.station||'all'):'all',
-      autoEvents:[]
+      autoEvents:[],
+      deviceName:''
     });
     save({render:false});printerCenter();toast('Destino de impressão criado.','success');
   }
@@ -251,6 +271,7 @@
     p.paper=['58mm','80mm','a4'].includes(v.paper)?v.paper:p.paper;
     p.copies=Math.min(3,Math.max(1,Number(v.copies)||1));
     p.station=p.purpose==='kitchen'?(v.station||'all'):'all';
+    if(p.paper==='a4')p.deviceName='';
     save({render:false});printerCenter();toast('Destino de impressão atualizado.','success');
   }
 
@@ -267,7 +288,7 @@
     const p=profileById(id);if(!p)return;
     openModal(`<div class="modal-head"><div><h2>Automação — ${esc(p.name)}</h2><p class="dialog-subtitle">Escolha exatamente quando este destino deve abrir a impressão.</p></div><button class="icon-btn" onclick="printerCenter()" aria-label="Voltar">${icon('arrow-left')}</button></div>
       <div class="automation-list">${Object.keys(EVENT_LABEL).map(event=>{const on=p.autoEvents.includes(event);return `<button class="automation-row ${on?'active':''}" onclick="togglePrinterEvent('${p.id}','${event}')"><span class="automation-icon">${icon(on?'check-circle-fill':'circle')}</span><div><b>${esc(EVENT_LABEL[event])}</b><span>${esc(EVENT_HELP[event])}</span></div><span class="badge ${on?'b-green':'b-gray'}">${on?'Automático':'Manual'}</span></button>`}).join('')}</div>
-      <div class="print-routing-example"><b>Destino</b><span>${esc(PURPOSE_LABEL[p.purpose])}${p.purpose==='kitchen'?' • '+esc(p.station==='all'?'Todos os setores':p.station):''} • ${esc(PAPER_LABEL[p.paper])}</span></div>
+      <div class="print-routing-example"><b>Destino</b><span>${esc(PURPOSE_LABEL[p.purpose])}${p.purpose==='kitchen'?' • '+esc(p.station==='all'?'Todos os setores':p.station):''} • ${esc(PAPER_LABEL[p.paper])}${p.deviceName?' • '+esc(p.deviceName):''}</span></div>
       <div class="modal-foot"><button class="btn btn-primary" onclick="printerCenter()">Concluir</button></div>`);
   }
   function togglePrinterEvent(id,event){
