@@ -1,4 +1,4 @@
-const CACHE='xburguer-central-v12-1';
+const CACHE='xburguer-central-v12-2';
 const APP_SHELL=['./','./index.html','./manifest.webmanifest','./assets/css/app.css','./assets/img/logo.png','./assets/img/icon.svg','./assets/img/icon-maskable.svg','./assets/js/core.js','./assets/js/ui.js','./assets/js/orders.js','./assets/js/sales.js','./assets/js/operations.js','./assets/js/crm.js','./assets/js/management.js','./assets/js/app.js','./assets/js/pwa.js'];
 self.addEventListener('install',event=>{event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(APP_SHELL)).then(()=>self.skipWaiting()))});
 self.addEventListener('activate',event=>{event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim()))});
