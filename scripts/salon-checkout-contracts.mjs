@@ -86,6 +86,13 @@ vm.runInContext(`
 `,context);
 assert.equal(vm.runInContext("checkoutCanReceiveV23(state.orders,false)",context),true);
 assert.equal(vm.runInContext("checkoutReadyToCloseV24(state.orders)",context),false);
+
+// O card do checkout segue a referência com Entregar, garçom e menu Ações.
+const checkoutCard=vm.runInContext("checkoutOrderListV22(state.orders,{tableId:'tui',orderId:''})",context);
+assert.match(checkoutCard,/Entregar/);
+assert.match(checkoutCard,/Garçom Tais/);
+assert.match(checkoutCard,/Ações/);
+
 vm.runInContext("recordCheckoutPaymentV23(state.orders,3700,'Dinheiro','total')",context);
 assert.equal(vm.runInContext("checkoutRemainingCentsV23(state.orders)",context),0);
 await vm.runInContext("closeTableCheckoutV22('tui')",context);
@@ -94,12 +101,6 @@ vm.runInContext("state.orders[0].status='ready'",context);
 assert.equal(vm.runInContext("checkoutReadyToCloseV24(state.orders)",context),true);
 await vm.runInContext("closeTableCheckoutV22('tui')",context);
 assert.equal(vm.runInContext("state.tables[0].status",context),'free');
-
-// O card do checkout segue a referência com Entregar, garçom e menu Ações.
-const checkoutCard=vm.runInContext("checkoutOrderListV22(state.orders,{tableId:'tui',orderId:''})",context);
-assert.match(checkoutCard,/Entregar/);
-assert.match(checkoutCard,/Garçom Tais/);
-assert.match(checkoutCard,/Ações/);
 
 // Ajustes de checkout entram no total.
 context.__order={type:'Balcão',items:[{p:'p1',q:1,price:100}],discount:12,surcharge:7};
