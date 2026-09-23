@@ -1,4 +1,4 @@
-/* X Burguer Central V11 — app */
+/* X Burguer Central V15 — bootstrap da aplicação */
 function enhanceTables(){document.querySelectorAll('.page.active .table:not([data-enhanced])').forEach(table=>{table.dataset.enhanced='1';if(table.parentElement?.classList.contains('table-shell'))return;const wrap=document.createElement('div');wrap.className='table-shell';table.parentNode.insertBefore(wrap,table);wrap.appendChild(table)})}
 function renderPage(id){({pedidos:renderPedidos,pdv:()=>renderPdv(),salao:renderSalao,cardapio:renderCardapio,entregas:renderEntregas,performance:renderPerformance,kds:renderKds,clientes:renderClientes,marketing:renderMarketing,atendimento:renderAtendimento,caixa:renderCaixa,estoque:renderEstoque,financeiro:renderFinanceiro,equipe:renderEquipe,config:renderConfig}[id]||(()=>{}))();enhanceTables()}
 function renderAll(){syncTables();setHeader();renderPage(currentPage)}
