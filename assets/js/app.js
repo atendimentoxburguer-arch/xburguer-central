@@ -1,4 +1,4 @@
-/* X Burguer Central V16 — bootstrap da aplicação */
+/* X Burguer Central V19 — bootstrap da aplicação */
 function enhanceTables(){document.querySelectorAll('.page.active .table:not([data-enhanced])').forEach(table=>{table.dataset.enhanced='1';if(table.parentElement?.classList.contains('table-shell'))return;const wrap=document.createElement('div');wrap.className='table-shell';table.parentNode.insertBefore(wrap,table);wrap.appendChild(table)})}
 function renderPage(id){
  updatePageTitle(id);
@@ -49,4 +49,4 @@ let shownGlobalError=false;
 function reportGlobalError(error){console.error('Erro de interface:',error);if(!shownGlobalError){shownGlobalError=true;toast('Ocorreu um erro inesperado. A área afetada pode ser recarregada sem perder os dados locais.','error')}}
 window.addEventListener('error',event=>reportGlobalError(event.error||event.message));
 window.addEventListener('unhandledrejection',event=>reportGlobalError(event.reason));
-initThemeUI();load();const initial=location.hash.slice(1);if(initial&&document.getElementById(initial))currentPage=initial;syncTables();setHeader();go(currentPage,{historyMode:'replace'});updateConnectionStatus();
+initThemeUI();load();globalThis.initPrintAgentClient?.();const initial=location.hash.slice(1);if(initial&&document.getElementById(initial))currentPage=initial;syncTables();setHeader();go(currentPage,{historyMode:'replace'});updateConnectionStatus();
