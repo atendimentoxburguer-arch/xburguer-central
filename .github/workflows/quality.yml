@@ -35,6 +35,8 @@ jobs:
         run: node scripts/visual-contracts.mjs
       - name: State contract tests
         run: node scripts/state-contracts.mjs
+      - name: Reports contract tests
+        run: node scripts/reports-contracts.mjs
       - name: Business contract tests
         run: node scripts/business-contracts.mjs
       - name: Salon and checkout contract tests
