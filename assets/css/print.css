@@ -1,47 +1,288 @@
-/* X Burguer Central V17 — impressão */
-:root{--print-width:80mm}
-*{box-sizing:border-box}
-html,body{margin:0;padding:0;background:#fff;color:#000;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:1.32}
-body{display:flex;justify-content:center}
-.print-sheet{width:var(--print-width);padding:4mm 3.2mm;background:#fff}
-.print-sheet.paper-58mm{--print-width:58mm;padding:3mm 2.4mm;font-size:10.5px}
-.print-sheet.paper-80mm{--print-width:80mm}
-.print-sheet.paper-a4{--print-width:210mm;padding:12mm 16mm;font-size:12px}
-.print-header{text-align:center;padding-bottom:8px;border-bottom:1px dashed #000}
-.print-header img{display:block;width:48px;height:48px;object-fit:contain;margin:0 auto 5px}
-.print-header h1{margin:0;font-size:17px;line-height:1.1}
-.print-header p{margin:4px 0 1px;font-size:11px;font-weight:700;letter-spacing:.06em}
-.print-header small{font-size:9px}
-.print-meta{display:grid;grid-template-columns:1fr 1fr;gap:4px 8px;padding:8px 0;border-bottom:1px dashed #000}
-.print-meta div{display:grid}
-.print-meta span,.print-payment span{font-size:9px;text-transform:uppercase}
-.print-meta b{font-size:11px}
-.print-customer{display:grid;gap:2px;padding:8px 0;border-bottom:1px dashed #000}
-.print-customer.strong b{font-size:15px}
-.print-customer span{overflow-wrap:anywhere}
-.print-items{padding:5px 0;border-bottom:1px dashed #000}
-.print-item{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:start;padding:4px 0}
-.print-item b{display:block;font-size:11.5px}
-.print-item small{display:block;margin-top:1px;font-size:9px;text-transform:uppercase}
-.print-item strong{font-size:11px;white-space:nowrap}
-.print-empty{text-align:center;font-style:italic}
-.print-totals{display:grid;gap:3px;padding:7px 0;border-bottom:1px dashed #000}
-.print-totals div,.print-payment{display:flex;justify-content:space-between;gap:8px}
-.print-totals .grand{margin-top:3px;padding-top:5px;border-top:1px solid #000;font-size:14px}
-.print-payment{padding:7px 0;border-bottom:1px dashed #000}
-.print-notes{margin:7px 0;padding:6px;border:1px solid #000}
-.print-notes p{margin:3px 0 0;white-space:pre-wrap;overflow-wrap:anywhere}
-.print-notes.emphasis{border-width:2px;font-size:13px}
-.print-notes.emphasis b{font-size:14px}
-footer{padding-top:8px;text-align:center;font-size:9px}
-.print-copy-break{page-break-after:always}
-@page{margin:0}
-@media print{
-  body{display:block}
-  .print-sheet{margin:0 auto}
-  .print-copy-break{break-after:page}
+/* X Burguer Central V18 — impressão vertical, compacta e de alto contraste */
+:root{
+  --print-width:80mm;
+  --print-font:11.4px;
+  --print-line:1.16;
+  color-scheme:light only;
 }
-@page thermal58{size:58mm auto;margin:0}
-@page thermal80{size:80mm auto;margin:0}
-.paper-58mm{page:thermal58}
-.paper-80mm{page:thermal80}
+*{box-sizing:border-box}
+html,body{
+  margin:0;
+  padding:0;
+  background:#fff!important;
+  color:#000!important;
+  font-family:"Arial Narrow",Arial,Helvetica,sans-serif;
+  font-size:var(--print-font);
+  line-height:var(--print-line);
+  -webkit-font-smoothing:none;
+  text-rendering:optimizeLegibility;
+  -webkit-print-color-adjust:exact;
+  print-color-adjust:exact;
+}
+body{
+  display:flex;
+  justify-content:center;
+  width:100%;
+}
+.print-sheet{
+  width:var(--print-width);
+  max-width:100%;
+  padding:2.2mm 2.2mm 1.8mm;
+  background:#fff!important;
+  color:#000!important;
+}
+.paper-58mm{
+  --print-width:58mm;
+  --print-font:10.7px;
+  padding:1.7mm 1.8mm 1.4mm;
+}
+.paper-80mm{
+  --print-width:80mm;
+}
+.paper-a4{
+  --print-width:210mm;
+  --print-font:12px;
+  padding:8mm 10mm;
+}
+.font-small{font-size:calc(var(--print-font) - .8px)}
+.font-normal{font-size:var(--print-font)}
+.font-large{font-size:calc(var(--print-font) + 1.1px)}
+.print-strong,
+.print-strong b,
+.print-strong strong{
+  font-weight:800!important;
+}
+.print-strong{
+  letter-spacing:.005em;
+}
+.density-compact{
+  --section-pad:3.5px;
+  --item-pad:2.5px;
+}
+.density-comfortable{
+  --section-pad:6px;
+  --item-pad:4px;
+}
+.print-header{
+  text-align:center;
+  padding:0 0 var(--section-pad);
+  border-bottom:1.5px solid #000;
+}
+.print-header img{
+  display:block;
+  width:34px;
+  height:34px;
+  object-fit:contain;
+  filter:grayscale(1) contrast(1.35);
+  margin:0 auto 2px;
+}
+.print-header h1{
+  margin:0;
+  color:#000;
+  font-size:1.34em;
+  line-height:1.02;
+  font-weight:900;
+  letter-spacing:-.02em;
+}
+.print-header p{
+  margin:2px 0 0;
+  color:#000;
+  font-size:.95em;
+  font-weight:900;
+  letter-spacing:.055em;
+}
+.print-header small{
+  display:block;
+  margin-top:1px;
+  color:#000;
+  font-size:.76em;
+  font-weight:700;
+}
+.print-meta{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:2px 7px;
+  padding:var(--section-pad) 0;
+  border-bottom:1px dashed #000;
+}
+.print-meta div{display:grid;gap:0}
+.print-meta span,
+.print-payment span{
+  color:#000;
+  font-size:.72em;
+  font-weight:800;
+  text-transform:uppercase;
+  letter-spacing:.045em;
+}
+.print-meta b{
+  color:#000;
+  font-size:.96em;
+  font-weight:900;
+}
+.print-customer{
+  display:grid;
+  gap:1px;
+  padding:var(--section-pad) 0;
+  border-bottom:1px dashed #000;
+}
+.print-customer.compact-customer{padding:2px 0}
+.print-customer b{
+  color:#000;
+  font-size:1em;
+  font-weight:900;
+}
+.print-customer.strong b{font-size:1.22em}
+.print-customer span{
+  color:#000;
+  font-weight:700;
+  overflow-wrap:anywhere;
+}
+.print-items{
+  padding:2px 0;
+  border-bottom:1px dashed #000;
+}
+.print-item{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  gap:6px;
+  align-items:start;
+  padding:var(--item-pad) 0;
+  break-inside:avoid;
+}
+.print-item b{
+  display:block;
+  color:#000;
+  font-size:1.02em;
+  line-height:1.12;
+  font-weight:900;
+}
+.print-item small{
+  display:block;
+  margin-top:1px;
+  color:#000;
+  font-size:.72em;
+  line-height:1.08;
+  font-weight:700;
+  text-transform:uppercase;
+}
+.print-item strong{
+  color:#000;
+  font-size:.96em;
+  font-weight:900;
+  white-space:nowrap;
+}
+.print-empty{
+  margin:4px 0;
+  color:#000;
+  text-align:center;
+  font-style:italic;
+  font-weight:700;
+}
+.print-totals{
+  display:grid;
+  gap:1px;
+  padding:var(--section-pad) 0;
+  border-bottom:1px dashed #000;
+}
+.print-totals div,
+.print-payment{
+  display:flex;
+  justify-content:space-between;
+  gap:8px;
+}
+.print-totals span{
+  color:#000;
+  font-weight:700;
+}
+.print-totals b{
+  color:#000;
+  font-weight:900;
+}
+.print-totals .grand{
+  margin-top:2px;
+  padding-top:3px;
+  border-top:1.5px solid #000;
+  font-size:1.19em;
+  font-weight:900;
+}
+.print-payment{
+  align-items:baseline;
+  padding:var(--section-pad) 0;
+  border-bottom:1px dashed #000;
+}
+.print-payment b{
+  color:#000;
+  font-weight:900;
+  text-align:right;
+}
+.print-notes{
+  margin:var(--section-pad) 0 0;
+  padding:4px 5px;
+  border:1.5px solid #000;
+  break-inside:avoid;
+}
+.print-notes b{
+  color:#000;
+  font-size:.9em;
+  font-weight:900;
+}
+.print-notes p{
+  margin:2px 0 0;
+  color:#000;
+  font-weight:800;
+  line-height:1.12;
+  white-space:pre-wrap;
+  overflow-wrap:anywhere;
+}
+.print-notes.emphasis{
+  border-width:2px;
+  font-size:1.08em;
+}
+.print-notes.emphasis b{font-size:1.04em}
+footer{
+  padding-top:4px;
+  color:#000;
+  text-align:center;
+  font-size:.72em;
+  line-height:1.1;
+  font-weight:700;
+}
+.print-copy-break{page-break-after:always;break-after:page}
+
+/* Retrato/vertical é obrigatório. Em bobina térmica a altura acompanha o conteúdo/driver. */
+@page{
+  size:portrait;
+  margin:0;
+}
+@page a4portrait{
+  size:A4 portrait;
+  margin:7mm;
+}
+.paper-a4{page:a4portrait}
+
+@media print{
+  html,body{
+    width:100%;
+    min-height:0!important;
+  }
+  body{
+    display:block;
+    background:#fff!important;
+  }
+  .print-sheet{
+    margin:0 auto;
+    box-shadow:none!important;
+  }
+  .print-copy-break{
+    page-break-after:always;
+    break-after:page;
+  }
+}
+
+@media screen{
+  body{background:#eef1f5!important;padding:14px 0}
+  .print-sheet{
+    box-shadow:0 8px 28px rgba(0,0,0,.16);
+    min-height:40px;
+  }
+}
