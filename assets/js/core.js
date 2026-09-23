@@ -98,7 +98,7 @@ function validateState(candidate){
  if(!candidate||typeof candidate!=='object')return 'Estado inválido.';
  const required=['orders','products','categories','tables','couriers','promos','finance','team','chats','customers','diningAreas'];
  for(const key of required)if(!Array.isArray(candidate[key]))return 'Coleção inválida: '+key+'.';
- const idGroups=[candidate.products,candidate.categories,candidate.tables,candidate.couriers,candidate.promos,candidate.finance,candidate.team,candidate.chats,candidate.customers,candidate.diningAreas];
+ const idGroups=[candidate.orders,candidate.products,candidate.categories,candidate.tables,candidate.couriers,candidate.promos,candidate.finance,candidate.team,candidate.chats,candidate.customers,candidate.diningAreas];
  for(const group of idGroups){
   const seen=new Set();
   for(const item of group){
