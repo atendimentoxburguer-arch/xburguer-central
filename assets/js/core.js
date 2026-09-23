@@ -160,13 +160,13 @@ function normalize(){
  if(!Array.isArray(state.cash.movements))state.cash.movements=[];
  if(!Array.isArray(state.cash.history))state.cash.history=[];
  const printDefaults=d.settings.printing;
- if(!state.settings.printing||typeof state.settings.printing!=='object'||Array.isArray(state.settings.printing))state.settings.printing=structuredClone(printDefaults);
+ if(!state.settings.printing||typeof state.settings.printing!=='object'||Array.isArray(state.settings.printing))state.settings.printing={...printDefaults,profiles:printDefaults.profiles.map(p=>({...p}))};
  state.settings.printing.enabled=state.settings.printing.enabled!==false;
  state.settings.printing.showLogo=state.settings.printing.showLogo!==false;
  state.settings.printing.footer=String(state.settings.printing.footer??printDefaults.footer).slice(0,180);
  state.settings.printing.openKitchenOnAccept=Boolean(state.settings.printing.openKitchenOnAccept);
  state.settings.printing.openReceiptOnSave=Boolean(state.settings.printing.openReceiptOnSave);
- if(!Array.isArray(state.settings.printing.profiles)||!state.settings.printing.profiles.length)state.settings.printing.profiles=structuredClone(printDefaults.profiles);
+ if(!Array.isArray(state.settings.printing.profiles)||!state.settings.printing.profiles.length)state.settings.printing.profiles=printDefaults.profiles.map(p=>({...p}));
  const allowedPurpose=new Set(['receipt','kitchen','delivery']),allowedPaper=new Set(['58mm','80mm','a4']);
  state.settings.printing.profiles=state.settings.printing.profiles.slice(0,12).map((p,i)=>{
   const fallback=printDefaults.profiles[i]||printDefaults.profiles[0];
