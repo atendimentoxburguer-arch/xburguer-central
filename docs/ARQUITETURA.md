@@ -79,3 +79,9 @@ A impressão silenciosa usa uma arquitetura de ponte local. O front-end envia jo
 ## Aplicativo de impressão V20
 
 A camada local agora é empacotada em Electron/NSIS. A janela Electron não possui acesso Node direto no renderer: usa preload restrito, `contextIsolation`, sandbox e IPC. O serviço HTTP continua em loopback para compatibilidade com o painel web. A fila local possui deduplicação de eventos automáticos, retry e histórico. O workflow Windows gera o instalador `.exe`; tags de versão podem publicar o artifact em Releases.
+
+## Gestão operacional V21
+
+A gestão de salão expõe os pedidos abertos e o histórico recente de cada mesa, mantendo as ações de pedido no domínio de pedidos. Cancelamentos passam a exigir motivo, devolver estoque uma única vez e permanecer no histórico. Exclusão permanente é limitada a pedidos já cancelados para reduzir risco de apagar vendas concluídas ou alterar relatórios financeiros.
+
+Fotos de produtos podem vir de URL HTTPS/HTTP ou upload local JPG/PNG/WebP. Uploads são redimensionados e comprimidos no navegador antes de serem persistidos no estado local; por isso essa solução continua apropriada apenas ao protótipo. Em produção, as imagens devem ir para armazenamento de objetos/CDN e o banco deve guardar somente a URL.

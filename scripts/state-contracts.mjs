@@ -25,12 +25,12 @@ const context=vm.createContext({
 context.globalThis=context;
 vm.runInContext(source,context,{filename:'assets/js/core.js'});
 
-const api=vm.runInContext('({APP_VERSION,SCHEMA_VERSION,defaultState,validateState})',context);
-assert.equal(api.APP_VERSION,'20.0.0');
-assert.equal(api.SCHEMA_VERSION,8);
+const api=vm.runInContext('({APP_VERSION,SCHEMA_VERSION,defaultState,validateState,safeProductImageSrc})',context);
+assert.equal(api.APP_VERSION,'21.0.0');
+assert.equal(api.SCHEMA_VERSION,9);
 
 const fresh=vm.runInContext('defaultState()',context);
-assert.equal(fresh.schemaVersion,8);
+assert.equal(fresh.schemaVersion,9);
 assert.ok(Array.isArray(fresh.diningAreas)&&fresh.diningAreas.length>=1);
 assert.ok(fresh.tables.every(t=>t.area&&Number(t.seats)>=1));
 assert.equal(new Set(fresh.tables.map(t=>t.name.toLowerCase())).size,fresh.tables.length);
@@ -48,6 +48,9 @@ assert.equal(fresh.settings.printing.agent.url,'http://127.0.0.1:17871');
 assert.equal(fresh.settings.printing.agent.token,'');
 assert.equal(fresh.settings.printing.agent.fallbackBrowser,false);
 assert.ok(Array.isArray(fresh.printOutbox));
+assert.equal(api.safeProductImageSrc('javascript:alert(1)'),'');
+assert.equal(api.safeProductImageSrc('https://example.com/lanche.jpg'),'https://example.com/lanche.jpg');
+assert.ok(fresh.products.every(p=>typeof p.image==='undefined'||typeof p.image==='string'));
 assert.ok(fresh.printOutbox.every(j=>typeof j.dedupeKey==='string'));
 
 context.__legacy=JSON.stringify({
@@ -61,7 +64,7 @@ context.__legacy=JSON.stringify({
 });
 vm.runInContext('state=JSON.parse(__legacy);normalize()',context);
 const migrated=vm.runInContext('state',context);
-assert.equal(migrated.schemaVersion,8);
+assert.equal(migrated.schemaVersion,9);
 assert.ok(migrated.diningAreas.length>=1);
 assert.ok(migrated.tables.every(t=>t.area&&t.seats>=1&&Number.isFinite(t.order)));
 assert.ok(migrated.products.every(p=>typeof p.description==='string'&&p.station&&typeof p.manualSold==='boolean'));
@@ -72,6 +75,8 @@ assert.equal(migrated.settings.printing.orientation,'portrait');
 assert.ok(migrated.settings.printing.profiles.every(p=>Array.isArray(p.autoEvents)));
 assert.equal(migrated.settings.printing.agent.url,'http://127.0.0.1:17871');
 assert.ok(Array.isArray(migrated.printOutbox));
+assert.ok(migrated.orders.every(o=>typeof o.cancelReason==='string'&&typeof o.stockRestored==='boolean'));
+assert.ok(migrated.products.every(p=>typeof p.image==='string'));
 assert.equal(migrated.products[0].manualSold,true);
 assert.equal(migrated.products[0].sold,true);
 assert.equal(vm.runInContext('validateState(state)',context),'');
