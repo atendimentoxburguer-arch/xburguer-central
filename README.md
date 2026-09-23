@@ -38,3 +38,7 @@ Antes de usar como sistema transacional real, implementar backend, autenticaçã
 ## Visual V12
 
 A interface foi refinada com uma hierarquia tipográfica mais forte (Manrope + Inter), espaçamento consistente, cartões e tabelas mais bem enquadrados, ícones mais elegantes, estados semânticos mais suaves e responsividade revisada. O objetivo é manter alta legibilidade e velocidade operacional sem excesso de elementos decorativos.
+
+## Revisão V13
+
+Foi realizada uma auditoria completa de consistência visual: alinhamento de toolbars, grids, cartões, tabelas, formulários, pedidos, PDV, mesas, cardápio, delivery, KDS, marketing, configurações e breakpoints. Estilos de layout que estavam inline foram convertidos para classes reutilizáveis. O service worker passou a buscar CSS/JS pela rede antes do cache para reduzir o risco de uma atualização visual antiga continuar aparecendo após novos deploys.
