@@ -1,32 +1,5 @@
-/* X Burguer Central V14 — gestão avançada de salão e cardápio */
+/* X Burguer Central V15 — gestão avançada de salão e cardápio */
 (function(){
-  const baseNormalizeV14=normalize;
-  normalize=function(){
-    baseNormalizeV14();
-    state.diningAreas=Array.isArray(state.diningAreas)&&state.diningAreas.length?state.diningAreas:[
-      {id:'area-salao',name:'Salão principal'},
-      {id:'area-varanda',name:'Varanda'},
-      {id:'area-balcao',name:'Balcão'}
-    ];
-    state.tables.forEach(function(t,i){
-      const counter=String(t.name||'').toLowerCase().includes('balc');
-      if(!t.area||!state.diningAreas.some(function(a){return a.id===t.area}))t.area=counter?'area-balcao':'area-salao';
-      t.seats=Math.max(1,Number(t.seats)|| (counter?2:4));
-      t.guests=Math.max(0,Math.min(t.seats,Number(t.guests)||0));
-      t.server=t.server||'';
-      t.order=Number.isFinite(Number(t.order))?Number(t.order):i;
-    });
-    state.products.forEach(function(p){
-      p.description=p.description||'';
-      p.station=p.station||'Cozinha';
-      p.min=Math.max(0,Number(p.min)||0);
-      p.cost=Math.max(0,Number(p.cost)||0);
-      p.stock=Math.max(0,Number(p.stock)||0);
-      p.active=p.active!==false;
-      p.sold=Boolean(p.sold||p.stock<=0);
-    });
-  };
-
   let tableSearchV14='';
   let tableStatusV14='all';
   let tableAreaV14='all';
@@ -219,10 +192,15 @@
   };
 
   tFinish=function(id){tFinishV14(id)};
-  tFinishV14=function(id){
+  tFinishV14=async function(id){
     const t=state.tables.find(function(x){return x.id===id});
     if(!t)return;
-    state.orders.filter(function(o){return o.table===t.name&&!['done','cancelled'].includes(o.status)}).forEach(function(o){o.status='done';o.completedAt=new Date().toISOString()});
+    const open=openOrdersV14(t);
+    const pending=open.filter(function(o){return ['analysis','production'].includes(o.status)});
+    if(pending.length){toast('Ainda há pedido(s) em análise ou produção nesta mesa.','warning');return}
+    const ok=await confirmDialog('Receber e liberar',`Finalizar ${open.length} pedido(s) de ${t.name} e liberar a mesa?`,{confirmLabel:'Finalizar conta'});
+    if(!ok)return;
+    open.forEach(function(o){o.status='done';o.completedAt=new Date().toISOString()});
     t.status='free';t.guests=0;t.server='';
     closeModal();save();toast('Conta finalizada e mesa liberada.','success');
   };
@@ -444,8 +422,8 @@
   bulkMenuV14=function(action){
     if(!menuSelectedV14.size){toast('Selecione pelo menos um item.','warning');return}
     state.products.filter(function(p){return menuSelectedV14.has(p.id)}).forEach(function(p){
-      if(action==='available'){p.active=true;p.sold=p.stock<=0}
-      if(action==='sold')p.sold=true;
+      if(action==='available'){p.active=true;p.manualSold=false;p.sold=p.stock<=0}
+      if(action==='sold'){p.manualSold=true;p.sold=true}
       if(action==='pause')p.active=false;
     });
     menuSelectedV14.clear();save();toast('Itens atualizados.','success');
@@ -476,7 +454,7 @@
     ]});
     if(!v)return;
     const price=Math.max(0,Number(v.price)||0),stock=Math.max(0,Number(v.stock)||0);
-    state.products.push({id:uid('p'),cat:v.cat,name:v.name.trim(),description:(v.description||'').trim(),price:price,cost:Math.max(0,Number(v.cost)||0),emoji:v.emoji||'🍔',active:true,sold:stock<=0,stock:stock,min:Math.max(0,Number(v.min)||0),station:v.station||'Cozinha'});
+    state.products.push({id:uid('p'),cat:v.cat,name:v.name.trim(),description:(v.description||'').trim(),price:price,cost:Math.max(0,Number(v.cost)||0),emoji:v.emoji||'🍔',active:true,manualSold:false,sold:stock<=0,stock:stock,min:Math.max(0,Number(v.min)||0),station:v.station||'Cozinha'});
     selectedCat=v.cat;save();toast('Item criado.','success');
   };
 
@@ -497,8 +475,9 @@
       {key:'sold',label:'Disponibilidade',type:'select',value:p.sold?'1':'0',options:[{value:'0',label:'Disponível'},{value:'1',label:'Esgotado'}]}
     ]});
     if(!v)return;
-    Object.assign(p,{name:v.name.trim(),description:(v.description||'').trim(),price:Math.max(0,Number(v.price)||0),cost:Math.max(0,Number(v.cost)||0),stock:Math.max(0,Number(v.stock)||0),min:Math.max(0,Number(v.min)||0),station:v.station||'Cozinha',cat:v.cat,active:v.active==='1',sold:v.sold==='1'});
-    if(p.stock<=0)p.sold=true;
+    const stock=Math.max(0,Number(v.stock)||0);
+    const manualSold=v.sold==='1';
+    Object.assign(p,{name:v.name.trim(),description:(v.description||'').trim(),price:Math.max(0,Number(v.price)||0),cost:Math.max(0,Number(v.cost)||0),stock:stock,min:Math.max(0,Number(v.min)||0),station:v.station||'Cozinha',cat:v.cat,active:v.active==='1',manualSold:manualSold,sold:manualSold||stock<=0});
     selectedCat=v.cat;save();toast('Item atualizado.','success');
   };
 
@@ -549,16 +528,18 @@
     });
   };
 
-  const baseToggleSoldV14=toggleSold;
   toggleSold=function(id){
     const p=product(id);if(!p)return;
-    if(p.sold&&Number(p.stock)<=0){toast('Ajuste o estoque antes de disponibilizar este item.','warning');return}
-    baseToggleSoldV14(id);
+    if(p.sold&&!p.manualSold&&Number(p.stock)<=0){toast('Ajuste o estoque antes de disponibilizar este item.','warning');return}
+    p.manualSold=!Boolean(p.manualSold);
+    p.sold=Boolean(p.manualSold||Number(p.stock)<=0);
+    save();
   };
 
   resetDemo=async function(){
     const ok=await confirmDialog('Restaurar demonstração','Apagar as alterações locais e restaurar os dados de demonstração?',{confirmLabel:'Restaurar',danger:true});
     if(!ok)return;
+    snapshotLocal('antes_reset');
     state=defaultState();
     normalize();
     try{localStorage.setItem(STORAGE,JSON.stringify(state))}catch(e){}
