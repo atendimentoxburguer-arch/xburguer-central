@@ -36,7 +36,7 @@ export function createPrintAgent(options={}){
   const logPath=path.join(dataDir,'agent.log.jsonl');
   fs.mkdirSync(dataDir,{recursive:true});
 
-  let config=safeJson(configPath,{token:'',createdAt:iso()});
+  let config=safeJson(configPath,{token:'',createdAt:iso(),lastPairedAt:''});
   if(!config.token){config.token=crypto.randomBytes(24).toString('hex');writeJson(configPath,config)}
   let pairingCode=String(crypto.randomInt(100000,1000000));
   let jobs=safeJson(queuePath,[]);
@@ -155,7 +155,7 @@ export function createPrintAgent(options={}){
   function getSnapshot(){
     return {
       ok:true,name:'X Burguer Print Agent',version,platform:process.platform,host,port,startedAt,pairingCode,
-      queue:queueSummary(),lastJob:getLastJob(),lastError,dataDir,paired:Boolean(config.token),logCount:recentLogs(200).length
+      queue:queueSummary(),lastJob:getLastJob(),lastError,dataDir,pairedOnce:Boolean(config.lastPairedAt),lastPairedAt:config.lastPairedAt||'',logCount:recentLogs(200).length
     };
   }
   function rotatePairingCode(){pairingCode=String(crypto.randomInt(100000,1000000));return pairingCode}
@@ -213,7 +213,7 @@ export function createPrintAgent(options={}){
         try{
           const body=await readBody(req);
           if(String(body.code||'')!==pairingCode){send(req,res,403,{ok:false,error:'Codigo de pareamento invalido.'});return}
-          rotatePairingCode();send(req,res,200,{ok:true,token:config.token,version});
+          config.lastPairedAt=iso();writeJson(configPath,config);rotatePairingCode();send(req,res,200,{ok:true,token:config.token,version,lastPairedAt:config.lastPairedAt});
           log('info','Novo pareamento autorizado',{origin:req.headers.origin||''});
         }catch(error){send(req,res,400,{ok:false,error:error.message})}
         return;
