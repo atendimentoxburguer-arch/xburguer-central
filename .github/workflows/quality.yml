@@ -33,6 +33,8 @@ jobs:
         run: node scripts/state-contracts.mjs
       - name: Business contract tests
         run: node scripts/business-contracts.mjs
+      - name: Salon and checkout contract tests
+        run: node scripts/salon-checkout-contracts.mjs
       - name: Printing contract tests
         run: node scripts/printing-contracts.mjs
       - name: Print agent contract tests
