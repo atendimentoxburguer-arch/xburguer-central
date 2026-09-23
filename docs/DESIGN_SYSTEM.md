@@ -34,3 +34,13 @@ Desktop prioriza densidade e leitura simultânea. Em tablet e celular, grids sã
 ## Referências de princípios
 
 A organização de espaçamento e densidade segue princípios comuns em design systems maduros, como Carbon. A direção de iconografia prioriza formas limpas e consistentes, semelhante ao princípio de bibliotecas SVG como Lucide.
+
+## Regras de alinhamento V13
+
+- Toolbars usam uma grade previsível: conteúdo flexível à esquerda e ações à direita; em larguras menores viram uma coluna.
+- Componentes operacionais não devem se mover ao passar o mouse; feedback usa borda/sombra em vez de deslocamento.
+- Ícones e botões têm caixas fixas para evitar desalinhamento vertical.
+- Textos longos usam truncamento ou quebra controlada conforme o contexto.
+- Tabelas mantêm alinhamento de colunas e usam rolagem horizontal em telas pequenas.
+- Cards de pedidos, mesas, PDV e KDS seguem a mesma escala de espaçamento e raios.
+- Estilos de layout não devem ser adicionados inline; usar classes reutilizáveis.
