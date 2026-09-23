@@ -1,4 +1,4 @@
-/* X Burguer Central V11 — PWA */
+/* X Burguer Central V15 — PWA */
 let deferredInstallPrompt=null;
 const installBtn=document.getElementById('installAppBtn');
 if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js').catch(err=>console.warn('Service Worker não registrado',err)))}
