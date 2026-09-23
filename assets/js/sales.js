@@ -26,6 +26,8 @@ async function finishPdv(editId=''){
   table='';
   if(!address||existing?.type!=='Delivery'){const v=await formDialog({title:'Dados da entrega',fields:[{key:'address',label:'Endereço',value:address,required:true,full:true},{key:'phone',label:'Telefone',value:phone,placeholder:'(62) 9____-____'}]});if(!v)return;address=v.address.trim();phone=v.phone.trim()}
  }else{table='';address=''}
+ const matchedCustomer=state.customers.find(c=>phone&&c.phone&&c.phone===phone)||state.customers.find(c=>c.name.trim().toLowerCase()===customer.trim().toLowerCase());
+ const customerId=matchedCustomer?.id||existing?.customerId||'';
  const oldQty=new Map((existing?.items||[]).map(i=>[i.p,Number(i.q)||0]));
  for(const i of pdvCart){const p=product(i.p),available=(Number(p?.stock)||0)+(oldQty.get(i.p)||0);if(!p||(p.sold&&!(oldQty.get(i.p)>0))||available<i.q){toast(`Estoque insuficiente para ${p?.name||'um item'}.`,'error');return}}
  if(existing){
@@ -37,10 +39,10 @@ async function finishPdv(editId=''){
    p.sold=Boolean(p.manualSold||p.stock<=0);
    if(delta)recordStockMovement(pid,delta,'Edição de pedido',existing.id);
   });
-  Object.assign(existing,{items:pdvCart.map(x=>({...x})),customer,payment:pay,type,table,address,phone});
+  Object.assign(existing,{items:pdvCart.map(x=>({...x})),customer,customerId,payment:pay,type,table,address,phone});
  }else{
   const id=String(Math.max(...state.orders.map(o=>Number(o.id)||0),77500)+1);
-  state.orders.push({id,type,table,customer,phone,address,payment:pay,status:state.settings.autoAccept?'production':'analysis',createdAt:new Date().toISOString(),items:pdvCart.map(x=>({...x})),notes:'',courier:'',scheduled:false});
+  state.orders.push({id,type,table,customer,customerId,phone,address,payment:pay,status:state.settings.autoAccept?'production':'analysis',createdAt:new Date().toISOString(),items:pdvCart.map(x=>({...x})),notes:'',courier:'',scheduled:false});
   pdvCart.forEach(i=>{const p=product(i.p);if(p&&Number.isFinite(p.stock)){p.stock=Math.max(0,p.stock-i.q);p.sold=Boolean(p.manualSold||p.stock<=0);recordStockMovement(p.id,-Number(i.q||0),'Venda',id)}})
  }
  pdvCart=[];pdvDraftTable='';pdvEditingId='';syncTables();save();go('pedidos');toast('Pedido salvo com sucesso.','success');
