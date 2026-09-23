@@ -23,3 +23,5 @@ jobs:
           done
       - name: Run static project checks
         run: node scripts/check.mjs
+      - name: State contract tests
+        run: node scripts/state-contracts.mjs
