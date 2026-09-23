@@ -13,7 +13,7 @@
   }
   function agentBase(){
     const raw=String(agentConfig().url||DEFAULT_AGENT_URL).trim().replace(/\/+$/,'');
-    return raw||DEFAULT_AGENT_URL;
+    return /^http:\/\/(?:127\.0\.0\.1|localhost)(?::\d{1,5})?$/.test(raw)?raw:DEFAULT_AGENT_URL;
   }
   async function agentRequest(path,{method='GET',body=null,auth=true,timeout=3500}={}){
     const cfg=agentConfig(),controller=new AbortController(),timer=setTimeout(()=>controller.abort(),timeout);
