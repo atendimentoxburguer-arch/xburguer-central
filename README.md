@@ -42,3 +42,7 @@ A interface foi refinada com uma hierarquia tipográfica mais forte (Manrope + I
 ## Revisão V13
 
 Foi realizada uma auditoria completa de consistência visual: alinhamento de toolbars, grids, cartões, tabelas, formulários, pedidos, PDV, mesas, cardápio, delivery, KDS, marketing, configurações e breakpoints. Estilos de layout que estavam inline foram convertidos para classes reutilizáveis. O service worker passou a buscar CSS/JS pela rede antes do cache para reduzir o risco de uma atualização visual antiga continuar aparecendo após novos deploys.
+
+## Gestão V14
+
+A área de salão ganhou gestão por áreas/seções, capacidade, pessoas sentadas, responsável, ordenação, criação em lote, transferência e administração completa das mesas. O gestor de cardápio ganhou indicadores, filtros, ordenação, edição em massa, disponibilidade/86, estoque mínimo, custo, descrição e estação de preparo.
