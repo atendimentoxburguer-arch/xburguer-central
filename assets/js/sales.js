@@ -272,7 +272,7 @@ function checkoutOrderListV22(orders,context={tableId:'',orderId:''}){
     '<div class="checkout-order-controls-v24">'+
      '<label class="checkout-served-v24 '+(o.servedAt?'checked':'')+'"><input type="checkbox" '+(o.servedAt?'checked':'')+' onchange="checkoutToggleServedV24(\''+o.id+'\',\''+(context.tableId||'')+'\',\''+(context.orderId||'')+'\')"><span>Entregar</span></label>'+
      '<span class="checkout-time-v24">'+icon('clock')+' '+orderTime(o)+'</span>'+
-     '<span class="checkout-server-v24">'+icon('bow-tie')+' '+esc(server)+'</span>'+
+     '<span class="checkout-server-v24">'+icon('person-badge')+' '+esc(server)+'</span>'+
      checkoutOrderActionMenuV24(o,context)+
     '</div>'+
    '</div>'+
