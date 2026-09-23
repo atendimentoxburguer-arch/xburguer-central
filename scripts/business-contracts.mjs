@@ -19,6 +19,7 @@ const context=vm.createContext({
 context.globalThis=context;
 context.toast=()=>{};
 context.confirmDialog=async()=>true;
+context.formDialog=async()=>({reason:'Teste de cancelamento'});
 context.closeModal=()=>{};
 context.renderAll=()=>{};
 vm.runInContext(fs.readFileSync('assets/js/core.js','utf8'),context,{filename:'core.js'});
@@ -51,6 +52,14 @@ assert.equal(vm.runInContext("state.products.find(x=>x.id==='p1').stock",context
 assert.equal(vm.runInContext("state.products.find(x=>x.id==='p1').sold",context),false);
 assert.equal(vm.runInContext("state.inventoryMovements.at(-1).delta",context),2);
 assert.equal(vm.runInContext("state.inventoryMovements.at(-1).reason",context),'Cancelamento de pedido');
+assert.equal(vm.runInContext("state.orders.find(x=>x.id==='test-cancel').cancelReason",context),'Teste de cancelamento');
+
+// Exclusão permanente só remove pedidos já cancelados.
+vm.runInContext(`
+  state.orders.push({id:'test-delete',type:'Balcão',table:'',customer:'Teste',customerId:'',payment:'PIX',status:'cancelled',createdAt:new Date().toISOString(),items:[{p:'p1',q:1,price:10}],stockRestored:true,cancelReason:'Duplicado'});
+`,context);
+await vm.runInContext("deleteOrderV21('test-delete')",context);
+assert.equal(vm.runInContext("state.orders.some(x=>x.id==='test-delete')",context),false);
 
 // Caixa físico não soma PIX/cartão ao dinheiro da gaveta.
 vm.runInContext(`
