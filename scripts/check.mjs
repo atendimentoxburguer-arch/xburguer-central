@@ -86,14 +86,14 @@ for(const match of html.matchAll(/(?:src|href)="([^"]+)"/g)){
 }
 
 const scripts=[...html.matchAll(/<script[^>]+src="([^"]+)"/g)].map(m=>m[1]);
-for(const requiredScript of ['assets/js/core.js','assets/js/ui.js','assets/js/print-agent-client.js','assets/js/printing.js','assets/js/orders.js','assets/js/sales.js','assets/js/management.js','assets/js/reports.js','assets/js/salon-management.js','assets/js/menu-management.js','assets/js/app.js']){
+for(const requiredScript of ['assets/js/core.js','assets/js/ui.js','assets/js/integrations.js','assets/js/print-agent-client.js','assets/js/printing.js','assets/js/orders.js','assets/js/sales.js','assets/js/management.js','assets/js/reports.js','assets/js/salon-management.js','assets/js/menu-management.js','assets/js/app.js']){
   if(!scripts.includes(requiredScript)){
     console.error('Script essencial ausente do HTML:',requiredScript);
     process.exitCode=1;
   }
 }
-if(!(scripts.indexOf('assets/js/core.js')<scripts.indexOf('assets/js/ui.js')&&scripts.indexOf('assets/js/ui.js')<scripts.indexOf('assets/js/print-agent-client.js')&&scripts.indexOf('assets/js/print-agent-client.js')<scripts.indexOf('assets/js/printing.js')&&scripts.indexOf('assets/js/printing.js')<scripts.indexOf('assets/js/orders.js')&&scripts.indexOf('assets/js/orders.js')<scripts.indexOf('assets/js/sales.js')&&scripts.indexOf('assets/js/sales.js')<scripts.indexOf('assets/js/management.js')&&scripts.indexOf('assets/js/management.js')<scripts.indexOf('assets/js/reports.js')&&scripts.indexOf('assets/js/reports.js')<scripts.indexOf('assets/js/salon-management.js')&&scripts.indexOf('assets/js/salon-management.js')<scripts.indexOf('assets/js/menu-management.js')&&scripts.indexOf('assets/js/menu-management.js')<scripts.indexOf('assets/js/app.js'))){
-  console.error('Ordem de carregamento inválida: core -> ui -> print-agent-client -> printing -> orders -> sales -> management -> reports -> salon-management -> menu-management -> app.');
+if(!(scripts.indexOf('assets/js/core.js')<scripts.indexOf('assets/js/ui.js')&&scripts.indexOf('assets/js/ui.js')<scripts.indexOf('assets/js/integrations.js')&&scripts.indexOf('assets/js/integrations.js')<scripts.indexOf('assets/js/print-agent-client.js')&&scripts.indexOf('assets/js/print-agent-client.js')<scripts.indexOf('assets/js/printing.js')&&scripts.indexOf('assets/js/printing.js')<scripts.indexOf('assets/js/orders.js')&&scripts.indexOf('assets/js/orders.js')<scripts.indexOf('assets/js/sales.js')&&scripts.indexOf('assets/js/sales.js')<scripts.indexOf('assets/js/management.js')&&scripts.indexOf('assets/js/management.js')<scripts.indexOf('assets/js/reports.js')&&scripts.indexOf('assets/js/reports.js')<scripts.indexOf('assets/js/salon-management.js')&&scripts.indexOf('assets/js/salon-management.js')<scripts.indexOf('assets/js/menu-management.js')&&scripts.indexOf('assets/js/menu-management.js')<scripts.indexOf('assets/js/app.js'))){
+  console.error('Ordem de carregamento inválida: core -> ui -> integrations -> print-agent-client -> printing -> orders -> sales -> management -> reports -> salon-management -> menu-management -> app.');
   process.exitCode=1;
 }
 
