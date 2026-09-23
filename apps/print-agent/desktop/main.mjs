@@ -1,4 +1,4 @@
-import { app, BrowserWindow, Menu, Tray, nativeImage, ipcMain, shell, Notification } from 'electron';
+import { app, BrowserWindow, Menu, Tray, nativeImage, ipcMain, shell, Notification, dialog } from 'electron';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -6,7 +6,7 @@ import { createPrintAgent } from '../server.mjs';
 
 const __dirname=path.dirname(fileURLToPath(import.meta.url));
 const DASHBOARD_URL='https://atendimentoxburguer-arch.github.io/xburguer-central/';
-const RELEASES_API='https://api.github.com/repos/atendimentoxburguer-arch/xburguer-central/releases/latest';
+const RELEASES_API='https://api.github.com/repos/atendimentoxburguer-arch/xburguer-central/releases?per_page=20';
 
 let mainWindow=null,tray=null,quitting=false,agent=null,desktopConfig={startWithWindows:true};
 
@@ -25,7 +25,13 @@ function saveDesktopConfig(){
 }
 function applyStartupPreference(){
   if(!app.isPackaged)return;
-  app.setLoginItemSettings({openAtLogin:Boolean(desktopConfig.startWithWindows),path:process.execPath,args:[]});
+  app.setLoginItemSettings({openAtLogin:Boolean(desktopConfig.startWithWindows),path:process.execPath,args:['--hidden']});
+}
+function cleanupLegacyStartupShortcut(){
+  if(process.platform!=='win32')return;
+  const appData=process.env.APPDATA;if(!appData)return;
+  const legacy=path.join(appData,'Microsoft','Windows','Start Menu','Programs','Startup','X Burguer Print Agent.lnk');
+  try{if(fs.existsSync(legacy))fs.unlinkSync(legacy)}catch{}
 }
 function statusText(snapshot){
   if(!snapshot)return 'Inicializando';
@@ -57,8 +63,8 @@ function showWindow(){
   if(!mainWindow)return createWindow();
   mainWindow.show();mainWindow.focus();
 }
-function createWindow(){
-  if(mainWindow){showWindow();return mainWindow}
+function createWindow({show=true}={}){
+  if(mainWindow){if(show)showWindow();return mainWindow}
   mainWindow=new BrowserWindow({
     width:980,height:720,minWidth:780,minHeight:600,show:false,
     title:'X Burguer Print Agent',
@@ -72,7 +78,7 @@ function createWindow(){
     }
   });
   mainWindow.loadFile(path.join(__dirname,'ui.html'));
-  mainWindow.once('ready-to-show',()=>mainWindow?.show());
+  mainWindow.once('ready-to-show',()=>{if(show)mainWindow?.show()});
   mainWindow.on('close',event=>{
     if(!quitting){event.preventDefault();mainWindow.hide();refreshTray()}
   });
@@ -115,9 +121,11 @@ function isNewer(remote,local){
 async function checkUpdates(){
   try{
     const response=await fetch(RELEASES_API,{headers:{'Accept':'application/vnd.github+json','User-Agent':'X-Burguer-Print-Agent'}});
-    if(response.status===404)return {ok:true,available:false,message:'Ainda não há release público do agente.'};
     if(!response.ok)throw new Error('GitHub respondeu HTTP '+response.status);
-    const release=await response.json(),tag=String(release.tag_name||'').replace(/^print-agent-v/i,'').replace(/^v/i,'');
+    const releases=await response.json();
+    const release=(Array.isArray(releases)?releases:[]).find(r=>String(r.tag_name||'').startsWith('print-agent-v'));
+    if(!release)return {ok:true,available:false,message:'Ainda não há release público do agente.',current:app.getVersion()};
+    const tag=String(release.tag_name||'').replace(/^print-agent-v/i,'');
     return {ok:true,available:isNewer(tag,app.getVersion()),latest:tag,url:release.html_url||'',current:app.getVersion()};
   }catch(error){return {ok:false,error:String(error.message||error),current:app.getVersion()}}
 }
@@ -144,14 +152,27 @@ async function bootstrap(){
   if(!app.requestSingleInstanceLock()){app.quit();return}
   app.on('second-instance',()=>showWindow());
   app.setAppUserModelId('com.xburguer.printagent');
+  cleanupLegacyStartupShortcut();
   agent=createPrintAgent({version:app.getVersion(),rawPrintScript:rawPrintPath()});
-  await agent.start();
+  try{await agent.start()}
+  catch(error){
+    console.error(error);
+    const portBusy=error?.code==='EADDRINUSE'||String(error.message||'').includes('EADDRINUSE');
+    dialog.showErrorBox(
+      portBusy?'Print Agent já está em execução':'Falha ao iniciar Print Agent',
+      portBusy
+        ?'A porta local 17871 já está sendo usada. Feche uma versão antiga do X Burguer Print Agent ou reinicie o Windows e abra o aplicativo novamente.'
+        :String(error.message||error)
+    );
+    app.quit();return;
+  }
   loadDesktopConfig();applyStartupPreference();
-  registerIpc();createTray();createWindow();
+  registerIpc();createTray();createWindow({show:!process.argv.includes('--hidden')});
   setInterval(refreshTray,3000).unref?.();
 }
 app.whenReady().then(bootstrap).catch(error=>{
   console.error(error);
+  dialog.showErrorBox('Falha ao iniciar X Burguer Print Agent',String(error.message||error));
   app.quit();
 });
 app.on('before-quit',()=>{quitting=true});
