@@ -1,5 +1,6 @@
 /* X Burguer Central V15 — gestão de salão */
 (function(){
+  'use strict';
   let tableSearchV14='';
   let tableStatusV14='all';
   let tableAreaV14='all';
@@ -31,7 +32,7 @@
     }).map(function(u){return {value:u.name,label:u.name}}));
   }
 
-  renderSalao=function(){
+  globalThis.renderSalao=function(){
     syncTables();
     const root=document.getElementById('salao');
     const busy=state.tables.filter(function(t){return t.status==='busy'}).length;
@@ -60,7 +61,7 @@
       (salaoTab==='mesas'?renderMesasGridV14():renderComandasV14());
   };
 
-  renderMesasGrid=function(){return renderMesasGridV14()};
+  globalThis.renderMesasGrid=function(){return renderMesasGridV14()};
   function renderMesasGridV14(){
     const areas=state.diningAreas||[];
     return '<div class="toolbar salon-toolbar">'+
@@ -94,7 +95,7 @@
     '</section>';
   }
 
-  mesaCard=function(t){return mesaCardV14(t)};
+  globalThis.mesaCard=function(t){return mesaCardV14(t)};
   function mesaCardV14(t){
     const os=openOrdersV14(t);
     const total=os.reduce(function(s,o){return s+orderTotal(o)},0);
@@ -115,7 +116,7 @@
     '</article>';
   }
 
-  filterTables=function(){filterTablesV14()};
+  globalThis.filterTables=function(){filterTablesV14()};
   globalThis.filterTablesV14=function(){
     tableSearchV14=(document.getElementById('mesaSearch')?.value||'').trim().toLowerCase();
     tableStatusV14=document.getElementById('mesaStatus')?.value||'all';
@@ -131,7 +132,7 @@
     });
   };
 
-  newTableOrder=function(name){newTableOrderV14(name)};
+  globalThis.newTableOrder=function(name){newTableOrderV14(name)};
   globalThis.newTableOrderV14=function(name){
     pdvType='Mesa';
     pdvDraftTable=name;
@@ -140,7 +141,7 @@
     toast('Novo pedido vinculado a '+name+'.','info');
   };
 
-  tableMenu=function(id){tableMenuV14(id)};
+  globalThis.tableMenu=function(id){tableMenuV14(id)};
   globalThis.tableMenuV14=function(id){
     const t=state.tables.find(function(x){return x.id===id});
     if(!t)return;
@@ -163,7 +164,7 @@
     );
   };
 
-  transferTable=function(id){return transferTableV14(id)};
+  globalThis.transferTable=function(id){return transferTableV14(id)};
   globalThis.transferTableV14=async function(id){
     const t=state.tables.find(function(x){return x.id===id});
     if(!t)return;
@@ -180,14 +181,14 @@
     closeModal();syncTables();save();toast('Pedidos transferidos.','success');
   };
 
-  tSet=function(id,s){tSetV14(id,s)};
+  globalThis.tSet=function(id,s){tSetV14(id,s)};
   globalThis.tSetV14=function(id,s){
     const t=state.tables.find(function(x){return x.id===id});
     if(!t)return;
     t.status=s;closeModal();save();
   };
 
-  tFinish=function(id){tFinishV14(id)};
+  globalThis.tFinish=function(id){tFinishV14(id)};
   globalThis.tFinishV14=async function(id){
     const t=state.tables.find(function(x){return x.id===id});
     if(!t)return;
@@ -201,7 +202,7 @@
     closeModal();save();toast('Conta finalizada e mesa liberada.','success');
   };
 
-  createTable=function(){return createTableV14()};
+  globalThis.createTable=function(){return createTableV14()};
   globalThis.createTableV14=async function(){
     const areas=(state.diningAreas||[]).map(function(a){return {value:a.id,label:a.name}});
     const v=await formDialog({title:'Nova mesa',subtitle:'Cadastre a mesa na área correta para manter o salão organizado.',fields:[
@@ -320,7 +321,7 @@
     state.diningAreas=state.diningAreas.filter(function(x){return x.id!==id});save();manageTablesV14();
   };
 
-  renderComandas=function(){return renderComandasV14()};
+  globalThis.renderComandas=function(){return renderComandasV14()};
   function renderComandasV14(){
     const occupied=orderedTablesV14().filter(function(t){return t.status!=='free'});
     return '<div class="card commands-card"><div class="table-shell"><table class="table"><thead><tr><th>Mesa / comanda</th><th>Área</th><th>Responsável</th><th>Pessoas</th><th>Status</th><th>Pedidos</th><th>Total</th><th></th></tr></thead><tbody>'+
