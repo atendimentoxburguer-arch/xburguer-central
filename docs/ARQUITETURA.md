@@ -1,87 +1,143 @@
-# Arquitetura
+# Arquitetura — X Burguer Central
 
-## Objetivo
+## Princípio
 
-Manter o protótipo simples para validação visual e operacional, mas com responsabilidades separadas o suficiente para evoluir para uma aplicação full stack.
+O sistema deve evoluir por substituição controlada, não por acúmulo. Uma camada nova só entra quando substitui ou encapsula claramente a responsabilidade anterior.
 
-## Camadas atuais
+## Arquitetura atual
+
+```text
+Browser / PWA
+├── UI e módulos por domínio
+├── Núcleo de estado e persistência local
+├── Serviço de impressão
+│   └── Agente Windows local
+└── GitHub Pages
+```
 
 ### Apresentação
-`index.html` contém apenas o shell principal, regiões de navegação e pontos de montagem das telas.
 
-### Design system
-`assets/css/app.css` concentra tokens de cor, tipografia, layout, componentes e regras responsivas.
+`index.html` contém o shell. A interface é renderizada pelos módulos JavaScript por domínio. O sistema visual é mantido em CSS consolidado, com estilos específicos de gestão separados.
 
 ### Núcleo
-`core.js` gerencia estado, persistência local, cálculos e funções compartilhadas.
 
-### Interface
-`ui.js` centraliza navegação, modal, feedbacks e interações globais.
+`assets/js/core.js` é o único proprietário de:
+
+- estado global;
+- normalização e migração de schema;
+- persistência local;
+- snapshots e backup;
+- cálculos compartilhados;
+- utilitários de domínio reutilizados.
+
+Nenhum módulo de feature deve gravar diretamente no `localStorage`.
 
 ### Domínios
-- `orders.js`: pedidos e mudanças de status.
-- `sales.js`: PDV, mesas/comandas e cardápio.
-- `operations.js`: entregas, KDS e desempenho.
-- `crm.js`: clientes, campanhas e atendimento.
-- `management.js`: caixa, estoque, financeiro, equipe e configurações.
 
-### Inicialização
-`app.js` registra eventos globais e inicializa tema, estado e tela atual.
+- Pedidos: `orders.js`
+- Vendas/checkout: `sales.js`
+- Operações/KDS/delivery: `operations.js`
+- CRM: `crm.js`
+- Gestão: `management.js`
+- Relatórios: `reports.js`
+- Salão: `salon-management.js`
+- Cardápio: `menu-management.js`
+- Impressão: `printing.js`
 
-## Persistência
+### Integrações locais
 
-O protótipo usa `localStorage`. Isso é adequado apenas para demonstração local. Produção deve usar API autenticada e banco de dados.
+`print-agent-client.js` é o adaptador autorizado a usar HTTP no frontend atual. Ele conversa somente com o agente local de impressão em loopback.
 
-## Próxima arquitetura recomendada
+## Arquitetura alvo de produção
 
-Quando os fluxos estiverem aprovados:
-1. TypeScript no front-end.
-2. Componentização por domínio.
-3. API com autenticação e autorização por perfil.
-4. Banco PostgreSQL.
-5. Camada de serviços para WhatsApp, pagamentos, fiscal e impressão.
-6. Logs, auditoria, backup e monitoramento.
-7. Testes automatizados de regras críticas.
+```text
+Web/PWA
+  │
+  ├── HTTPS / REST
+  └── WebSocket
+        │
+      Backend
+        │
+  ┌─────┼─────────┬──────────┬────────────┐
+  │     │         │          │            │
+Postgres Redis  Pagamentos  Fiscal     WhatsApp
+  │     │
+  │    Filas
+  │     └─────────────── Impressão central
+  │                         │
+  └──────────────────── Agente Windows
+```
 
-## Regras
+### Backend recomendado
 
-- Não armazenar chaves, tokens ou senhas no repositório.
-- Não misturar regra de negócio com código puramente visual quando houver refatoração.
-- Mudanças grandes devem entrar por branch e pull request.
-- `main` deve representar a versão estável.
+- Node.js + TypeScript.
+- NestJS/Fastify quando a migração full stack começar.
+- PostgreSQL como fonte de verdade.
+- Redis/BullMQ somente quando houver necessidade de fila central, jobs e WebSocket em escala.
+- Armazenamento de objetos para fotos e documentos fiscais.
 
-## Módulos V15
+### Modelo de integração
 
-- `assets/js/salon-management.js`: áreas, mesas, comandas e organização do salão.
-- `assets/js/menu-management.js`: categorias, produtos, disponibilidade e ações em massa.
-- `assets/css/domain-management.css`: estilos específicos das áreas de gestão.
-- `scripts/state-contracts.mjs`: contratos de esquema e migração.
-- `scripts/business-contracts.mjs`: regras críticas de pedido e estoque.
+Nenhum provedor externo deve vazar para os módulos de negócio.
 
-O estado persistido usa esquema local versão 4. Migrações e normalização pertencem exclusivamente ao núcleo, evitando overrides de persistência em módulos de interface.
+Exemplo conceitual:
 
-## Contratos financeiros V16
+```text
+PaymentService
+├── MercadoPagoAdapter
+├── AsaasAdapter
+└── outro provedor
 
-Pedidos passam a preservar snapshots de preço, custo, taxa de entrega e percentual de serviço. Isso evita que mudanças futuras nas configurações ou custos alterem retrospectivamente vendas já registradas. O estoque mantém uma trilha local de movimentações em `inventoryMovements`, limitada para proteger o armazenamento do navegador.
+FiscalService
+├── NuvemFiscalAdapter
+└── FocusNFeAdapter
+```
 
-## Módulo de impressão V18
+A escolha concreta de provedor é configuração de infraestrutura, não regra de tela.
 
-- `assets/js/printing.js`: geração dos documentos, perfis lógicos e abertura do diálogo de impressão.
-- `assets/css/print.css`: layouts térmicos 58/80 mm e A4.
-- `scripts/printing-contracts.mjs`: contratos do payload de impressão e normalização de perfis.
+## Estratégia de migração
 
-A camada de impressão possui roteamento automático por perfil. Cada perfil define finalidade, papel, cópias, estação e eventos do ciclo do pedido. A seleção da impressora física pertence ao navegador/sistema operacional. Impressão silenciosa e seleção direta do dispositivo exigirão uma ponte local/desktop no futuro.
+### Etapa A — fundação limpa
 
-## Print Agent V19
+- consolidar CSS e remover overrides redundantes;
+- centralizar persistência;
+- definir contratos automáticos de arquitetura;
+- manter a aplicação atual estável.
 
-A impressão silenciosa usa uma arquitetura de ponte local. O front-end envia jobs estruturados para `http://127.0.0.1:17871`; o agente valida, persiste em fila e envia RAW/ESC-POS ao spooler do Windows. O agente só aceita loopback, usa pareamento/token local e não contém segredos no repositório. A fila centralizada em backend continua como etapa futura.
+### Etapa B — backend
 
-## Aplicativo de impressão V20
+- autenticação;
+- usuários, perfis e permissões;
+- PostgreSQL;
+- API de produtos, clientes, pedidos, mesas, caixa e estoque;
+- auditoria de alterações;
+- backup de servidor.
 
-A camada local agora é empacotada em Electron/NSIS. A janela Electron não possui acesso Node direto no renderer: usa preload restrito, `contextIsolation`, sandbox e IPC. O serviço HTTP continua em loopback para compatibilidade com o painel web. A fila local possui deduplicação de eventos automáticos, retry e histórico. O workflow Windows gera o instalador `.exe`; tags de versão podem publicar o artifact em Releases.
+### Etapa C — frontend conectado
 
-## Gestão operacional V21
+Criar uma única camada de dados. Durante a migração, cada domínio troca a fonte local pela API. Não criar uma segunda interface paralela.
 
-A gestão de salão expõe os pedidos abertos e o histórico recente de cada mesa, mantendo as ações de pedido no domínio de pedidos. Cancelamentos passam a exigir motivo, devolver estoque uma única vez e permanecer no histórico. Exclusão permanente é limitada a pedidos já cancelados para reduzir risco de apagar vendas concluídas ou alterar relatórios financeiros.
+### Etapa D — integrações
 
-Fotos de produtos podem vir de URL HTTPS/HTTP ou upload local JPG/PNG/WebP. Uploads são redimensionados e comprimidos no navegador antes de serem persistidos no estado local; por isso essa solução continua apropriada apenas ao protótipo. Em produção, as imagens devem ir para armazenamento de objetos/CDN e o banco deve guardar somente a URL.
+Somente após o backend ser fonte de verdade:
+
+- Pix/cartão;
+- NFC-e;
+- WhatsApp;
+- fila de impressão central.
+
+## Regras obrigatórias
+
+- Sem segredos no frontend ou repositório.
+- Sem SDK financeiro/fiscal carregado diretamente no `index.html`.
+- Sem `fetch()` espalhado pelos módulos.
+- Sem `localStorage` fora do núcleo enquanto ele existir.
+- Sem bloco de CSS por número de release.
+- Sem alteração direta de venda concluída sem trilha de auditoria.
+- Dinheiro e pagamentos são armazenados em centavos no backend futuro.
+- Webhooks de pagamento/fiscal precisam ser idempotentes.
+- `main` deve estar sempre publicável e passar pelo Quality.
+
+## Testes de arquitetura
+
+`scripts/architecture-contracts.mjs` impede regressões estruturais, incluindo persistência fora do núcleo, HTTP indevido no frontend, SDK externo no shell e crescimento excessivo do CSS.
