@@ -1,8 +1,12 @@
 /* X Burguer Central V16 — gestão */
 function cashSessionOrders(){
  const opened=state.cash.openedAt?new Date(state.cash.openedAt).getTime():0;
+ const closed=!state.cash.open&&state.cash.closedAt?new Date(state.cash.closedAt).getTime():Infinity;
  if(!state.cash.openedAt)return [];
- return state.orders.filter(o=>o.status==='done'&&new Date(o.completedAt||o.createdAt).getTime()>=opened);
+ return state.orders.filter(o=>{
+  const ts=new Date(o.completedAt||o.createdAt).getTime();
+  return o.status==='done'&&Number.isFinite(ts)&&ts>=opened&&ts<=closed;
+ });
 }
 function cashPaymentBreakdown(){
  const by={};
