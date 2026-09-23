@@ -26,7 +26,7 @@ context.globalThis=context;
 vm.runInContext(source,context,{filename:'assets/js/core.js'});
 
 const api=vm.runInContext('({APP_VERSION,SCHEMA_VERSION,defaultState,validateState,safeProductImageSrc})',context);
-assert.equal(api.APP_VERSION,'24.0.0');
+assert.equal(api.APP_VERSION,'25.0.0');
 assert.equal(api.SCHEMA_VERSION,11);
 
 const fresh=vm.runInContext('defaultState()',context);
