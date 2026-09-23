@@ -455,6 +455,15 @@
 .commands-summary-v22>div{padding:8px 9px;border-radius:9px}
 .commands-summary-v22 span{font-size:.57rem}
 .commands-summary-v22 b{font-size:.86rem}
+.item-thumb,.menu-item-photo{
+  background:linear-gradient(135deg,var(--accent-soft),var(--primary-soft));
+  border-color:var(--border);
+}
+.cat-row.active{
+  color:var(--primary);
+  background:var(--primary-soft);
+  box-shadow:inset 3px 0 0 var(--primary);
+}
 @media(max-width:1120px){
   .menu-toolbar-v14{grid-template-columns:1fr 150px 140px}
 }
