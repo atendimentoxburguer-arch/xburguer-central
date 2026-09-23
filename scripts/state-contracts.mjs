@@ -48,7 +48,7 @@ assert.equal(fresh.settings.printing.strongText,true);
 assert.equal(fresh.settings.printing.showLogo,false);
 assert.ok(fresh.settings.printing.profiles.every(p=>Array.isArray(p.autoEvents)));
 assert.ok(fresh.settings.printing.profiles.every(p=>typeof p.deviceName==='string'));
-assert.equal(fresh.settings.printing.agent.url,'http://127.0.0.1:17871');
+assert.equal(fresh.settings.printing.agent.url,'');
 assert.equal(fresh.settings.printing.agent.token,'');
 assert.equal(fresh.settings.printing.agent.fallbackBrowser,false);
 assert.ok(Array.isArray(fresh.printOutbox));
