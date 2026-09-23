@@ -155,7 +155,12 @@ function normalize(){
   o.customerId=SAFE_ID.test(String(o.customerId||''))?String(o.customerId):'';
   o.type=ORDER_TYPES.has(o.type)?o.type:'Balcão';
   o.payment=String(o.payment||'Não registrado');
-  o.items=o.items.map(i=>({p:String(i.p||''),q:Math.max(0,Number(i.q)||0),price:Math.max(0,Number(i.price)||0)})).filter(i=>i.p&&i.q>0);
+  o.deliveryFee=Math.max(0,Number(o.deliveryFee ?? state.settings.deliveryFee)||0);
+  o.serviceFeePct=Math.max(0,Number(o.serviceFeePct ?? state.settings.serviceFee)||0);
+  o.items=o.items.map(i=>{
+   const pid=String(i.p||''),p=state.products.find(x=>x.id===pid);
+   return {p:pid,q:Math.max(0,Number(i.q)||0),price:Math.max(0,Number(i.price)||0),cost:Math.max(0,Number(i.cost ?? p?.cost)||0)};
+  }).filter(i=>i.p&&i.q>0);
  });
  const firstCat=state.categories[0]?.id||'';
  state.products.forEach(p=>{
@@ -265,12 +270,12 @@ function paymentIsCash(payment){return String(payment||'').toLowerCase().include
 function orderSubtotal(o){return o.items.reduce((s,i)=>s+(Number(i.price)||0)*(Number(i.q)||0),0)}
 function orderFeeTotal(o){
  const subtotal=orderSubtotal(o);
- const delivery=o.type==='Delivery'?Math.max(0,Number(state.settings.deliveryFee)||0):0;
- const service=o.type==='Mesa'?subtotal*Math.max(0,Number(state.settings.serviceFee)||0)/100:0;
+ const delivery=o.type==='Delivery'?Math.max(0,Number(o.deliveryFee ?? state.settings.deliveryFee)||0):0;
+ const service=o.type==='Mesa'?subtotal*Math.max(0,Number(o.serviceFeePct ?? state.settings.serviceFee)||0)/100:0;
  return delivery+service;
 }
 function orderTotal(o){return orderSubtotal(o)+orderFeeTotal(o)}
-function orderCost(o){return o.items.reduce((s,i)=>s+(Number(product(i.p)?.cost)||0)*(Number(i.q)||0),0)}
+function orderCost(o){return o.items.reduce((s,i)=>s+(Number(i.cost ?? product(i.p)?.cost)||0)*(Number(i.q)||0),0)}
 function orderAge(o){const ts=new Date(o.createdAt).getTime();return Number.isFinite(ts)?Math.max(0,Math.floor((Date.now()-ts)/60000)):0}
 function orderTime(o){const d=new Date(o.createdAt);return Number.isFinite(d.getTime())?d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}):'—'}
 function orderItemsText(o){return o.items.map(i=>`${i.q}x ${esc(product(i.p)?.name||'Item')}`).join('<br>')}
