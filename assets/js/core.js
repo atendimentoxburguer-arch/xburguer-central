@@ -257,6 +257,7 @@ function normalize(){
  state.printOutbox=state.printOutbox.slice(-100).map(j=>({
   id:SAFE_ID.test(String(j?.id||''))?String(j.id):uid('pj'),
   profileId:SAFE_ID.test(String(j?.profileId||''))?String(j.profileId):'',
+  dedupeKey:/^[A-Za-z0-9._:-]{1,180}$/.test(String(j?.dedupeKey||''))?String(j.dedupeKey):'',
   printerName:String(j?.printerName||'').trim().slice(0,180),
   purpose:['receipt','kitchen','delivery'].includes(j?.purpose)?j.purpose:'receipt',
   station:String(j?.station||'all').slice(0,80),
