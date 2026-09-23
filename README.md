@@ -80,3 +80,6 @@ A V21 amplia a operação diária: cada mesa passa a exibir e gerenciar seus ped
 
 O fechamento de mesas agora permite receber a conta inteira, dividir o valor em parcelas/pessoas, pagar produtos individualmente e fracionar o valor de uma unidade. Cada recebimento guarda forma de pagamento e alocação, permite estorno antes da conclusão e bloqueia edição/cancelamento enquanto houver valores recebidos. Pagamentos mistos são consolidados corretamente no caixa e nos relatórios.
 
+## Checkout visual V24
+
+O fechamento de mesas foi redesenhado para seguir a referência operacional escolhida: seletor da mesa e ações no topo, pedidos em cards com status/entrega/garçom/ações, painel financeiro fixo à direita, formas de pagamento em destaque, saldo “Falta”, divisão por pessoas e seleção de itens. Pagamentos podem ser registrados durante o preparo, mas a mesa só é liberada quando todos os pedidos estiverem prontos e o saldo estiver zerado.
