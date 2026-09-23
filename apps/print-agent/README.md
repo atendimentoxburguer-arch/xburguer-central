@@ -24,12 +24,11 @@ O agente:
 
 ## Instalação manual
 
-1. Abra PowerShell nesta pasta.
-2. Execute: powershell -ExecutionPolicy Bypass -File .\install-windows.ps1
-3. A página http://127.0.0.1:17871/ abrirá mostrando o código de pareamento.
-4. No X Burguer Central, abra Configurações → Impressoras → Gerenciar agente.
-5. Informe o código de pareamento.
-6. Mapeie cada destino lógico para uma impressora física.
+1. Dê duplo clique em `INSTALAR-AGENTE.cmd`. Como alternativa, abra PowerShell nesta pasta e execute `powershell -ExecutionPolicy Bypass -File .\install-windows.ps1`.
+2. A página http://127.0.0.1:17871/ abrirá mostrando o código de pareamento.
+3. No X Burguer Central, abra Configurações → Impressoras → Gerenciar agente.
+4. Informe o código de pareamento.
+5. Mapeie cada destino lógico para uma impressora física.
 
 ## Segurança
 
