@@ -1,4 +1,4 @@
-/* X Burguer Central V24 — PDV e fechamento de conta */
+/* Vendas — PDV e fechamento de conta */
 let pdvDiscountDraft=0;
 let pdvSurchargeDraft=0;
 let pdvSplitDraft=1;
