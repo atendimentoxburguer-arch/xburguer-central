@@ -184,7 +184,7 @@ function menuStatsV14(){
       {key:'cat',label:'Categoria',type:'select',value:selectedCat,options:cats,required:true},
       {key:'emoji',label:'Ícone de fallback',value:'🍔',help:'Aparece quando o item não possui foto.'},
       {key:'photo',label:'Foto do lanche',type:'file',accept:'image/jpeg,image/png,image/webp',full:true,help:'JPG, PNG ou WebP. A foto será comprimida para economizar espaço.'},
-      {key:'imageUrl',label:'Ou URL da foto',placeholder:'https://...',full:true}
+      {key:'imageUrl',label:'Ou URL da foto',placeholder:'Cole o endereço da imagem',full:true}
     ]});
     if(!v)return;
     let image='';
