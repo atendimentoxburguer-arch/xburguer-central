@@ -1,4 +1,4 @@
-/* X Burguer Central V22 — salão, comandas, garçons e configurações */
+/* Salão — mesas, comandas, garçons e configurações */
 (function(){
   'use strict';
   let tableSearchV14='';
