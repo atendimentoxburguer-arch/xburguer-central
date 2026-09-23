@@ -1,4 +1,4 @@
-/* X Burguer Central V21 — gestão de salão, mesas e pedidos */
+/* X Burguer Central V22 — salão, comandas, garçons e configurações */
 (function(){
   'use strict';
   let tableSearchV14='';
@@ -39,26 +39,39 @@
     const closing=state.tables.filter(function(t){return t.status==='closing'}).length;
     const seats=state.tables.reduce(function(s,t){return s+(Number(t.seats)||0)},0);
     const guests=state.tables.reduce(function(s,t){return s+(Number(t.guests)||0)},0);
+    const waiters=state.team.filter(function(u){return u.role==='Garçom'}).length;
+    const openCommands=state.tables.filter(function(t){return t.status!=='free'}).length;
+    const allowedTabs=['mesas','comandas','garcons','configuracoes'];
+    if(!allowedTabs.includes(salaoTab))salaoTab='mesas';
+    let body='';
+    if(salaoTab==='mesas')body=renderMesasGridV14();
+    else if(salaoTab==='comandas')body=renderComandasV14();
+    else if(salaoTab==='garcons')body=renderWaitersV22();
+    else body=renderSalonSettingsV22();
     root.innerHTML=
       '<div class="page-head">'+
-        '<div><h1>Gestão do salão</h1><p>Organize áreas, mesas, capacidade, responsáveis, comandas e contas em um único lugar.</p></div>'+
+        '<div><h1>Gestão do salão</h1><p>Mesas, comandas, garçons e regras de atendimento em uma operação única.</p></div>'+
         '<div class="page-head-actions">'+
-          '<button class="btn btn-outline" onclick="manageTablesV14()">'+icon('grid-3x3-gap')+'<span>Organizar mesas</span></button>'+
-          '<button class="btn btn-primary" onclick="createTableV14()">'+icon('plus-lg')+'<span>Nova mesa</span></button>'+
+          (salaoTab==='mesas'?'<button class="btn btn-outline" onclick="manageTableQrV22()">'+icon('qr-code')+'<span>QR das mesas</span></button><button class="btn btn-primary" onclick="createTableV14()">'+icon('plus-lg')+'<span>Nova mesa</span></button>':
+           salaoTab==='garcons'?'<button class="btn btn-primary" onclick="createWaiterV22()">'+icon('person-plus')+'<span>Novo garçom</span></button>':
+           salaoTab==='comandas'?'<button class="btn btn-primary" onclick="go(\'pdv\')">'+icon('plus-lg')+'<span>Novo pedido</span></button>':'')+
         '</div>'+
       '</div>'+
       '<div class="salon-kpis">'+
         '<div><span>Total de mesas</span><b>'+state.tables.length+'</b></div>'+
         '<div><span>Livres</span><b>'+state.tables.filter(function(t){return t.status==='free'}).length+'</b></div>'+
         '<div><span>Ocupadas</span><b>'+busy+'</b></div>'+
-        '<div><span>Fechando</span><b>'+closing+'</b></div>'+
+        '<div><span>Comandas abertas</span><b>'+openCommands+'</b></div>'+
+        '<div><span>Garçons ativos</span><b>'+state.team.filter(function(u){return u.role==='Garçom'&&u.active}).length+' / '+waiters+'</b></div>'+
         '<div><span>Pessoas / lugares</span><b>'+guests+' / '+seats+'</b></div>'+
       '</div>'+
-      '<div class="mesas-tabs">'+
-        '<button class="'+(salaoTab==='mesas'?'active':'')+'" onclick="salaoTab=\'mesas\';renderSalao()">Mesas <span>'+state.tables.length+'</span></button>'+
-        '<button class="'+(salaoTab==='comandas'?'active':'')+'" onclick="salaoTab=\'comandas\';renderSalao()">Comandas <span>'+state.tables.filter(function(t){return t.status!=='free'}).length+'</span></button>'+
+      '<div class="salon-section-tabs">'+
+        '<button class="'+(salaoTab==='mesas'?'active':'')+'" onclick="salaoTab=\'mesas\';renderSalao()">'+icon('grid-3x3-gap')+'<span>Mesas / QR Code</span><b>'+state.tables.length+'</b></button>'+
+        '<button class="'+(salaoTab==='comandas'?'active':'')+'" onclick="salaoTab=\'comandas\';renderSalao()">'+icon('receipt')+'<span>Comandas</span><b>'+openCommands+'</b></button>'+
+        '<button class="'+(salaoTab==='garcons'?'active':'')+'" onclick="salaoTab=\'garcons\';renderSalao()">'+icon('people')+'<span>Garçons</span><b>'+waiters+'</b></button>'+
+        '<button class="'+(salaoTab==='configuracoes'?'active':'')+'" onclick="salaoTab=\'configuracoes\';renderSalao()">'+icon('sliders2')+'<span>Configurações do salão</span></button>'+
       '</div>'+
-      (salaoTab==='mesas'?renderMesasGridV14():renderComandasV14());
+      body;
   };
 
   globalThis.renderMesasGrid=function(){return renderMesasGridV14()};
@@ -79,6 +92,7 @@
       '</div>'+
       '<div class="toolbar-right">'+
         '<span class="status-legend"><span><i class="legend-dot free"></i>Livre</span><span><i class="legend-dot busy"></i>Ocupada</span><span><i class="legend-dot closing"></i>Fechando</span></span>'+
+        '<button class="btn btn-outline" onclick="manageTableQrV22()">'+icon('qr-code')+'<span>QR das mesas</span></button>'+
         '<button class="btn btn-outline" onclick="bulkCreateTablesV14()">'+icon('files')+'<span>Criar várias</span></button>'+
         '<button class="btn btn-primary" onclick="go(\'pdv\')">'+icon('plus-lg')+'<span>Novo pedido</span></button>'+
       '</div>'+
@@ -173,7 +187,7 @@
       (history.length?'<section class="table-orders-section history"><div class="table-orders-head"><div><b>Histórico recente</b><span>Últimos pedidos concluídos ou cancelados nesta mesa.</span></div></div><div class="table-orders-list">'+history.map(row).join('')+'</div></section>':'')+
       '<div class="modal-foot table-modal-actions">'+
         '<button class="btn btn-outline" onclick="editTableV14(\''+id+'\')">'+icon('pencil')+'<span>Editar mesa</span></button>'+
-        (t.status!=='free'?'<button class="btn btn-outline" onclick="transferTableV14(\''+id+'\')">'+icon('arrow-left-right')+'<span>Transferir</span></button><button class="btn btn-outline" onclick="tSetV14(\''+id+'\',\'closing\')">'+icon('receipt')+'<span>Fechar conta</span></button><button class="btn btn-green" onclick="tFinishV14(\''+id+'\')">'+icon('check2-circle')+'<span>Receber e liberar</span></button>':'<button class="btn btn-primary" onclick="closeModal();newTableOrderV14(\''+id+'\')">'+icon('plus-lg')+'<span>Novo pedido</span></button>')+
+        (t.status!=='free'?'<button class="btn btn-outline" onclick="transferTableV14(\''+id+'\')">'+icon('arrow-left-right')+'<span>Transferir</span></button><button class="btn btn-outline" onclick="tSetV14(\''+id+'\',\'closing\')">'+icon('receipt')+'<span>Fechar conta</span></button><button class="btn btn-green" onclick="closeModal();openTableCheckoutV22(\''+id+'\')">'+icon('cash-coin')+'<span>Fechar conta</span></button>':'<button class="btn btn-primary" onclick="closeModal();newTableOrderV14(\''+id+'\')">'+icon('plus-lg')+'<span>Novo pedido</span></button>')+
       '</div>'
     );
   };
@@ -334,6 +348,97 @@
     const ok=await confirmDialog('Excluir área','Excluir '+a.name+'?',{confirmLabel:'Excluir',danger:true});if(!ok)return;
     state.diningAreas=state.diningAreas.filter(function(x){return x.id!==id});save();manageTablesV14();
   };
+
+  function qrPayloadV22(t){
+    return 'X BURGUER • '+t.name+' • '+tableAreaNameV14(t)+' • ID '+t.id;
+  }
+  globalThis.manageTableQrV22=function(){
+    const cards=orderedTablesV14().map(function(t){
+      const data=encodeURIComponent(qrPayloadV22(t));
+      return '<article class="table-qr-card"><img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&margin=0&data='+data+'" alt="QR de identificação da '+esc(t.name)+'" loading="lazy"><div><b>'+esc(t.name)+'</b><span>'+esc(tableAreaNameV14(t))+'</span><small>Identificação interna da mesa nesta versão.</small></div><button class="btn btn-outline btn-sm" onclick="editTableV14(\''+t.id+'\')">'+icon('pencil')+'<span>Editar</span></button></article>';
+    }).join('');
+    openModal('<div class="modal-head"><div><h2>Mesas — QR Code</h2><p class="dialog-subtitle">Identifique e organize as mesas visualmente. O pedido direto pelo QR será conectado ao backend em uma etapa futura.</p></div><button class="icon-btn" onclick="closeModal()" aria-label="Fechar">'+icon('x-lg')+'</button></div><div class="qr-manager-actions"><button class="btn btn-primary" onclick="createTableV14()">'+icon('plus-lg')+'<span>Criar mesa</span></button><button class="btn btn-outline" onclick="bulkCreateTablesV14()">'+icon('files')+'<span>Criar várias</span></button></div><div class="table-qr-grid">'+(cards||'<div class="empty">Nenhuma mesa cadastrada.</div>')+'</div><div class="modal-foot"><button class="btn btn-primary" onclick="closeModal()">Concluir</button></div>');
+  };
+
+  function renderWaitersV22(){
+    const waiters=state.team.filter(function(u){return u.role==='Garçom'});
+    return '<div class="salon-subhead"><div><h2>Garçons</h2><p>Cadastre quem atende o salão e associe responsáveis às mesas.</p></div><div class="searchbox"><span class="search-icon">'+icon('search')+'</span><input id="waiterSearchV22" placeholder="Buscar garçom" oninput="filterWaitersV22()"></div></div>'+
+      '<div class="waiters-table-wrap"><table class="table waiters-table"><thead><tr><th>Status</th><th>Nome</th><th>E-mail</th><th>WhatsApp</th><th>Mesas</th><th></th></tr></thead><tbody>'+
+      (waiters.map(function(u){
+        const assigned=state.tables.filter(function(t){return t.server===u.name&&t.status!=='free'}).length;
+        const search=(u.name+' '+(u.email||'')+' '+(u.phone||'')).toLowerCase();
+        return '<tr data-waiter-search="'+esc(search)+'"><td><button class="waiter-toggle '+(u.active?'on':'')+'" onclick="toggleWaiterV22(\''+u.id+'\')" title="'+(u.active?'Desativar':'Ativar')+'"><span></span></button></td><td><b>'+esc(u.name)+'</b></td><td>'+esc(u.email||'—')+'</td><td>'+esc(u.phone||'—')+'</td><td>'+assigned+'</td><td><div class="row-actions"><button class="icon-btn" onclick="editWaiterV22(\''+u.id+'\')" title="Editar">'+icon('pencil')+'</button><button class="icon-btn" onclick="openWaiterTablesV22(\''+u.id+'\')" title="Mesas">'+icon('grid-3x3-gap')+'</button></div></td></tr>';
+      }).join('')||'<tr><td colspan="6"><div class="empty">Nenhum garçom cadastrado.</div></td></tr>')+
+      '</tbody></table></div>';
+  }
+  globalThis.filterWaitersV22=function(){
+    const q=(document.getElementById('waiterSearchV22')?.value||'').trim().toLowerCase();
+    document.querySelectorAll('[data-waiter-search]').forEach(function(row){row.hidden=!!q&&!row.dataset.waiterSearch.includes(q)});
+  };
+  globalThis.createWaiterV22=async function(){
+    const v=await formDialog({title:'Novo garçom',subtitle:'Cadastre os dados usados na operação do salão.',fields:[
+      {key:'name',label:'Nome',required:true},
+      {key:'email',label:'E-mail',type:'email',placeholder:'garcom@xburguer.com'},
+      {key:'phone',label:'WhatsApp',placeholder:'(62) 9____-____'}
+    ]});
+    if(!v?.name)return;
+    const name=v.name.trim();
+    if(state.team.some(function(u){return u.name.toLowerCase()===name.toLowerCase()})){toast('Já existe um colaborador com esse nome.','warning');return}
+    state.team.push({id:uid('u'),name:name,role:'Garçom',active:true,email:String(v.email||'').trim(),phone:String(v.phone||'').trim()});
+    save();renderSalao();toast('Garçom cadastrado.','success');
+  };
+  globalThis.editWaiterV22=async function(id){
+    const u=state.team.find(function(x){return x.id===id&&x.role==='Garçom'});if(!u)return;
+    const oldName=u.name;
+    const v=await formDialog({title:'Editar garçom',subtitle:u.name,fields:[
+      {key:'name',label:'Nome',value:u.name,required:true},
+      {key:'email',label:'E-mail',type:'email',value:u.email||''},
+      {key:'phone',label:'WhatsApp',value:u.phone||''}
+    ]});
+    if(!v?.name)return;
+    const name=v.name.trim();
+    if(state.team.some(function(x){return x.id!==id&&x.name.toLowerCase()===name.toLowerCase()})){toast('Já existe outro colaborador com esse nome.','warning');return}
+    u.name=name;u.email=String(v.email||'').trim();u.phone=String(v.phone||'').trim();
+    if(oldName!==name)state.tables.filter(function(t){return t.server===oldName}).forEach(function(t){t.server=name});
+    save();renderSalao();toast('Garçom atualizado.','success');
+  };
+  globalThis.toggleWaiterV22=function(id){
+    const u=state.team.find(function(x){return x.id===id&&x.role==='Garçom'});if(!u)return;
+    u.active=!u.active;
+    if(!u.active)state.tables.filter(function(t){return t.server===u.name}).forEach(function(t){t.server=''});
+    save();renderSalao();
+  };
+  globalThis.openWaiterTablesV22=function(id){
+    const u=state.team.find(function(x){return x.id===id&&x.role==='Garçom'});if(!u)return;
+    const tables=state.tables.filter(function(t){return t.server===u.name&&t.status!=='free'});
+    openModal('<div class="modal-head"><div><h2>'+esc(u.name)+'</h2><p class="dialog-subtitle">Mesas atualmente atribuídas a este garçom.</p></div><button class="icon-btn" onclick="closeModal()" aria-label="Fechar">'+icon('x-lg')+'</button></div><div class="waiter-table-list">'+(tables.map(function(t){return '<button class="waiter-table-card" onclick="closeModal();tableMenuV14(\''+t.id+'\')"><div><b>'+esc(t.name)+'</b><span>'+esc(tableAreaNameV14(t))+'</span></div><strong>'+money(openOrdersV14(t).reduce(function(s,o){return s+orderTotal(o)},0))+'</strong></button>'}).join('')||'<div class="empty">Nenhuma mesa atribuída no momento.</div>')+'</div>');
+  };
+
+  function salonModeButtonV22(mode,label,help){
+    const on=(state.settings.salon.serviceModes||[]).includes(mode);
+    return '<button class="salon-mode-card '+(on?'active':'')+'" onclick="toggleSalonModeV22(\''+mode+'\')"><span class="salon-mode-check">'+icon(on?'check-square-fill':'square')+'</span><div><b>'+esc(label)+'</b><span>'+esc(help)+'</span></div></button>';
+  }
+  function renderSalonSettingsV22(){
+    const s=state.settings.salon||{};
+    return '<div class="salon-settings-v22">'+
+      '<section class="salon-settings-card"><div class="salon-settings-title"><div><span>Atendimento de salão</span><h2>Você tem atendimento de salão no estabelecimento?</h2></div><button class="waiter-toggle '+(s.enabled?'on':'')+'" onclick="toggleSalonEnabledV22()"><span></span></button></div></section>'+
+      '<section class="salon-settings-card"><div class="salon-settings-title"><div><span>Estrutura e modelo de negócio</span><h2>Como o salão está organizado</h2></div></div><div class="salon-settings-grid"><div class="salon-number-box"><span>Quantidade de mesas</span><b>'+state.tables.length+'</b><small>Mesas atualmente cadastradas</small><button class="btn btn-outline btn-sm" onclick="manageTablesV14()">Organizar mesas</button></div><div class="salon-number-box"><span>Quantidade de comandas</span><b>'+Number(s.commandCount||0)+'</b><small>Capacidade planejada de comandas</small><button class="btn btn-outline btn-sm" onclick="setCommandCountV22()">Alterar</button></div><div class="salon-number-box"><span>Possui garçons?</span><b>'+(s.hasWaiters?'Sim':'Não')+'</b><small>'+state.team.filter(function(u){return u.role==='Garçom'&&u.active}).length+' ativos</small><button class="btn btn-outline btn-sm" onclick="toggleSalonWaitersV22()">Alternar</button></div><div class="salon-number-box"><span>Taxa de serviço</span><b>'+Number(state.settings.serviceFee||0)+'%</b><small>Aplicada aos pedidos em mesa</small><button class="btn btn-outline btn-sm" onclick="setSalonServiceFeeV22()">Alterar</button></div></div></section>'+
+      '<section class="salon-settings-card"><div class="salon-settings-title"><div><span>Como você opera?</span><h2>Modelo principal do salão</h2></div></div><div class="salon-model-grid">'+[
+        ['a-la-carte','À la carte','Cardápio físico ou digital'],
+        ['self-service','Buffet / Self Service','Preço único ou por quilo'],
+        ['rodizio','Rodízio','Garçons oferecem variedades'],
+        ['none','Sem atendimento no salão','Operação somente fora do salão']
+      ].map(function(x){return '<button class="salon-model-card '+(s.operationModel===x[0]?'active':'')+'" onclick="setSalonModelV22(\''+x[0]+'\')"><span>'+icon(s.operationModel===x[0]?'record-circle-fill':'circle')+'</span><div><b>'+x[1]+'</b><small>'+x[2]+'</small></div></button>'}).join('')+'</div></section>'+
+      '<section class="salon-settings-card"><div class="salon-settings-title"><div><span>Como atende o cliente?</span><h2>Canais utilizados no salão</h2></div></div><div class="salon-mode-grid">'+salonModeButtonV22('table','Em mesa','Garçom atende diretamente nas mesas')+salonModeButtonV22('command','Comanda individual','Consumo registrado por cliente/comanda')+salonModeButtonV22('counter','No balcão','Cliente se dirige ao balcão')+'</div></section>'+
+    '</div>';
+  }
+  globalThis.toggleSalonEnabledV22=function(){state.settings.salon.enabled=!state.settings.salon.enabled;save();renderSalao()};
+  globalThis.toggleSalonWaitersV22=function(){state.settings.salon.hasWaiters=!state.settings.salon.hasWaiters;save();renderSalao()};
+  globalThis.setCommandCountV22=async function(){const v=await formDialog({title:'Quantidade de comandas',fields:[{key:'count',label:'Comandas',type:'number',value:state.settings.salon.commandCount||0,min:0,max:500,step:'1',required:true}]});if(!v)return;state.settings.salon.commandCount=Math.min(500,Math.max(0,Number(v.count)||0));save();renderSalao()};
+  globalThis.setSalonServiceFeeV22=async function(){const v=await formDialog({title:'Taxa de serviço',fields:[{key:'fee',label:'Percentual',type:'number',value:state.settings.serviceFee||0,min:0,max:30,step:'0.5',required:true}]});if(!v)return;state.settings.serviceFee=Math.min(30,Math.max(0,Number(v.fee)||0));save();renderSalao()};
+  globalThis.setSalonModelV22=function(model){state.settings.salon.operationModel=model;save();renderSalao()};
+  globalThis.toggleSalonModeV22=function(mode){const set=new Set(state.settings.salon.serviceModes||[]);if(set.has(mode)&&set.size>1)set.delete(mode);else set.add(mode);state.settings.salon.serviceModes=[...set];save();renderSalao()};
+
 
   globalThis.renderComandas=function(){return renderComandasV14()};
   function renderComandasV14(){
