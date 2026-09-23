@@ -72,3 +72,7 @@ A ETAPA 1 adiciona um agente local Windows para impressão silenciosa em térmic
 ## Print Agent V20
 
 A ETAPA 2 transforma o agente de impressão em aplicativo Windows instalável, com runtime embutido, bandeja, inicialização automática, janela própria de gerenciamento, fila/histórico, teste, diagnóstico, reinício e build `.exe` automatizada pelo GitHub Actions. O usuário final não precisa instalar Node.js. Consulte `docs/PRINT_AGENT.md`.
+
+## Operação V21
+
+A V21 amplia a operação diária: cada mesa passa a exibir e gerenciar seus pedidos individualmente, a tela de pedidos ganha histórico de concluídos/cancelados, cancelamento com motivo e exclusão definitiva segura de pedidos cancelados. O gestor de cardápio passa a aceitar fotos JPG/PNG/WebP ou URL, comprimir uploads para o armazenamento local e mostrar as imagens também no PDV.
