@@ -1,4 +1,4 @@
-/* X Burguer Central V20 — core, estado e impressão gerenciada */
+/* X Burguer Central V21 — core, pedidos, mesas e cardápio com fotos */
 function icon(name,extra=''){
   return `<i class="bi bi-${name} ${extra}" aria-hidden="true"></i>`;
 }
@@ -25,12 +25,13 @@ function initThemeUI(){
   applyTheme(document.documentElement.getAttribute('data-bs-theme')||'light');
 }
 
-const APP_VERSION='20.0.0';
-const SCHEMA_VERSION=8;
+const APP_VERSION='21.0.0';
+const SCHEMA_VERSION=9;
 const LOGO='assets/img/logo.png';
 const STORAGE='xburguer_gestor_pro_v3';
 const BACKUP_PREFIX='xburguer_backup_';
 const MAX_IMPORT_BYTES=5*1024*1024;
+const MAX_PRODUCT_IMAGE_CHARS=140000;
 const SAFE_ID=/^[A-Za-z0-9._:-]{1,96}$/;
 const ORDER_STATUSES=new Set(['analysis','production','ready','done','cancelled']);
 const ORDER_TYPES=new Set(['Balcão','Retirada','Delivery','Mesa']);
@@ -38,6 +39,18 @@ const now=()=>new Date();
 const isoAgo=m=>new Date(Date.now()-m*60000).toISOString();
 const money=v=>(Number(v)||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
 const esc=s=>String(s??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
+function safeProductImageSrc(value){
+ const src=String(value||'').trim();
+ if(!src)return '';
+ if(/^https?:\/\/[^\s]+$/i.test(src))return src.slice(0,2000);
+ if(/^data:image\/(?:png|jpeg|webp);base64,[A-Za-z0-9+/=]+$/i.test(src)&&src.length<=MAX_PRODUCT_IMAGE_CHARS)return src;
+ return '';
+}
+function productMedia(p,className=''){
+ const src=safeProductImageSrc(p?.image);
+ if(src)return `<img class="${esc(className)}" src="${esc(src)}" alt="${esc(p?.name||'Produto')}" loading="lazy" decoding="async">`;
+ return `<span class="${esc(className)} product-emoji" aria-hidden="true">${esc(p?.emoji||'🍔')}</span>`;
+}
 const uid=p=>p+(globalThis.crypto?.randomUUID?.().replace(/-/g,'').slice(0,10)||Math.random().toString(36).slice(2,12));
 function defaultState(){return {schemaVersion:SCHEMA_VERSION,
  settings:{storeName:'X Burguer',storeOpen:true,autoAccept:false,deliveryMin:'10 a 60 min',counterMin:'15 a 35 min',deliveryFee:7,serviceFee:10,city:'Goianésia - GO',phone:'(62) 99999-9999',cashback:3,loyalty:true,
@@ -153,6 +166,9 @@ function validateState(candidate){
  if(candidate.orders.some(o=>!ORDER_STATUSES.has(o.status)))return 'Existe pedido com status inválido.';
  if(candidate.orders.some(o=>!ORDER_TYPES.has(o.type)))return 'Existe pedido com tipo inválido.';
  if(candidate.tables.some(t=>String(t.name||'').length>120)||candidate.products.some(p=>String(p.name||'').length>180)||candidate.categories.some(cat=>String(cat.name||'').length>120))return 'Há textos estruturais acima do limite permitido.';
+ if(candidate.products.some(p=>String(p.image||'').length>MAX_PRODUCT_IMAGE_CHARS))return 'Existe foto de produto acima do limite permitido.';
+ if(candidate.products.some(p=>p.image&&!safeProductImageSrc(p.image)))return 'Existe foto de produto com formato ou endereço inválido.';
+ if(candidate.orders.some(o=>String(o.cancelReason||'').length>240))return 'Existe motivo de cancelamento acima do limite permitido.';
  return '';
 }
 function normalize(){
@@ -213,6 +229,11 @@ function normalize(){
   o.customerId=SAFE_ID.test(String(o.customerId||''))?String(o.customerId):'';
   o.type=ORDER_TYPES.has(o.type)?o.type:'Balcão';
   o.payment=String(o.payment||'Não registrado');
+  o.cancelReason=String(o.cancelReason||'').trim().slice(0,240);
+  o.cancelledAt=o.cancelledAt?String(o.cancelledAt):'';
+  o.completedAt=o.completedAt?String(o.completedAt):'';
+  if(o.stockRestored===undefined&&o.status==='cancelled')o.stockRestored=true;
+  o.stockRestored=Boolean(o.stockRestored);
   o.deliveryFee=Math.max(0,Number(o.deliveryFee ?? state.settings.deliveryFee)||0);
   o.serviceFeePct=Math.max(0,Number(o.serviceFeePct ?? state.settings.serviceFee)||0);
   o.items=o.items.map(i=>{
@@ -228,7 +249,9 @@ function normalize(){
   p.stock=Math.max(0,Number(p.stock)||0);
   p.min=Math.max(0,Number(p.min)||0);
   p.cost=Math.max(0,Number(p.cost)||0);
-  p.description=String(p.description||'');
+  p.description=String(p.description||'').slice(0,600);
+  p.image=safeProductImageSrc(p.image);
+  p.emoji=String(p.emoji||'🍔').slice(0,12)||'🍔';
   p.station=String(p.station||'Cozinha');
   p.active=p.active!==false;
   if(p.manualSold===undefined)p.manualSold=Boolean(p.sold&&p.stock>0);
