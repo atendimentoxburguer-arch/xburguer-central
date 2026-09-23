@@ -1,4 +1,4 @@
-/* X Burguer Central V20 — impressão gerenciada por aplicativo Windows */
+/* Impressão — documentos, perfis e roteamento */
 (function(){
   'use strict';
 
