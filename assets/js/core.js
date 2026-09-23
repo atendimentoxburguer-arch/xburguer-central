@@ -84,7 +84,7 @@ function defaultState(){return {schemaVersion:SCHEMA_VERSION,
 }}
 let state;
 let currentPage='pedidos';
-let orderFilter='all';let orderSearch='';let selectedCat='cat1';let pdvCat='all';let pdvCart=[];let pdvType='Balcão';let pdvDraftTable='';let salaoTab='mesas';let chatId='w1';let performanceRange='today';let kdsStation='all';
+let orderFilter='all';let orderSearch='';let selectedCat='cat1';let pdvCat='all';let pdvCart=[];let pdvType='Balcão';let pdvDraftTable='';let pdvEditingId='';let salaoTab='mesas';let chatId='w1';let performanceRange='today';let kdsStation='all';
 function mergeDefaults(base,value){
  if(Array.isArray(base)) return Array.isArray(value)?value:base;
  if(base&&typeof base==='object'){const out={...base};if(value&&typeof value==='object'&&!Array.isArray(value))Object.keys(value).forEach(k=>out[k]=k in base?mergeDefaults(base[k],value[k]):value[k]);return out}
@@ -254,7 +254,14 @@ function recordStockMovement(productId,delta,reason='Ajuste',ref=''){
  if(state.inventoryMovements.length>1000)state.inventoryMovements=state.inventoryMovements.slice(-1000);
 }
 function paymentIsCash(payment){return String(payment||'').toLowerCase().includes('dinheiro')}
-function orderTotal(o){return o.items.reduce((s,i)=>s+(Number(i.price)||0)*(Number(i.q)||0),0)+(o.type==='Delivery'?Number(state.settings.deliveryFee||0):0)}
+function orderSubtotal(o){return o.items.reduce((s,i)=>s+(Number(i.price)||0)*(Number(i.q)||0),0)}
+function orderFeeTotal(o){
+ const subtotal=orderSubtotal(o);
+ const delivery=o.type==='Delivery'?Math.max(0,Number(state.settings.deliveryFee)||0):0;
+ const service=o.type==='Mesa'?subtotal*Math.max(0,Number(state.settings.serviceFee)||0)/100:0;
+ return delivery+service;
+}
+function orderTotal(o){return orderSubtotal(o)+orderFeeTotal(o)}
 function orderCost(o){return o.items.reduce((s,i)=>s+(Number(product(i.p)?.cost)||0)*(Number(i.q)||0),0)}
 function orderAge(o){const ts=new Date(o.createdAt).getTime();return Number.isFinite(ts)?Math.max(0,Math.floor((Date.now()-ts)/60000)):0}
 function orderTime(o){const d=new Date(o.createdAt);return Number.isFinite(d.getTime())?d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}):'—'}
