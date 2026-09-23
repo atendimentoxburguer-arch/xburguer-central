@@ -8,6 +8,7 @@ assert.ok(wrapText('X-Burguer especial sem cebola e com bastante molho',20).leng
 
 const job={
   id:'pj-test-001',
+  dedupeKey:'77552:print-kitchen:production:Chapa',
   printerName:'EPSON TM-T20',
   profile:{paper:'80mm',copies:1,strongText:true},
   document:{
@@ -39,5 +40,6 @@ assert.match(validateJob({...job,printerName:''}),/Impressora fisica/i);
 assert.match(validateJob({...job,profile:{...job.profile,paper:'a4'}}),/58 mm ou 80 mm/i);
 assert.match(validateJob({...job,profile:{...job.profile,copies:4}}),/copias/i);
 assert.match(validateJob({...job,document:{...job.document,purpose:'hack'}}),/documento/i);
+assert.match(validateJob({...job,dedupeKey:'x '.repeat(100)}),/deduplicacao/i);
 
 console.log('Print agent contracts OK');
