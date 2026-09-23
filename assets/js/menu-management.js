@@ -159,7 +159,7 @@ function menuStatsV14(){
       {key:'station',label:'Estação de preparo',type:'select',value:p.station||'Cozinha',options:['Cozinha','Chapa','Fritadeira','Bebidas','Bar','Sem preparo']},
       {key:'cat',label:'Categoria',type:'select',value:p.cat,options:cats,required:true},
       {key:'active',label:'Visibilidade',type:'select',value:p.active?'1':'0',options:[{value:'1',label:'Visível no cardápio'},{value:'0',label:'Pausado'}]},
-      {key:'sold',label:'Disponibilidade',type:'select',value:p.sold?'1':'0',options:[{value:'0',label:'Disponível'},{value:'1',label:'Esgotado'}]}
+      {key:'sold',label:'Esgotamento manual',type:'select',value:p.manualSold?'1':'0',options:[{value:'0',label:'Automático pelo estoque'},{value:'1',label:'Esgotado manualmente'}]}
     ]});
     if(!v)return;
     const beforeStock=Number(p.stock)||0;
