@@ -217,18 +217,7 @@
   };
 
   globalThis.tFinish=function(id){tFinishV14(id)};
-  globalThis.tFinishV14=async function(id){
-    const t=state.tables.find(function(x){return x.id===id});
-    if(!t)return;
-    const open=openOrdersV14(t);
-    const pending=open.filter(function(o){return ['analysis','production'].includes(o.status)});
-    if(pending.length){toast('Ainda há pedido(s) em análise ou produção nesta mesa.','warning');return}
-    const ok=await confirmDialog('Receber e liberar',`Finalizar ${open.length} pedido(s) de ${t.name} e liberar a mesa?`,{confirmLabel:'Finalizar conta'});
-    if(!ok)return;
-    open.forEach(function(o){o.status='done';o.completedAt=new Date().toISOString()});
-    t.status='free';t.guests=0;t.server='';
-    closeModal();save();toast('Conta finalizada e mesa liberada.','success');
-  };
+  globalThis.tFinishV14=function(id){return openTableCheckoutV22(id)};
 
   globalThis.createTable=function(){return createTableV14()};
   globalThis.createTableV14=async function(){
