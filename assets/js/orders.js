@@ -1,4 +1,4 @@
-/* X Burguer Central V22 — gestão completa de pedidos */
+/* Pedidos — ciclo operacional e histórico */
 let orderViewV21='active';
 
 function orderStatusMetaV21(status){
