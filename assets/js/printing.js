@@ -43,7 +43,7 @@
       items,
       subtotal,
       fees,
-      feeLabel:order.type==='Delivery'?'Taxa de entrega':order.type==='Mesa'?'Serviço ('+Number(order.serviceFeePct??state.settings.serviceFee||0)+'%)':'Taxas',
+      feeLabel:order.type==='Delivery'?'Taxa de entrega':order.type==='Mesa'?'Serviço ('+Number((order.serviceFeePct??state.settings.serviceFee)||0)+'%)':'Taxas',
       total:orderTotal(order),
       store:{
         name:String(state.settings.storeName||'X Burguer'),
