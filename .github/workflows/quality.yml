@@ -25,3 +25,5 @@ jobs:
         run: node scripts/check.mjs
       - name: State contract tests
         run: node scripts/state-contracts.mjs
+      - name: Business contract tests
+        run: node scripts/business-contracts.mjs
