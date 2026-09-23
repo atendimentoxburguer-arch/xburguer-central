@@ -1,4 +1,4 @@
-/* X Burguer Central V19 — core, estado e impressão gerenciada */
+/* X Burguer Central V20 — core, estado e impressão gerenciada */
 function icon(name,extra=''){
   return `<i class="bi bi-${name} ${extra}" aria-hidden="true"></i>`;
 }
@@ -25,7 +25,7 @@ function initThemeUI(){
   applyTheme(document.documentElement.getAttribute('data-bs-theme')||'light');
 }
 
-const APP_VERSION='19.0.0';
+const APP_VERSION='20.0.0';
 const SCHEMA_VERSION=8;
 const LOGO='assets/img/logo.png';
 const STORAGE='xburguer_gestor_pro_v3';
