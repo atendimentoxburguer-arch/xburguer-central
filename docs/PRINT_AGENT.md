@@ -48,15 +48,14 @@ Pré-requisitos:
 
 Procedimento:
 1. Obter a pasta `apps/print-agent` deste repositório.
-2. Abrir PowerShell nela.
-3. Executar `powershell -ExecutionPolicy Bypass -File .\install-windows.ps1`.
-4. O navegador abrirá `http://127.0.0.1:17871/`.
-5. Copiar o código de pareamento exibido.
-6. No X Burguer Central: **Configurações → Impressoras → Gerenciar**.
-7. Conectar o agente com o código.
-8. Em cada destino, mapear a impressora física do Windows.
-9. Executar uma impressão de teste.
-10. Somente depois ativar os eventos automáticos desejados.
+2. Dar duplo clique em `INSTALAR-AGENTE.cmd` (ou executar o `install-windows.ps1` pelo PowerShell).
+3. O navegador abrirá `http://127.0.0.1:17871/`.
+4. Copiar o código de pareamento exibido.
+5. No X Burguer Central: **Configurações → Impressoras → Gerenciar**.
+6. Conectar o agente com o código.
+7. Em cada destino, mapear a impressora física do Windows.
+8. Executar uma impressão de teste.
+9. Somente depois ativar os eventos automáticos desejados.
 
 ## Impressoras suportadas nesta etapa
 
