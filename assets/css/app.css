@@ -310,7 +310,7 @@ body{font-family:"Inter",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-se
     radial-gradient(circle at 10% 0%,rgba(96,165,250,.14),transparent 24%),
     radial-gradient(circle at 94% 0%,rgba(59,130,246,.09),transparent 22%),
     linear-gradient(180deg,#08111e 0%,#091321 52%,#0a1220 100%)}
-h1,h2,h3,h4,h5,h6,.brandname b,.nav button,.btn,.badge,.page-head h1{font-family:"Manrope","Inter",system-ui,sans-serif}
+h1,h2,h3,h4,h5,h6,.brandname b,.nav button,.btn,.badge,.page-head h1{font-family:"Inter","Segoe UI",Roboto,Arial,sans-serif}
 .brand-foot{backdrop-filter:blur(12px)}
 .store-pill{box-shadow:0 6px 14px rgba(34,197,94,.22)}
 .side-search input{box-shadow:inset 0 1px 0 rgba(255,255,255,.04)}
@@ -393,8 +393,8 @@ h1,h2,h3,h4,h5,h6,.brandname b,.nav button,.btn,.badge,.page-head h1{font-family
 .auto-section-head{display:flex;align-items:center;justify-content:space-between;padding:2px 2px 0}
 .auto-section-head>div{display:grid;gap:2px;min-width:0}
 .auto-kicker{color:var(--muted);font-weight:850;letter-spacing:.07em;text-transform:uppercase}
-.auto-section-head strong{color:var(--text);font-family:"Manrope","Inter",system-ui,sans-serif;line-height:1.25}
-.auto-edit{display:inline-flex;align-items:center;justify-content:center;gap:7px;border:1px solid var(--border);background:var(--surface);color:var(--primary);font:800 .78rem "Manrope","Inter",system-ui,sans-serif;box-shadow:var(--shadow-sm)}
+.auto-section-head strong{color:var(--text);font-family:"Inter","Segoe UI",Roboto,Arial,sans-serif;line-height:1.25}
+.auto-edit{display:inline-flex;align-items:center;justify-content:center;gap:7px;border:1px solid var(--border);background:var(--surface);color:var(--primary);font:800 .78rem "Inter","Segoe UI",Roboto,Arial,sans-serif;box-shadow:var(--shadow-sm)}
 .auto-edit:hover{background:var(--primary-soft);border-color:color-mix(in srgb,var(--primary) 35%,var(--border));transform:translateY(-1px)}
 .auto-edit .bi{font-size:.8rem}
 .auto-times{display:grid}
@@ -433,7 +433,7 @@ button,.btn,.icon-btn,.chip,.cat-row,.mesa-actions button{touch-action:manipulat
 .page,.main,.content,.toolbar,.toolbar-left,.toolbar-right,.order-col,.col-body,.card,.cart,.items-panel,.cat-panel{min-width:0}
 .content{width:100%}
 .right-rail{display:none!important}
-.section-title{margin:0 0 14px!important;color:var(--text);font-family:"Manrope","Inter",system-ui,sans-serif;line-height:1.25}
+.section-title{margin:0 0 14px!important;color:var(--text);font-family:"Inter","Segoe UI",Roboto,Arial,sans-serif;line-height:1.25}
 .toolbar-title{margin:0!important}
 .mt-sm{margin-top:10px!important}
 .mt-md{margin-top:14px!important}
@@ -443,9 +443,9 @@ button,.btn,.icon-btn,.chip,.cat-row,.mesa-actions button{touch-action:manipulat
 .btn-block{width:100%;justify-content:center}
 .section-divider{height:1px;margin:18px 0;border:0;background:var(--border)}
 .section-divider-sm{margin:14px 0}
-.order-total-highlight{margin:.35rem 0 0;font-family:"Manrope","Inter",system-ui,sans-serif;font-size:1.55rem;font-weight:900;letter-spacing:-.04em}
-.consumption-value{margin-top:6px;font-family:"Manrope","Inter",system-ui,sans-serif;font-size:1.7rem;font-weight:900;letter-spacing:-.04em}
-.promo-value{font-family:"Manrope","Inter",system-ui,sans-serif;font-size:1.7rem;font-weight:900;letter-spacing:-.04em}
+.order-total-highlight{margin:.35rem 0 0;font-family:"Inter","Segoe UI",Roboto,Arial,sans-serif;font-size:1.55rem;font-weight:900;letter-spacing:-.04em}
+.consumption-value{margin-top:6px;font-family:"Inter","Segoe UI",Roboto,Arial,sans-serif;font-size:1.7rem;font-weight:900;letter-spacing:-.04em}
+.promo-value{font-family:"Inter","Segoe UI",Roboto,Arial,sans-serif;font-size:1.7rem;font-weight:900;letter-spacing:-.04em}
 .identity-row{display:flex;align-items:center;gap:14px}
 .identity-logo{width:76px;height:76px;flex:0 0 76px;object-fit:cover;border:1px solid var(--border);border-radius:20px;background:var(--surface);box-shadow:var(--shadow-sm)}
 .sidebar{width:256px}
@@ -540,7 +540,7 @@ button,.btn,.icon-btn,.chip,.cat-row,.mesa-actions button{touch-action:manipulat
 .cart-row>div:first-child{min-width:0}
 .qty{flex:0 0 auto}
 .cart-total{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:50px}
-.cart-total span:last-child{font-family:"Manrope","Inter",system-ui,sans-serif;font-size:1.25rem;font-weight:900}
+.cart-total span:last-child{font-family:"Inter","Segoe UI",Roboto,Arial,sans-serif;font-size:1.25rem;font-weight:900}
 .mesas-tabs{margin-bottom:12px}
 .mesas-grid{grid-template-columns:repeat(3,minmax(220px,1fr))}
 .mesa{overflow:hidden}
@@ -664,7 +664,7 @@ button:disabled,.btn:disabled{cursor:not-allowed;opacity:.58;box-shadow:none!imp
 .order-summary>div{display:flex;align-items:center;justify-content:space-between;gap:12px;color:var(--muted);font-size:.82rem}
 .order-summary>div b{color:var(--text)}
 .order-summary .order-summary-total{margin-top:3px;padding-top:9px;border-top:1px solid var(--border);color:var(--text);font-size:.94rem}
-.order-summary-total b{font-family:"Manrope","Inter",system-ui,sans-serif;font-size:1.25rem;letter-spacing:-.03em}
+.order-summary-total b{font-family:"Inter","Segoe UI",Roboto,Arial,sans-serif;font-size:1.25rem;letter-spacing:-.03em}
 .cart-summary{display:grid;gap:5px;margin-top:10px;padding:10px 0;border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
 .cart-summary>div{display:flex;align-items:center;justify-content:space-between;gap:10px;color:var(--muted);font-size:.78rem}
 .cart-summary b{color:var(--text)}
