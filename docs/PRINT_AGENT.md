@@ -1,3 +1,32 @@
+## Modo Desktop Automático — V40 / Print Agent 2.4.0
+
+O modo recomendado para operação diária passa a ser abrir o **X Burguer Central pelo próprio Print Agent**.
+
+Ao clicar em **Abrir X Burguer Central • Automático**, o aplicativo cria uma janela desktop segura carregando o painel oficial e injeta apenas um canal IPC restrito de impressão.
+
+Nesse modo:
+
+- não existe popup do Print Bridge;
+- não existe permissão de rede local;
+- não existe pareamento de 6 dígitos;
+- não existe botão Reconectar;
+- saúde, fila, impressoras e envio de jobs usam IPC interno;
+- o agente fica disponível assim que o painel termina de carregar;
+- o navegador comum continua disponível como modo legado/fallback.
+
+### Segurança
+
+A janela integrada aceita navegação somente dentro de `https://atendimentoxburguer-arch.github.io/xburguer-central/`. Links externos são abertos fora do aplicativo.
+
+O preload expõe somente `xbPrintDesktop.request()` e `xbPrintDesktop.info()`. O processo principal valida a origem do remetente e permite apenas as rotas internas de saúde, impressoras e fila.
+
+### Dados locais
+
+O modo desktop usa um perfil persistente próprio do Electron (`persist:xburguer-central`). Isso evita perda de dados em atualizações do Print Agent.
+
+Como o navegador Chrome/Edge mantém outro armazenamento, quem já usava o sistema exclusivamente no navegador deve fazer uma única migração usando **Exportar** no navegador e **Importar** na janela desktop. Depois disso, o uso diário pode ficar somente no aplicativo.
+
+
 # Print Agent — ETAPA 2
 
 ## Visão geral
