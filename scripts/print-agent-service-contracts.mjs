@@ -6,7 +6,7 @@ import { createPrintAgent } from '../apps/print-agent/server.mjs';
 
 const dataDir=fs.mkdtempSync(path.join(os.tmpdir(),'xb-print-agent-'));
 const port=17879;
-const agent=createPrintAgent({port,dataDir,version:'2.1.0-test'});
+const agent=createPrintAgent({port,dataDir,version:'2.2.0-test',printerProvider:async()=>[{name:'X Burguer Thermal',displayName:'X Burguer Thermal',description:'Driver térmico',status:0,isDefault:true,options:{'printer-location':'USB001'}}]});
 await agent.start();
 
 try{
@@ -32,7 +32,7 @@ try{
 
   const health=await fetch('http://127.0.0.1:'+port+'/health').then(r=>r.json());
   assert.equal(health.ok,true);
-  assert.equal(health.version,'2.1.0-test');
+  assert.equal(health.version,'2.2.0-test');
   assert.match(health.pairingCode,/^\d{6}$/);
 
   const denied=await fetch('http://127.0.0.1:'+port+'/jobs?limit=1');
@@ -47,6 +47,16 @@ try{
   const paired=await pair.json();
   assert.equal(paired.ok,true);
   assert.ok(paired.token.length>=32);
+
+  const printersResponse=await fetch('http://127.0.0.1:'+port+'/printers',{
+    headers:{'X-XB-Print-Token':paired.token}
+  });
+  assert.equal(printersResponse.status,200);
+  const printersData=await printersResponse.json();
+  assert.equal(printersData.ok,true);
+  assert.equal(printersData.printers.length,1);
+  assert.equal(printersData.printers[0].name,'X Burguer Thermal');
+  assert.equal(printersData.printers[0].default,true);
 
   const jobs=await fetch('http://127.0.0.1:'+port+'/jobs?limit=10',{
     headers:{'X-XB-Print-Token':paired.token}
