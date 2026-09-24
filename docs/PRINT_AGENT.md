@@ -108,6 +108,18 @@ Esta etapa ainda não usa certificado de assinatura de código. O Windows pode e
 
 Antes de distribuição ampla, a próxima melhoria de segurança é assinar o instalador e o executável com certificado de code signing.
 
+## Detecção de impressoras 2.2.0
+
+A versão 2.2.0 deixa de depender exclusivamente do PowerShell `Get-Printer`.
+
+A enumeração usa esta ordem:
+
+1. lista nativa do Electron/Windows via `webContents.getPrintersAsync()`;
+2. PowerShell `Get-Printer`;
+3. WMI/CIM via `Get-CimInstance Win32_Printer`.
+
+Isso cobre casos em que a impressora está instalada e funcional no Windows, mas uma das APIs retorna lista vazia.
+
 ## Print Bridge 2.1.0
 
 A partir do Print Agent 2.1.0, o transporte principal não depende mais de `fetch()` cross-origin entre o GitHub Pages e `127.0.0.1`.

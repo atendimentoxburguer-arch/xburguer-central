@@ -44,6 +44,14 @@ assert.match(validateJob({...job,document:{...job.document,purpose:'hack'}}),/do
 assert.match(validateJob({...job,dedupeKey:'x '.repeat(100)}),/deduplicacao/i);
 
 
+const server=fs.readFileSync('apps/print-agent/server.mjs','utf8');
+const desktopMain=fs.readFileSync('apps/print-agent/desktop/main.mjs','utf8');
+assert.match(server,/printerProvider/);
+assert.match(server,/Get-Printer/);
+assert.match(server,/Get-CimInstance Win32_Printer/);
+assert.match(desktopMain,/getPrintersAsync/);
+assert.match(desktopMain,/printerProvider:nativePrinterProvider/);
+
 const client=fs.readFileSync('assets/js/print-agent-client.js','utf8');
 assert.match(client,/loopback-network/);
 assert.match(client,/local-network-access/);
