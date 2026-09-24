@@ -108,6 +108,17 @@ Esta etapa ainda não usa certificado de assinatura de código. O Windows pode e
 
 Antes de distribuição ampla, a próxima melhoria de segurança é assinar o instalador e o executável com certificado de code signing.
 
+## Reconexão automática V39
+
+Quando o navegador já possui um token de pareamento salvo, ações manuais de impressão e testes tentam reabrir o Print Bridge e reutilizar a autorização existente antes de enviar o job.
+
+Comportamento:
+
+- se o token salvo ainda for válido, o agente é reconectado sem pedir o código novamente;
+- a fila local pendente é reenviada após a reconexão;
+- se o token tiver expirado ou sido perdido, o sistema abre o fluxo de pareamento;
+- ações automáticas continuam indo para a fila local quando não existe uma janela de bridge ativa, evitando pop-ups inesperados.
+
 ## Detecção de impressoras 2.3.0
 
 A versão 2.3.0 amplia a descoberta para cinco caminhos:

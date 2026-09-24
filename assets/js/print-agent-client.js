@@ -155,6 +155,22 @@
     }
     return agentHealth;
   }
+  async function reconnectPrintAgent({allowPair=true,silent=false}={}){
+    const cfg=agentConfig();
+    if(!cfg.enabled)return false;
+    try{openPrintBridgeWindow()}
+    catch(error){if(!silent)toast(String(error.message||error),'warning');return false}
+    const health=await probePrintAgent({silent:true,userInitiated:false});
+    if(health.online&&health.authorized){
+      if(!silent)toast('Print Agent reconectado.','success');
+      await flushPrintOutbox();
+      globalThis.printerCenter?.();
+      return true;
+    }
+    if(health.online&&!health.authorized&&allowPair)return pairPrintAgent();
+    if(!silent)toast('Não foi possível reconectar ao Print Agent.','warning');
+    return false;
+  }
   async function pairPrintAgent(){
     try{openPrintBridgeWindow()}
     catch(error){toast(String(error.message||error),'warning');return false}
@@ -259,10 +275,25 @@
       if(!silent)toast('O destino “'+profile.name+'” ainda não possui uma impressora física mapeada.','warning');
       return false;
     }
+    const interactive=!silent&&(event==='manual'||event==='test');
     if(!agentConfig().enabled||!agentConfig().token){
+      if(interactive){
+        const paired=await pairPrintAgent();
+        if(paired){
+          const result=await submitAgentJob(agentJob(profile,document,event),{queueOnFailure:true,silent});
+          return result.ok;
+        }
+      }
       const job=agentJob(profile,document,event);pushOutbox(job,'Agente não pareado.');
       if(!silent)toast('Impressão guardada até o agente ser conectado.','warning');
       return false;
+    }
+    if(interactive&&(!agentHealth.online||!agentHealth.authorized)){
+      const reconnected=await reconnectPrintAgent({allowPair:true,silent:false});
+      if(!reconnected){
+        const job=agentJob(profile,document,event);pushOutbox(job,'Agente indisponível.');
+        return false;
+      }
     }
     const result=await submitAgentJob(agentJob(profile,document,event),{queueOnFailure:true,silent});
     return result.ok;
@@ -330,10 +361,12 @@
       ?'Versão '+esc(agentHealth.version||cfg.lastVersion||'—')+' • fila '+Number(agentHealth.queue?.queued||0)
       :status==='pair'?'Informe o código de pareamento para liberar a impressão silenciosa.'
       :status==='disabled'?'A impressão gerenciada está desativada.'
-      :'Clique em Conectar agente para abrir a ponte local e autorizar este navegador.';
+      :cfg.token?'O pareamento está salvo. Clique em Reconectar agente para reabrir a ponte local.':'Clique em Conectar agente para abrir a ponte local e autorizar este navegador.';
     const action=status==='ready'
       ?'<button class="btn btn-outline btn-sm" onclick="showManagedPrintQueue()">Fila</button><button class="btn btn-outline btn-sm" onclick="unpairPrintAgent()">Desconectar</button>'
-      :'<button class="btn btn-primary btn-sm" onclick="pairPrintAgent()">Conectar agente</button>';
+      :cfg.token
+        ?'<button class="btn btn-primary btn-sm" onclick="reconnectPrintAgent({allowPair:true,silent:false})">Reconectar agente</button>'
+        :'<button class="btn btn-primary btn-sm" onclick="pairPrintAgent()">Conectar agente</button>';
     return '<div class="print-agent-card" id="printAgentCard"><span class="print-agent-icon">'+icon(status==='ready'?'pc-display-horizontal':'printer')+'</span><div><b>'+label+'</b><span>'+detail+'</span></div><span class="badge '+badge+'">'+(status==='ready'?'Online':status==='pair'?'Parear':status==='disabled'?'Off':'Conectar')+'</span><div class="print-agent-actions">'+action+'<button class="icon-btn" onclick="probePrintAgent({silent:false,userInitiated:true})" title="Verificar agente">'+icon('arrow-clockwise')+'</button></div></div>';
   }
   function refreshAgentStatusCard(){
@@ -351,6 +384,7 @@
   globalThis.agentConfig=agentConfig;
   globalThis.probePrintAgent=probePrintAgent;
   globalThis.pairPrintAgent=pairPrintAgent;
+  globalThis.reconnectPrintAgent=reconnectPrintAgent;
   globalThis.unpairPrintAgent=unpairPrintAgent;
   globalThis.openLocalPrintAgentPage=openLocalPrintAgentPage;
   globalThis.showLocalNetworkHelp=showLocalNetworkHelp;
