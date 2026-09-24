@@ -8,7 +8,7 @@ const __dirname=path.dirname(fileURLToPath(import.meta.url));
 const DASHBOARD_URL='https://atendimentoxburguer-arch.github.io/xburguer-central/';
 const RELEASES_API='https://api.github.com/repos/atendimentoxburguer-arch/xburguer-central/releases?per_page=20';
 
-let mainWindow=null,centralWindow=null,tray=null,quitting=false,agent=null,desktopConfig={startWithWindows:true};
+let mainWindow=null,centralWindow=null,tray=null,quitting=false,agent=null,centralRetryTimer=null,desktopConfig={startWithWindows:true,openCentralAutomatically:true};
 
 function resourcePath(name){
   return app.isPackaged?path.join(process.resourcesPath,name):path.resolve(__dirname,'../../../assets/img',name);
@@ -18,7 +18,7 @@ function rawPrintPath(){
 }
 function configPath(){return agent?path.join(agent.dataDir,'desktop-config.json'):''}
 function loadDesktopConfig(){
-  try{desktopConfig={startWithWindows:true,...JSON.parse(fs.readFileSync(configPath(),'utf8'))}}catch{desktopConfig={startWithWindows:true}}
+  try{desktopConfig={startWithWindows:true,openCentralAutomatically:true,...JSON.parse(fs.readFileSync(configPath(),'utf8'))}}catch{desktopConfig={startWithWindows:true,openCentralAutomatically:true}}
 }
 function saveDesktopConfig(){
   try{fs.writeFileSync(configPath(),JSON.stringify(desktopConfig,null,2),'utf8')}catch{}
@@ -50,6 +50,7 @@ function trayMenu(){
     {label:'Abrir X Burguer Central',click:()=>showCentralWindow()},
     {label:'Reiniciar agente',click:()=>restartAgent()},
     {label:'Iniciar com o Windows',type:'checkbox',checked:Boolean(desktopConfig.startWithWindows),click:item=>setStartWithWindows(item.checked)},
+    {label:'Abrir Central automaticamente',type:'checkbox',checked:Boolean(desktopConfig.openCentralAutomatically),click:item=>setAutoOpenCentral(item.checked)},
     {type:'separator'},
     {label:'Sair',click:()=>{quitting=true;app.quit()}}
   ]);
@@ -116,7 +117,15 @@ function createCentralWindow({show=true}={}){
   });
   centralWindow.loadURL(DASHBOARD_URL);
   centralWindow.once('ready-to-show',()=>{if(show)centralWindow?.show()});
-  centralWindow.on('closed',()=>{centralWindow=null});
+  centralWindow.webContents.on('did-fail-load',(_event,errorCode)=>{
+    if(errorCode===-3||quitting)return;
+    clearTimeout(centralRetryTimer);
+    centralRetryTimer=setTimeout(()=>{
+      if(centralWindow&&!centralWindow.isDestroyed())centralWindow.loadURL(DASHBOARD_URL).catch(()=>{});
+    },10000);
+  });
+  centralWindow.webContents.on('did-finish-load',()=>{clearTimeout(centralRetryTimer);centralRetryTimer=null});
+  centralWindow.on('closed',()=>{clearTimeout(centralRetryTimer);centralRetryTimer=null;centralWindow=null});
   centralWindow.webContents.setWindowOpenHandler(({url})=>{
     if(trustedCentralUrl(url)){centralWindow?.loadURL(url);return {action:'deny'}}
     if(/^https:\/\//i.test(url))void shell.openExternal(url);
@@ -198,6 +207,10 @@ function setStartWithWindows(value){
   desktopConfig.startWithWindows=Boolean(value);saveDesktopConfig();applyStartupPreference();refreshTray();
   return {ok:true,startWithWindows:desktopConfig.startWithWindows};
 }
+function setAutoOpenCentral(value){
+  desktopConfig.openCentralAutomatically=Boolean(value);saveDesktopConfig();refreshTray();
+  return {ok:true,openCentralAutomatically:desktopConfig.openCentralAutomatically};
+}
 function versionTuple(value){return String(value||'0').split('.').map(x=>Number.parseInt(x,10)||0).slice(0,3)}
 function isNewer(remote,local){
   const a=versionTuple(remote),b=versionTuple(local);
@@ -226,8 +239,9 @@ function registerIpc(){
   ipcMain.handle('agent:restart',()=>restartAgent());
   ipcMain.handle('agent:open-data',()=>shell.openPath(agent.dataDir));
   ipcMain.handle('app:dashboard',()=>{showCentralWindow();return {ok:true,mode:'desktop-auto'}});
-  ipcMain.handle('app:settings',()=>({version:app.getVersion(),startWithWindows:desktopConfig.startWithWindows,packaged:app.isPackaged,logoUrl:pathToFileURL(resourcePath('logo.png')).href}));
+  ipcMain.handle('app:settings',()=>({version:app.getVersion(),startWithWindows:desktopConfig.startWithWindows,openCentralAutomatically:desktopConfig.openCentralAutomatically,packaged:app.isPackaged,logoUrl:pathToFileURL(resourcePath('logo.png')).href}));
   ipcMain.handle('app:set-startup',(_e,value)=>setStartWithWindows(value));
+  ipcMain.handle('app:set-auto-open-central',(_e,value)=>setAutoOpenCentral(value));
   ipcMain.handle('app:check-update',()=>checkUpdates());
   ipcMain.handle('app:open-external',(_e,url)=>{
     const target=String(url||'');
@@ -260,6 +274,7 @@ async function bootstrap(){
   }
   loadDesktopConfig();applyStartupPreference();
   registerIpc();createTray();createWindow({show:!process.argv.includes('--hidden')});
+  if(desktopConfig.openCentralAutomatically)createCentralWindow({show:true});
   setInterval(refreshTray,3000).unref?.();
 }
 app.whenReady().then(bootstrap).catch(error=>{
