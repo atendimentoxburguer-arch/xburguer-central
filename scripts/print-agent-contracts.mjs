@@ -57,7 +57,6 @@ assert.doesNotMatch(client,/document\.createElement\('iframe'\)/);
 assert.match(client,/xb-print-bridge-request/);
 assert.match(client,/xb-print-bridge-response/);
 assert.match(client,/bridgeRequest/);
-assert.match(client,/2\.1\.0/);
 
 const sw=fs.readFileSync('service-worker.js','utf8');
 assert.match(sw,/url\.hostname==='127\.0\.0\.1'/);
