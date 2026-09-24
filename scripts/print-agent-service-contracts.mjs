@@ -6,7 +6,7 @@ import { createPrintAgent } from '../apps/print-agent/server.mjs';
 
 const dataDir=fs.mkdtempSync(path.join(os.tmpdir(),'xb-print-agent-'));
 const port=17879;
-const agent=createPrintAgent({port,dataDir,version:'2.0.0-test'});
+const agent=createPrintAgent({port,dataDir,version:'2.1.0-test'});
 await agent.start();
 
 try{
@@ -22,9 +22,17 @@ try{
   assert.equal(preflight.headers.get('access-control-allow-origin'),'https://atendimentoxburguer-arch.github.io');
   assert.equal(preflight.headers.get('access-control-allow-private-network'),'true');
 
+  const bridge=await fetch('http://127.0.0.1:'+port+'/bridge');
+  assert.equal(bridge.status,200);
+  const bridgeHtml=await bridge.text();
+  assert.match(bridgeHtml,/xb-print-bridge-ready/);
+  assert.match(bridgeHtml,/xb-print-bridge-request/);
+  assert.match(bridgeHtml,/atendimentoxburguer-arch\\.github\\.io/);
+  assert.match(bridgeHtml,/connect-src 'self'/);
+
   const health=await fetch('http://127.0.0.1:'+port+'/health').then(r=>r.json());
   assert.equal(health.ok,true);
-  assert.equal(health.version,'2.0.0-test');
+  assert.equal(health.version,'2.1.0-test');
   assert.match(health.pairingCode,/^\d{6}$/);
 
   const denied=await fetch('http://127.0.0.1:'+port+'/jobs?limit=1');
