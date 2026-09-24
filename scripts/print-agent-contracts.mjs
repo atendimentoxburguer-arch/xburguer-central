@@ -61,11 +61,11 @@ assert.match(desktopMain,/central:agent-request/);
 assert.match(desktopMain,/partition:'persist:xburguer-central'/);
 assert.match(desktopMain,/desktopManaged:true/);
 assert.match(centralPreload,/xbPrintDesktop/);
+
+const client=fs.readFileSync('assets/js/print-agent-client.js','utf8');
 assert.match(client,/function desktopPrintManaged/);
 assert.match(client,/desktopAgentRequest/);
 assert.match(client,/Conexão automática pelo aplicativo/);
-
-const client=fs.readFileSync('assets/js/print-agent-client.js','utf8');
 assert.match(client,/loopback-network/);
 assert.match(client,/local-network-access/);
 assert.match(client,/targetAddressSpace:'loopback'/);
