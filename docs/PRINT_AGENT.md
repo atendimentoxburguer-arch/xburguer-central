@@ -108,6 +108,30 @@ Esta etapa ainda não usa certificado de assinatura de código. O Windows pode e
 
 Antes de distribuição ampla, a próxima melhoria de segurança é assinar o instalador e o executável com certificado de code signing.
 
+## Conexão com navegadores atuais
+
+O painel web usa `http://127.0.0.1:17871` para falar com o aplicativo instalado no mesmo computador.
+
+Navegadores Chromium atuais podem exigir uma permissão explícita de **Rede local / Loopback** quando um site HTTPS acessa um serviço local. O X Burguer Central verifica essa permissão e diferencia três situações:
+
+1. **Permissão necessária** — o navegador ainda precisa autorizar o acesso local.
+2. **Agente offline** — a permissão não é o problema; o serviço na porta 17871 não respondeu.
+3. **Agente encontrado** — o serviço respondeu e falta apenas o código de pareamento.
+
+### Diagnóstico rápido
+
+1. Abra o X Burguer Print Agent e confirme que a janela mostra **Agente online**.
+2. No navegador, abra diretamente `http://127.0.0.1:17871`.
+3. Se a página local abrir, o serviço está funcionando.
+4. Volte ao X Burguer Central e clique em **Conectar agente**.
+5. Se o navegador pedir acesso à rede local, escolha **Permitir**.
+6. Informe o código de 6 dígitos mostrado no aplicativo.
+7. Depois do pareamento, mapeie a impressora física e faça um teste.
+
+Se a página local não abrir, reinicie o Print Agent. Se o aplicativo informar que a porta 17871 já está em uso, feche versões antigas pela bandeja do Windows ou reinicie o computador.
+
+Se a permissão tiver sido negada, abra as permissões do site no navegador, altere **Rede local / Loopback** para **Permitir** e recarregue o X Burguer Central.
+
 ## Segurança
 
 - loopback-only;
