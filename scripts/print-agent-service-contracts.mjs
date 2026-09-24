@@ -28,7 +28,7 @@ try{
   assert.match(bridgeHtml,/xb-print-bridge-ready/);
   assert.match(bridgeHtml,/xb-print-bridge-request/);
   assert.match(bridgeHtml,/atendimentoxburguer-arch\\.github\\.io/);
-  assert.match(bridgeHtml,/connect-src 'self'/);
+  assert.match(bridge.headers.get('content-security-policy')||'',/connect-src 'self'/);
 
   const health=await fetch('http://127.0.0.1:'+port+'/health').then(r=>r.json());
   assert.equal(health.ok,true);
