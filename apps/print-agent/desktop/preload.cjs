@@ -13,6 +13,7 @@ contextBridge.exposeInMainWorld('xbAgent',{
   openDashboard:()=>ipcRenderer.invoke('app:dashboard'),
   settings:()=>ipcRenderer.invoke('app:settings'),
   setStartup:value=>ipcRenderer.invoke('app:set-startup',Boolean(value)),
+  setAutoOpenCentral:value=>ipcRenderer.invoke('app:set-auto-open-central',Boolean(value)),
   checkUpdate:()=>ipcRenderer.invoke('app:check-update'),
   openExternal:url=>ipcRenderer.invoke('app:open-external',url),
   onChanged:callback=>{
