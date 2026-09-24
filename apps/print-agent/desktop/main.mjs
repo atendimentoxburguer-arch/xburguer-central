@@ -96,6 +96,14 @@ function createTray(){
   tray.on('double-click',showWindow);
   tray.on('click',showWindow);
 }
+async function nativePrinterProvider(){
+  const win=mainWindow||createWindow({show:false});
+  if(win.webContents.isLoading()){
+    await new Promise(resolve=>win.webContents.once('did-finish-load',resolve));
+  }
+  const list=await win.webContents.getPrintersAsync();
+  return Array.isArray(list)?list:[];
+}
 async function restartAgent(){
   try{
     await agent.stop();
@@ -153,7 +161,7 @@ async function bootstrap(){
   app.on('second-instance',()=>showWindow());
   app.setAppUserModelId('com.xburguer.printagent');
   cleanupLegacyStartupShortcut();
-  agent=createPrintAgent({version:app.getVersion(),rawPrintScript:rawPrintPath()});
+  agent=createPrintAgent({version:app.getVersion(),rawPrintScript:rawPrintPath(),printerProvider:nativePrinterProvider});
   try{await agent.start()}
   catch(error){
     console.error(error);
