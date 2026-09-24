@@ -6,6 +6,12 @@
   let agentHealth={online:false,authorized:false,version:'',queue:null,error:'',permission:'unknown',checkedAt:''};
   let physicalPrinters=[];
   let flushBusy=false;
+  let bridgeFrame=null;
+  let bridgeReady=false;
+  let bridgeVersion='';
+  let bridgeSeq=0;
+  const bridgePending=new Map();
+  const bridgeReadyWaiters=[];
 
   function agentConfig(){
     const printing=state.settings.printing;
@@ -15,6 +21,75 @@
   function agentBase(){
     const raw=String(agentConfig().url||DEFAULT_AGENT_URL).trim().replace(/\/+$/,'');
     return /^http:\/\/(?:127\.0\.0\.1|localhost)(?::\d{1,5})?$/.test(raw)?raw:DEFAULT_AGENT_URL;
+  }
+  function bridgeOrigin(){
+    try{return new URL(agentBase()).origin}catch{return 'http://127.0.0.1:17871'}
+  }
+  function handleBridgeMessage(event){
+    if(event.origin!==bridgeOrigin())return;
+    const msg=event.data||{};
+    if(msg.type==='xb-print-bridge-ready'){
+      bridgeReady=true;
+      bridgeVersion=String(msg.version||'');
+      while(bridgeReadyWaiters.length)bridgeReadyWaiters.shift()?.resolve(true);
+      return;
+    }
+    if(msg.type!=='xb-print-bridge-response'||!msg.id)return;
+    const pending=bridgePending.get(msg.id);if(!pending)return;
+    bridgePending.delete(msg.id);clearTimeout(pending.timer);
+    if(msg.ok)pending.resolve(msg.data||{});
+    else{
+      const error=new Error(msg.error||('Bridge respondeu HTTP '+(msg.status||0)));
+      error.bridgeResponse=true;error.status=Number(msg.status)||0;pending.reject(error);
+    }
+  }
+  window.addEventListener('message',handleBridgeMessage);
+  function ensurePrintBridge(timeout=2200){
+    if(bridgeReady&&bridgeFrame?.contentWindow)return Promise.resolve(true);
+    if(!bridgeFrame||!bridgeFrame.isConnected){
+      bridgeReady=false;
+      bridgeFrame=document.createElement('iframe');
+      bridgeFrame.title='X Burguer Print Bridge';
+      bridgeFrame.src=agentBase()+'/bridge';
+      bridgeFrame.setAttribute('aria-hidden','true');
+      bridgeFrame.style.cssText='position:fixed;width:1px;height:1px;opacity:0;pointer-events:none;border:0;left:-9999px;top:-9999px';
+      document.body.appendChild(bridgeFrame);
+    }
+    return new Promise((resolve,reject)=>{
+      const waiter={resolve,reject};
+      bridgeReadyWaiters.push(waiter);
+      const timer=setTimeout(()=>{
+        const idx=bridgeReadyWaiters.indexOf(waiter);if(idx>=0)bridgeReadyWaiters.splice(idx,1);
+        bridgeReady=false;
+        try{bridgeFrame?.remove()}catch{}
+        bridgeFrame=null;
+        reject(new Error('Print Bridge indisponível. Atualize o X Burguer Print Agent para a versão 2.1.0 ou superior.'));
+      },timeout);
+      waiter.resolve=value=>{clearTimeout(timer);resolve(value)};
+      waiter.reject=error=>{clearTimeout(timer);reject(error)};
+    });
+  }
+  async function bridgeRequest(path,{method='GET',body=null,auth=true,timeout=4000}={}){
+    await ensurePrintBridge(Math.min(timeout,2400));
+    const id='xbp-'+Date.now().toString(36)+'-'+(++bridgeSeq).toString(36);
+    const token=auth?String(agentConfig().token||''):'';
+    return new Promise((resolve,reject)=>{
+      const timer=setTimeout(()=>{bridgePending.delete(id);reject(new Error('Print Bridge não respondeu.'))},timeout);
+      bridgePending.set(id,{resolve,reject,timer});
+      bridgeFrame.contentWindow.postMessage({type:'xb-print-bridge-request',id,path,method,body,token},bridgeOrigin());
+    });
+  }
+  async function directAgentRequest(path,{method='GET',body=null,auth=true,timeout=3500}={}){
+    const cfg=agentConfig(),controller=new AbortController(),timer=setTimeout(()=>controller.abort(),timeout);
+    try{
+      const headers={'Accept':'application/json'};
+      if(body!==null)headers['Content-Type']='application/json';
+      if(auth&&cfg.token)headers['X-XB-Print-Token']=cfg.token;
+      const response=await fetch(agentBase()+path,{method,headers,body:body===null?undefined:JSON.stringify(body),signal:controller.signal,cache:'no-store',targetAddressSpace:'loopback'});
+      let data={};try{data=await response.json()}catch{}
+      if(!response.ok)throw new Error(data.error||('Agente respondeu HTTP '+response.status));
+      return data;
+    }finally{clearTimeout(timer)}
   }
   async function localNetworkPermission(){
     if(!globalThis.navigator?.permissions?.query)return 'unsupported';
@@ -40,17 +115,15 @@
       '</div>'+(blocked?'<div class="notice">'+icon('shield-exclamation')+'<div><b>Acesso local está bloqueado</b><span>Altere a permissão do site para permitir acesso à rede local e recarregue a página.</span></div></div>':'')+
       '<div class="modal-foot"><button class="btn btn-outline" onclick="openLocalPrintAgentPage()">'+icon('box-arrow-up-right')+'<span>Abrir agente local</span></button><button class="btn btn-primary" onclick="closeModal();probePrintAgent({silent:false,userInitiated:true})">'+icon('wifi')+'<span>Testar conexão</span></button></div>');
   }
-  async function agentRequest(path,{method='GET',body=null,auth=true,timeout=3500}={}){
-    const cfg=agentConfig(),controller=new AbortController(),timer=setTimeout(()=>controller.abort(),timeout);
-    try{
-      const headers={'Accept':'application/json'};
-      if(body!==null)headers['Content-Type']='application/json';
-      if(auth&&cfg.token)headers['X-XB-Print-Token']=cfg.token;
-      const response=await fetch(agentBase()+path,{method,headers,body:body===null?undefined:JSON.stringify(body),signal:controller.signal,cache:'no-store',targetAddressSpace:'loopback'});
-      let data={};try{data=await response.json()}catch{}
-      if(!response.ok)throw new Error(data.error||('Agente respondeu HTTP '+response.status));
-      return data;
-    }finally{clearTimeout(timer)}
+  async function agentRequest(path,options={}){
+    let bridgeError=null;
+    try{return await bridgeRequest(path,options)}
+    catch(error){if(error?.bridgeResponse)throw error;bridgeError=error}
+    try{return await directAgentRequest(path,options)}
+    catch(error){
+      const combined=new Error((bridgeError?.message?bridgeError.message+' ':'')+String(error.message||error));
+      combined.bridgeError=bridgeError;combined.directError=error;throw combined;
+    }
   }
   function setHealth(next){
     agentHealth={...agentHealth,...next,checkedAt:new Date().toISOString()};
@@ -62,15 +135,6 @@
   async function probePrintAgent({silent=true,userInitiated=false}={}){
     if(!agentConfig().enabled){setHealth({online:false,authorized:false,error:'Agente desativado',permission:'unknown'});return agentHealth}
     const permission=await localNetworkPermission();
-    if(permission==='denied'){
-      setHealth({online:false,authorized:false,version:'',queue:null,error:localNetworkBlockedMessage(),permission});
-      if(!silent)showLocalNetworkHelp();
-      return agentHealth;
-    }
-    if(permission==='prompt'&&!userInitiated){
-      setHealth({online:false,authorized:false,version:'',queue:null,error:'Permissão de acesso local necessária.',permission});
-      return agentHealth;
-    }
     try{
       const health=await agentRequest('/health',{auth:false,timeout:3200});
       let authorized=false,queue=health.queue||null,error='';
@@ -80,15 +144,14 @@
           authorized=true;queue=protectedStatus.queue||queue;
         }catch(authError){error=authError.message}
       }
-      setHealth({online:true,authorized,version:health.version||'',queue,error,permission:permission==='unsupported'?'unknown':'granted'});
+      setHealth({online:true,authorized,version:health.version||bridgeVersion||'',queue,error,permission:'bridge'});
       if(!silent&&!authorized)toast('Agente encontrado. Falta concluir o pareamento.','info');
     }catch(error){
       const afterPermission=await localNetworkPermission();
-      const blocked=afterPermission==='denied';
-      const message=blocked?localNetworkBlockedMessage():(error.name==='AbortError'?'Agente não respondeu na porta 17871.':String(error.message||error));
+      const message=String(error.message||error);
       setHealth({online:false,authorized:false,version:'',queue:null,error:message,permission:afterPermission});
       if(!silent){
-        if(blocked)showLocalNetworkHelp();
+        if(message.includes('2.1.0'))toast('Atualize o X Burguer Print Agent para 2.1.0 e tente novamente.','warning');
         else toast('Não foi possível alcançar o Print Agent. Confirme que o aplicativo está aberto.','warning');
       }
     }
@@ -97,7 +160,6 @@
   async function pairPrintAgent(){
     const online=await probePrintAgent({silent:true,userInitiated:true});
     if(!online.online){
-      if(online.permission==='denied'||online.permission==='prompt'){showLocalNetworkHelp();return false}
       openModal('<div class="modal-head"><div><h2>Print Agent não encontrado</h2><p class="dialog-subtitle">O sistema não conseguiu acessar o aplicativo local na porta 17871.</p></div><button class="icon-btn" onclick="closeModal()" aria-label="Fechar">'+icon('x-lg')+'</button></div><div class="print-agent-help"><b>1.</b><span>Abra o <strong>X Burguer Print Agent</strong> e confirme que aparece <strong>Agente online</strong>.</span><b>2.</b><span>Clique em <strong>Abrir agente local</strong>. Se a página local abrir, o aplicativo está funcionando.</span><b>3.</b><span>Se a página não abrir, reinicie o Print Agent. Se aparecer erro da porta 17871, feche versões antigas ou reinicie o Windows.</span></div><div class="modal-foot"><button class="btn btn-outline" onclick="openPrintAgentDownload()">'+icon('download')+'<span>Baixar aplicativo</span></button><button class="btn btn-outline" onclick="openLocalPrintAgentPage()">'+icon('box-arrow-up-right')+'<span>Abrir agente local</span></button><button class="btn btn-primary" onclick="closeModal();pairPrintAgent()">'+icon('arrow-repeat')+'<span>Tentar novamente</span></button></div>');
       return false;
     }
@@ -246,7 +308,7 @@
     }catch{}
   }
   function agentStatusCard(){
-    const cfg=agentConfig(),needsPermission=agentHealth.permission==='denied'||agentHealth.permission==='prompt';
+    const cfg=agentConfig(),needsPermission=!bridgeReady&&(agentHealth.permission==='denied'||agentHealth.permission==='prompt');
     const status=!cfg.enabled?'disabled':agentHealth.online&&agentHealth.authorized?'ready':agentHealth.online?'pair':needsPermission?'permission':'offline';
     const label=status==='ready'?'Agente conectado':status==='pair'?'Agente encontrado':status==='permission'?'Permissão local necessária':status==='disabled'?'Agente desativado':'Agente offline';
     const badge=status==='ready'?'b-green':status==='pair'||status==='permission'?'b-orange':'b-gray';
@@ -281,6 +343,8 @@
   globalThis.openLocalPrintAgentPage=openLocalPrintAgentPage;
   globalThis.showLocalNetworkHelp=showLocalNetworkHelp;
   globalThis.localNetworkPermission=localNetworkPermission;
+  globalThis.ensurePrintBridge=ensurePrintBridge;
+  globalThis.bridgeRequest=bridgeRequest;
   globalThis.openPrintAgentDownload=openPrintAgentDownload;
   globalThis.fetchPhysicalPrinters=fetchPhysicalPrinters;
   globalThis.mapPrinterDevice=mapPrinterDevice;

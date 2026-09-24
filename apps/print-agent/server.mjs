@@ -7,7 +7,7 @@ import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { renderEscPosJob, validateJob } from './lib/agent-core.mjs';
 
-export const AGENT_VERSION='2.0.0';
+export const AGENT_VERSION='2.1.0';
 export const AGENT_HOST='127.0.0.1';
 export const AGENT_PORT=17871;
 
@@ -193,6 +193,41 @@ export function createPrintAgent(options={}){
   function homeHtml(){
     return '<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>X Burguer Print Agent</title><style>body{font:16px system-ui;margin:40px;max-width:760px;color:#111}code{font-size:28px;font-weight:800;letter-spacing:5px}section{padding:20px;border:1px solid #ddd;border-radius:14px;margin:14px 0}small{color:#666}</style></head><body><h1>X Burguer Print Agent</h1><section><b>Agente ativo</b><p>Versao '+version+' • http://'+host+':'+port+'</p></section><section><b>Codigo de pareamento</b><p><code>'+pairingCode+'</code></p><small>Digite este codigo no X Burguer Central para autorizar este computador.</small></section><section><b>Aplicativo Windows</b><p>Abra o X Burguer Print Agent pela bandeja do Windows para gerenciar impressoras, fila e testes.</p></section></body></html>';
   }
+  function bridgeHtml(){
+    return `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>X Burguer Print Bridge</title></head><body><script>
+(function(){
+  const allowed=[
+    /^https:\\/\\/atendimentoxburguer-arch\\.github\\.io$/,
+    /^http:\\/\\/localhost(?::\\d+)?$/,
+    /^http:\\/\\/127\\.0\\.0\\.1(?::\\d+)?$/
+  ];
+  const originOk=origin=>allowed.some(re=>re.test(String(origin||'')));
+  const pathOk=path=>/^\\/(?:health|pair|printers|jobs(?:\\?[^#]*)?|jobs\\/[A-Za-z0-9._:-]{1,96}\\/retry)$/.test(String(path||''));
+  async function call(req){
+    if(!pathOk(req.path))throw new Error('Rota do bridge não permitida.');
+    const method=req.method==='POST'?'POST':'GET';
+    const headers={Accept:'application/json'};
+    if(req.body!==null&&req.body!==undefined)headers['Content-Type']='application/json';
+    if(req.token)headers['X-XB-Print-Token']=String(req.token);
+    const response=await fetch(req.path,{method,headers,body:req.body===null||req.body===undefined?undefined:JSON.stringify(req.body),cache:'no-store',credentials:'omit'});
+    let data={};try{data=await response.json()}catch{}
+    return {ok:response.ok,status:response.status,data,error:data.error||''};
+  }
+  window.addEventListener('message',async event=>{
+    if(!originOk(event.origin))return;
+    const msg=event.data||{};
+    if(msg.type!=='xb-print-bridge-request'||!msg.id)return;
+    try{
+      const result=await call(msg);
+      event.source&&event.source.postMessage({type:'xb-print-bridge-response',id:msg.id,...result},event.origin);
+    }catch(error){
+      event.source&&event.source.postMessage({type:'xb-print-bridge-response',id:msg.id,ok:false,status:0,data:{},error:String(error&&error.message||error)},event.origin);
+    }
+  });
+  parent.postMessage({type:'xb-print-bridge-ready',version:${JSON.stringify(version)}},'*');
+})();
+<\/script></body></html>`;
+  }
   function requestHandler(req,res){
     void (async()=>{
       const url=new URL(req.url||'/','http://'+host+':'+port);
@@ -207,6 +242,14 @@ export function createPrintAgent(options={}){
       }
       if(req.method==='GET'&&url.pathname==='/'){
         res.writeHead(200,{'Content-Type':'text/html; charset=utf-8','Cache-Control':'no-store'});res.end(homeHtml());return;
+      }
+      if(req.method==='GET'&&url.pathname==='/bridge'){
+        res.writeHead(200,{
+          'Content-Type':'text/html; charset=utf-8',
+          'Cache-Control':'no-store',
+          'Content-Security-Policy':"default-src 'none'; script-src 'unsafe-inline'; connect-src 'self'"
+        });
+        res.end(bridgeHtml());return;
       }
       if(req.method==='GET'&&url.pathname==='/health'){send(req,res,200,{...getSnapshot(),pairingRequired:true});return}
       if(req.method==='POST'&&url.pathname==='/pair'){

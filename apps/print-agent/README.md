@@ -2,6 +2,12 @@
 
 Aplicativo Windows da ETAPA 2 de impressão gerenciada do X Burguer Central.
 
+## Bridge local 2.1.0
+
+A versão 2.1.0 adiciona o endpoint `/bridge`. O X Burguer Central carrega essa página local em segundo plano e troca mensagens seguras via `postMessage`. A ponte executa as chamadas de impressão no mesmo origin `127.0.0.1:17871`, evitando depender de CORS/LNA para cada operação.
+
+O bridge aceita mensagens apenas do origin oficial `https://atendimentoxburguer-arch.github.io` e dos origins locais de desenvolvimento. As rotas permitidas são limitadas a saúde, pareamento, impressoras, fila e retry.
+
 ## O que mudou
 
 O agente agora é distribuído como aplicativo Windows instalável. O usuário final não precisa instalar Node.js nem executar PowerShell manualmente.

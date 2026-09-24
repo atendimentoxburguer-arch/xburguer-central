@@ -108,6 +108,22 @@ Esta etapa ainda não usa certificado de assinatura de código. O Windows pode e
 
 Antes de distribuição ampla, a próxima melhoria de segurança é assinar o instalador e o executável com certificado de code signing.
 
+## Print Bridge 2.1.0
+
+A partir do Print Agent 2.1.0, o transporte principal não depende mais de `fetch()` cross-origin entre o GitHub Pages e `127.0.0.1`.
+
+O painel carrega `http://127.0.0.1:17871/bridge` em um frame local oculto. Essa página pertence ao próprio agente e executa chamadas same-origin para `/health`, `/pair`, `/printers` e `/jobs`. O X Burguer Central e o bridge trocam apenas mensagens estruturadas por `postMessage`.
+
+Benefícios:
+
+- evita falhas de CORS/LNA no fluxo principal;
+- mantém o agente preso ao loopback;
+- restringe origins aceitos;
+- restringe as rotas que a ponte pode executar;
+- preserva o `fetch()` direto apenas como fallback para compatibilidade.
+
+Por isso, instalações 2.0.0 devem ser atualizadas para 2.1.0.
+
 ## Conexão com navegadores atuais
 
 O painel web usa `http://127.0.0.1:17871` para falar com o aplicativo instalado no mesmo computador.
