@@ -52,6 +52,8 @@ assert.match(client,/Permissão local necessária/);
 assert.match(client,/showLocalNetworkHelp/);
 assert.match(client,/userInitiated:true/);
 assert.match(client,/ensurePrintBridge/);
+assert.match(client,/window\.open\(agentBase\(\)\+'\/bridge'/);
+assert.doesNotMatch(client,/document\.createElement\('iframe'\)/);
 assert.match(client,/xb-print-bridge-request/);
 assert.match(client,/xb-print-bridge-response/);
 assert.match(client,/bridgeRequest/);
