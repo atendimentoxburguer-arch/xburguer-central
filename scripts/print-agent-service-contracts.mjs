@@ -10,6 +10,18 @@ const agent=createPrintAgent({port,dataDir,version:'2.0.0-test'});
 await agent.start();
 
 try{
+  const preflight=await fetch('http://127.0.0.1:'+port+'/health',{
+    method:'OPTIONS',
+    headers:{
+      Origin:'https://atendimentoxburguer-arch.github.io',
+      'Access-Control-Request-Method':'GET',
+      'Access-Control-Request-Private-Network':'true'
+    }
+  });
+  assert.equal(preflight.status,204);
+  assert.equal(preflight.headers.get('access-control-allow-origin'),'https://atendimentoxburguer-arch.github.io');
+  assert.equal(preflight.headers.get('access-control-allow-private-network'),'true');
+
   const health=await fetch('http://127.0.0.1:'+port+'/health').then(r=>r.json());
   assert.equal(health.ok,true);
   assert.equal(health.version,'2.0.0-test');
