@@ -47,7 +47,7 @@ assert.match(validateJob({...job,dedupeKey:'x '.repeat(100)}),/deduplicacao/i);
 const client=fs.readFileSync('assets/js/print-agent-client.js','utf8');
 assert.match(client,/loopback-network/);
 assert.match(client,/local-network-access/);
-assert.match(client,/targetAddressSpace:'local'/);
+assert.match(client,/targetAddressSpace:'loopback'/);
 assert.match(client,/Permissão local necessária/);
 assert.match(client,/showLocalNetworkHelp/);
 assert.match(client,/userInitiated:true/);
