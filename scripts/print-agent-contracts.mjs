@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
 import { renderEscPosJob, validateJob, sanitizeText, paperColumns, wrapText } from '../apps/print-agent/lib/agent-core.mjs';
 
 assert.equal(sanitizeText('Porção de Tilápia — João'),'Porcao de Tilapia - Joao');
@@ -41,5 +42,14 @@ assert.match(validateJob({...job,profile:{...job.profile,paper:'a4'}}),/58 mm ou
 assert.match(validateJob({...job,profile:{...job.profile,copies:4}}),/copias/i);
 assert.match(validateJob({...job,document:{...job.document,purpose:'hack'}}),/documento/i);
 assert.match(validateJob({...job,dedupeKey:'x '.repeat(100)}),/deduplicacao/i);
+
+
+const client=fs.readFileSync('assets/js/print-agent-client.js','utf8');
+assert.match(client,/loopback-network/);
+assert.match(client,/local-network-access/);
+assert.match(client,/targetAddressSpace:'local'/);
+assert.match(client,/Permissão local necessária/);
+assert.match(client,/showLocalNetworkHelp/);
+assert.match(client,/userInitiated:true/);
 
 console.log('Print agent contracts OK');
