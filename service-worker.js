@@ -1,4 +1,4 @@
-const CACHE='xburguer-central-v32-1';
+const CACHE='xburguer-central-v33-1';
 const APP_SHELL=['./','./index.html','./manifest.webmanifest','./assets/css/app.css','./assets/css/domain-management.css','./assets/css/print.css','./assets/img/logo.png','./assets/img/icon.svg','./assets/img/icon-maskable.svg','./assets/js/core.js','./assets/js/ui.js','./assets/js/integrations.js','./assets/js/print-agent-client.js','./assets/js/printing.js','./assets/js/orders.js','./assets/js/sales.js','./assets/js/operations.js','./assets/js/crm.js','./assets/js/management.js','./assets/js/reports.js','./assets/js/salon-management.js','./assets/js/menu-management.js','./assets/js/app.js','./assets/js/pwa.js'];
 
 async function put(cacheName,request,response){
