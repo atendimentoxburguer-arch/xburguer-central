@@ -6,12 +6,11 @@
   let agentHealth={online:false,authorized:false,version:'',queue:null,error:'',permission:'unknown',checkedAt:''};
   let physicalPrinters=[];
   let flushBusy=false;
-  let bridgeFrame=null;
+  let bridgeWindow=null;
   let bridgeReady=false;
   let bridgeVersion='';
   let bridgeSeq=0;
   const bridgePending=new Map();
-  const bridgeReadyWaiters=[];
 
   function agentConfig(){
     const printing=state.settings.printing;
@@ -31,12 +30,12 @@
     if(msg.type==='xb-print-bridge-ready'){
       bridgeReady=true;
       bridgeVersion=String(msg.version||'');
-      while(bridgeReadyWaiters.length)bridgeReadyWaiters.shift()?.resolve(true);
       return;
     }
     if(msg.type!=='xb-print-bridge-response'||!msg.id)return;
     const pending=bridgePending.get(msg.id);if(!pending)return;
-    bridgePending.delete(msg.id);clearTimeout(pending.timer);
+    bridgeReady=true;
+    bridgePending.delete(msg.id);clearTimeout(pending.timer);clearInterval(pending.retry);
     if(msg.ok)pending.resolve(msg.data||{});
     else{
       const error=new Error(msg.error||('Bridge respondeu HTTP '+(msg.status||0)));
@@ -44,39 +43,34 @@
     }
   }
   window.addEventListener('message',handleBridgeMessage);
-  function ensurePrintBridge(timeout=2200){
-    if(bridgeReady&&bridgeFrame?.contentWindow)return Promise.resolve(true);
-    if(!bridgeFrame||!bridgeFrame.isConnected){
-      bridgeReady=false;
-      bridgeFrame=document.createElement('iframe');
-      bridgeFrame.title='X Burguer Print Bridge';
-      bridgeFrame.src=agentBase()+'/bridge';
-      bridgeFrame.setAttribute('aria-hidden','true');
-      bridgeFrame.style.cssText='position:fixed;width:1px;height:1px;opacity:0;pointer-events:none;border:0;left:-9999px;top:-9999px';
-      document.body.appendChild(bridgeFrame);
-    }
-    return new Promise((resolve,reject)=>{
-      const waiter={resolve,reject};
-      bridgeReadyWaiters.push(waiter);
-      const timer=setTimeout(()=>{
-        const idx=bridgeReadyWaiters.indexOf(waiter);if(idx>=0)bridgeReadyWaiters.splice(idx,1);
-        bridgeReady=false;
-        try{bridgeFrame?.remove()}catch{}
-        bridgeFrame=null;
-        reject(new Error('Print Bridge indisponível. Atualize o X Burguer Print Agent para a versão 2.1.0 ou superior.'));
-      },timeout);
-      waiter.resolve=value=>{clearTimeout(timer);resolve(value)};
-      waiter.reject=error=>{clearTimeout(timer);reject(error)};
-    });
+  function openPrintBridgeWindow(){
+    if(bridgeWindow&&!bridgeWindow.closed)return bridgeWindow;
+    bridgeReady=false;
+    bridgeWindow=window.open(agentBase()+'/bridge','xb-print-bridge','popup=yes,width=360,height=180,left=24,top=24');
+    if(!bridgeWindow)throw new Error('O navegador bloqueou a janela do Print Bridge. Permita pop-ups para o X Burguer Central e tente novamente.');
+    try{bridgeWindow.blur();window.focus()}catch{}
+    return bridgeWindow;
   }
-  async function bridgeRequest(path,{method='GET',body=null,auth=true,timeout=4000}={}){
-    await ensurePrintBridge(Math.min(timeout,2400));
+  function ensurePrintBridge({interactive=false}={}){
+    if(bridgeWindow&&!bridgeWindow.closed)return Promise.resolve(true);
+    if(!interactive)return Promise.reject(new Error('Print Bridge ainda não foi iniciado.'));
+    try{openPrintBridgeWindow();return Promise.resolve(true)}
+    catch(error){return Promise.reject(error)}
+  }
+  async function bridgeRequest(path,{method='GET',body=null,auth=true,timeout=4000,interactive=false}={}){
+    await ensurePrintBridge({interactive});
     const id='xbp-'+Date.now().toString(36)+'-'+(++bridgeSeq).toString(36);
     const token=auth?String(agentConfig().token||''):'';
+    const target=bridgeWindow;
     return new Promise((resolve,reject)=>{
-      const timer=setTimeout(()=>{bridgePending.delete(id);reject(new Error('Print Bridge não respondeu.'))},timeout);
-      bridgePending.set(id,{resolve,reject,timer});
-      bridgeFrame.contentWindow.postMessage({type:'xb-print-bridge-request',id,path,method,body,token},bridgeOrigin());
+      const send=()=>{try{if(target&&!target.closed)target.postMessage({type:'xb-print-bridge-request',id,path,method,body,token},bridgeOrigin())}catch{}};
+      const retry=setInterval(send,180);
+      const timer=setTimeout(()=>{
+        bridgePending.delete(id);clearInterval(retry);
+        reject(new Error(target?.closed?'A janela do Print Bridge foi fechada. Abra a conexão novamente.':'Print Bridge não respondeu.'));
+      },timeout);
+      bridgePending.set(id,{resolve,reject,timer,retry});
+      send();
     });
   }
   async function directAgentRequest(path,{method='GET',body=null,auth=true,timeout=3500}={}){
@@ -134,9 +128,10 @@
   }
   async function probePrintAgent({silent=true,userInitiated=false}={}){
     if(!agentConfig().enabled){setHealth({online:false,authorized:false,error:'Agente desativado',permission:'unknown'});return agentHealth}
+    if(userInitiated){try{openPrintBridgeWindow()}catch(error){setHealth({online:false,authorized:false,error:String(error.message||error),permission:'popup'});if(!silent)toast(String(error.message||error),'warning');return agentHealth}}
     const permission=await localNetworkPermission();
     try{
-      const health=await agentRequest('/health',{auth:false,timeout:3200});
+      const health=await agentRequest('/health',{auth:false,timeout:4200,interactive:userInitiated});
       let authorized=false,queue=health.queue||null,error='';
       if(agentConfig().token){
         try{
@@ -151,7 +146,7 @@
       const message=String(error.message||error);
       setHealth({online:false,authorized:false,version:'',queue:null,error:message,permission:afterPermission});
       if(!silent){
-        if(message.includes('2.1.0'))toast('Atualize o X Burguer Print Agent para 2.1.0 e tente novamente.','warning');
+        if(message.includes('pop-ups'))toast(message,'warning');
         else toast('Não foi possível alcançar o Print Agent. Confirme que o aplicativo está aberto.','warning');
       }
     }
@@ -344,6 +339,7 @@
   globalThis.showLocalNetworkHelp=showLocalNetworkHelp;
   globalThis.localNetworkPermission=localNetworkPermission;
   globalThis.ensurePrintBridge=ensurePrintBridge;
+  globalThis.openPrintBridgeWindow=openPrintBridgeWindow;
   globalThis.bridgeRequest=bridgeRequest;
   globalThis.openPrintAgentDownload=openPrintAgentDownload;
   globalThis.fetchPhysicalPrinters=fetchPhysicalPrinters;
