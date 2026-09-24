@@ -7,7 +7,7 @@ import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { renderEscPosJob, validateJob } from './lib/agent-core.mjs';
 
-export const AGENT_VERSION='2.3.0';
+export const AGENT_VERSION='2.4.0';
 export const AGENT_HOST='127.0.0.1';
 export const AGENT_PORT=17871;
 
