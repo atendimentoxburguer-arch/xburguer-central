@@ -46,7 +46,7 @@
       const headers={'Accept':'application/json'};
       if(body!==null)headers['Content-Type']='application/json';
       if(auth&&cfg.token)headers['X-XB-Print-Token']=cfg.token;
-      const response=await fetch(agentBase()+path,{method,headers,body:body===null?undefined:JSON.stringify(body),signal:controller.signal,cache:'no-store',targetAddressSpace:'local'});
+      const response=await fetch(agentBase()+path,{method,headers,body:body===null?undefined:JSON.stringify(body),signal:controller.signal,cache:'no-store',targetAddressSpace:'loopback'});
       let data={};try{data=await response.json()}catch{}
       if(!response.ok)throw new Error(data.error||('Agente respondeu HTTP '+response.status));
       return data;
