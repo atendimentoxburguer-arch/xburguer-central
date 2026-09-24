@@ -8,7 +8,7 @@ const __dirname=path.dirname(fileURLToPath(import.meta.url));
 const DASHBOARD_URL='https://atendimentoxburguer-arch.github.io/xburguer-central/';
 const RELEASES_API='https://api.github.com/repos/atendimentoxburguer-arch/xburguer-central/releases?per_page=20';
 
-let mainWindow=null,tray=null,quitting=false,agent=null,desktopConfig={startWithWindows:true};
+let mainWindow=null,centralWindow=null,tray=null,quitting=false,agent=null,desktopConfig={startWithWindows:true};
 
 function resourcePath(name){
   return app.isPackaged?path.join(process.resourcesPath,name):path.resolve(__dirname,'../../../assets/img',name);
@@ -47,7 +47,7 @@ function trayMenu(){
     {label:'Status: '+statusText(snapshot),enabled:false},
     {label:'Fila: '+Number(snapshot?.queue?.queued||0)+' • Falhas: '+Number(snapshot?.queue?.failed||0),enabled:false},
     {type:'separator'},
-    {label:'Abrir X Burguer Central',click:()=>shell.openExternal(DASHBOARD_URL)},
+    {label:'Abrir X Burguer Central',click:()=>showCentralWindow()},
     {label:'Reiniciar agente',click:()=>restartAgent()},
     {label:'Iniciar com o Windows',type:'checkbox',checked:Boolean(desktopConfig.startWithWindows),click:item=>setStartWithWindows(item.checked)},
     {type:'separator'},
@@ -87,6 +87,84 @@ function createWindow({show=true}={}){
     if(!url.startsWith('file:'))event.preventDefault();
   });
   return mainWindow;
+}
+function trustedCentralUrl(value=''){
+  try{
+    const url=new URL(String(value||''));
+    return url.origin==='https://atendimentoxburguer-arch.github.io'&&url.pathname.startsWith('/xburguer-central/');
+  }catch{return false}
+}
+function showCentralWindow(){
+  if(!centralWindow)return createCentralWindow();
+  centralWindow.show();centralWindow.focus();
+  return centralWindow;
+}
+function createCentralWindow({show=true}={}){
+  if(centralWindow){if(show)showCentralWindow();return centralWindow}
+  centralWindow=new BrowserWindow({
+    width:1480,height:920,minWidth:1180,minHeight:720,show:false,
+    title:'X Burguer Central',
+    icon:resourcePath('logo.png'),
+    autoHideMenuBar:true,
+    backgroundColor:'#f5f7fa',
+    webPreferences:{
+      preload:path.join(__dirname,'central-preload.cjs'),
+      contextIsolation:true,nodeIntegration:false,sandbox:true,
+      devTools:false,
+      partition:'persist:xburguer-central'
+    }
+  });
+  centralWindow.loadURL(DASHBOARD_URL);
+  centralWindow.once('ready-to-show',()=>{if(show)centralWindow?.show()});
+  centralWindow.on('closed',()=>{centralWindow=null});
+  centralWindow.webContents.setWindowOpenHandler(({url})=>{
+    if(trustedCentralUrl(url)){centralWindow?.loadURL(url);return {action:'deny'}}
+    if(/^https:\/\//i.test(url))void shell.openExternal(url);
+    return {action:'deny'};
+  });
+  centralWindow.webContents.on('will-navigate',(event,url)=>{
+    if(trustedCentralUrl(url))return;
+    event.preventDefault();
+    if(/^https:\/\//i.test(url))void shell.openExternal(url);
+  });
+  return centralWindow;
+}
+function centralSenderTrusted(event){
+  const url=event?.senderFrame?.url||event?.sender?.getURL?.()||'';
+  return trustedCentralUrl(url);
+}
+function centralAgentResponse(pathname,method,body,url){
+  if(method==='GET'&&pathname==='/health'){
+    return Promise.resolve({...agent.getSnapshot(),pairingRequired:false,desktopManaged:true});
+  }
+  if(method==='GET'&&pathname==='/printers'){
+    return agent.listPrinters().then(printers=>({ok:true,printers,desktopManaged:true}));
+  }
+  if(method==='GET'&&pathname==='/jobs'){
+    const limit=url.searchParams.get('limit');
+    return Promise.resolve({ok:true,jobs:agent.getJobs(limit),queue:agent.queueSummary(),desktopManaged:true});
+  }
+  if(method==='POST'&&pathname==='/jobs'){
+    const result=agent.enqueueJob(body||{});
+    return Promise.resolve({ok:true,jobId:result.job.id,status:result.job.status,deduplicated:result.deduplicated,desktopManaged:true});
+  }
+  const retry=pathname.match(/^\/jobs\/([A-Za-z0-9._:-]{1,96})\/retry$/);
+  if(method==='POST'&&retry){
+    const job=agent.retryJob(retry[1]);
+    return Promise.resolve({ok:true,jobId:job.id,status:job.status,desktopManaged:true});
+  }
+  if(method==='POST'&&pathname==='/pair'){
+    return Promise.resolve({ok:true,token:'desktop-managed',version:app.getVersion(),desktopManaged:true});
+  }
+  return Promise.reject(new Error('Rota de impressão não permitida no modo desktop.'));
+}
+async function handleCentralAgentRequest(event,payload={}){
+  if(!centralSenderTrusted(event))throw new Error('Origem do X Burguer Central não autorizada.');
+  const pathValue=String(payload.path||'/health');
+  const url=new URL(pathValue,'http://127.0.0.1:17871');
+  const method=String(payload.method||'GET').toUpperCase();
+  if(!['GET','POST'].includes(method))throw new Error('Método não permitido.');
+  return centralAgentResponse(url.pathname,method,payload.body??null,url);
 }
 function createTray(){
   let image=nativeImage.createFromPath(resourcePath('logo.png'));
@@ -147,7 +225,7 @@ function registerIpc(){
   ipcMain.handle('agent:test',(_e,args)=>agent.createTestJob(args||{}));
   ipcMain.handle('agent:restart',()=>restartAgent());
   ipcMain.handle('agent:open-data',()=>shell.openPath(agent.dataDir));
-  ipcMain.handle('app:dashboard',()=>shell.openExternal(DASHBOARD_URL));
+  ipcMain.handle('app:dashboard',()=>{showCentralWindow();return {ok:true,mode:'desktop-auto'}});
   ipcMain.handle('app:settings',()=>({version:app.getVersion(),startWithWindows:desktopConfig.startWithWindows,packaged:app.isPackaged,logoUrl:pathToFileURL(resourcePath('logo.png')).href}));
   ipcMain.handle('app:set-startup',(_e,value)=>setStartWithWindows(value));
   ipcMain.handle('app:check-update',()=>checkUpdates());
@@ -155,6 +233,11 @@ function registerIpc(){
     const target=String(url||'');
     if(/^https:\/\/github\.com\/atendimentoxburguer-arch\/xburguer-central\//.test(target))return shell.openExternal(target);
     return false;
+  });
+  ipcMain.handle('central:agent-request',(event,payload)=>handleCentralAgentRequest(event,payload));
+  ipcMain.handle('central:agent-info',event=>{
+    if(!centralSenderTrusted(event))throw new Error('Origem não autorizada.');
+    return {ok:true,desktopManaged:true,version:app.getVersion()};
   });
 }
 async function bootstrap(){

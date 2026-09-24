@@ -21,6 +21,15 @@
     const raw=String(agentConfig().url||DEFAULT_AGENT_URL).trim().replace(/\/+$/,'');
     return /^http:\/\/(?:127\.0\.0\.1|localhost)(?::\d{1,5})?$/.test(raw)?raw:DEFAULT_AGENT_URL;
   }
+  function desktopPrintManaged(){
+    return Boolean(globalThis.xbPrintDesktop&&typeof globalThis.xbPrintDesktop.request==='function');
+  }
+  async function desktopAgentRequest(path,{method='GET',body=null}={}){
+    if(!desktopPrintManaged())throw new Error('Canal desktop indisponível.');
+    const result=await globalThis.xbPrintDesktop.request({path,method,body});
+    if(!result||result.ok===false)throw new Error(result?.error||'Falha no canal interno de impressão.');
+    return result;
+  }
   function bridgeOrigin(){
     try{return new URL(agentBase()).origin}catch{return 'http://127.0.0.1:17871'}
   }
@@ -113,6 +122,7 @@
       '<div class="modal-foot"><button class="btn btn-outline" onclick="openLocalPrintAgentPage()">'+icon('box-arrow-up-right')+'<span>Abrir agente local</span></button><button class="btn btn-primary" onclick="closeModal();probePrintAgent({silent:false,userInitiated:true})">'+icon('wifi')+'<span>Testar conexão</span></button></div>');
   }
   async function agentRequest(path,options={}){
+    if(desktopPrintManaged())return desktopAgentRequest(path,options);
     let bridgeError=null;
     try{return await bridgeRequest(path,options)}
     catch(error){if(error?.bridgeResponse)throw error;bridgeError=error}
@@ -131,18 +141,19 @@
   }
   async function probePrintAgent({silent=true,userInitiated=false}={}){
     if(!agentConfig().enabled){setHealth({online:false,authorized:false,error:'Agente desativado',permission:'unknown'});return agentHealth}
-    if(userInitiated){try{openPrintBridgeWindow()}catch(error){setHealth({online:false,authorized:false,error:String(error.message||error),permission:'popup'});if(!silent)toast(String(error.message||error),'warning');return agentHealth}}
-    const permission=await localNetworkPermission();
+    const desktop=desktopPrintManaged();
+    if(userInitiated&&!desktop){try{openPrintBridgeWindow()}catch(error){setHealth({online:false,authorized:false,error:String(error.message||error),permission:'popup'});if(!silent)toast(String(error.message||error),'warning');return agentHealth}}
+    const permission=desktop?'desktop':await localNetworkPermission();
     try{
       const health=await agentRequest('/health',{auth:false,timeout:4200,interactive:userInitiated});
-      let authorized=false,queue=health.queue||null,error='';
-      if(agentConfig().token){
+      let authorized=desktop,queue=health.queue||null,error='';
+      if(desktop||agentConfig().token){
         try{
           const protectedStatus=await agentRequest('/jobs?limit=1',{timeout:2600});
           authorized=true;queue=protectedStatus.queue||queue;
         }catch(authError){error=authError.message}
       }
-      setHealth({online:true,authorized,version:health.version||bridgeVersion||'',queue,error,permission:'bridge'});
+      setHealth({online:true,authorized,version:health.version||bridgeVersion||'',queue,error,permission:desktop?'desktop':'bridge'});
       if(!silent&&!authorized)toast('Agente encontrado. Falta concluir o pareamento.','info');
     }catch(error){
       const afterPermission=await localNetworkPermission();
@@ -158,8 +169,10 @@
   async function reconnectPrintAgent({allowPair=true,silent=false}={}){
     const cfg=agentConfig();
     if(!cfg.enabled)return false;
-    try{openPrintBridgeWindow()}
-    catch(error){if(!silent)toast(String(error.message||error),'warning');return false}
+    if(!desktopPrintManaged()){
+      try{openPrintBridgeWindow()}
+      catch(error){if(!silent)toast(String(error.message||error),'warning');return false}
+    }
     const health=await probePrintAgent({silent:true,userInitiated:false});
     if(health.online&&health.authorized){
       if(!silent)toast('Print Agent reconectado.','success');
@@ -172,6 +185,11 @@
     return false;
   }
   async function pairPrintAgent(){
+    if(desktopPrintManaged()){
+      const health=await probePrintAgent({silent:true,userInitiated:false});
+      if(health.online&&health.authorized){toast('Print Agent conectado automaticamente.','success');globalThis.printerCenter?.();return true}
+      toast('Não foi possível acessar o canal interno do Print Agent.','error');return false;
+    }
     try{openPrintBridgeWindow()}
     catch(error){toast(String(error.message||error),'warning');return false}
     const v=await formDialog({title:'Conectar Print Agent',subtitle:'A ponte local foi aberta. Informe o código de 6 dígitos exibido pelo X Burguer Print Agent.',fields:[{key:'code',label:'Código de pareamento',placeholder:'000000',required:true}]});
@@ -200,7 +218,7 @@
   function openLocalPrintAgentPage(){window.open(agentBase()+'/','_blank','noopener,noreferrer')}
   function openPrintAgentDownload(){window.open('https://github.com/atendimentoxburguer-arch/xburguer-central/releases/latest','_blank','noopener,noreferrer')}
   async function fetchPhysicalPrinters({silent=false}={}){
-    if(!agentConfig().token){toast('Pareie o agente antes de buscar impressoras.','warning');return []}
+    if(!desktopPrintManaged()&&!agentConfig().token){toast('Pareie o agente antes de buscar impressoras.','warning');return []}
     try{
       const data=await agentRequest('/printers',{timeout:7000});
       physicalPrinters=Array.isArray(data.printers)?data.printers:[];
@@ -211,7 +229,7 @@
   async function mapPrinterDevice(profileId){
     const profile=(state.settings.printing.profiles||[]).find(p=>p.id===profileId);if(!profile)return;
     if(profile.paper==='a4'){toast('O aplicativo de impressão silenciosa é destinado a térmicas 58/80 mm. Para A4 use o modo do navegador.','warning');return}
-    if(!agentConfig().token){const paired=await pairPrintAgent();if(!paired)return}
+    if(!desktopPrintManaged()&&!agentConfig().token){const paired=await pairPrintAgent();if(!paired)return}
     const printers=await fetchPhysicalPrinters();
     let v=null;
     if(printers.length){
@@ -276,7 +294,7 @@
       return false;
     }
     const interactive=!silent&&(event==='manual'||event==='test');
-    if(!agentConfig().enabled||!agentConfig().token){
+    if(!agentConfig().enabled||(!desktopPrintManaged()&&!agentConfig().token)){
       if(interactive){
         const paired=await pairPrintAgent();
         if(paired){
@@ -299,7 +317,7 @@
     return result.ok;
   }
   async function flushPrintOutbox(){
-    if(flushBusy||!agentConfig().enabled||!agentConfig().token||!state.printOutbox?.length)return;
+    if(flushBusy||!agentConfig().enabled||(!desktopPrintManaged()&&!agentConfig().token)||!state.printOutbox?.length)return;
     flushBusy=true;
     try{
       await probePrintAgent({silent:true});
@@ -318,7 +336,7 @@
     }finally{flushBusy=false}
   }
   async function getAgentJobs(){
-    if(!agentConfig().token)return {jobs:[],queue:null};
+    if(!desktopPrintManaged()&&!agentConfig().token)return {jobs:[],queue:null};
     try{return await agentRequest('/jobs?limit=40',{timeout:4000})}catch(error){toast('Não foi possível ler a fila do agente.','warning');return {jobs:[],queue:null}}
   }
   async function retryAgentJob(id){
@@ -338,7 +356,7 @@
     return {state:'online',label:'Online'};
   }
   async function refreshPrinterDeviceBadges(){
-    if(!agentConfig().token)return;
+    if(!desktopPrintManaged()&&!agentConfig().token)return;
     try{
       if(!agentHealth.online||!agentHealth.authorized)await probePrintAgent({silent:true});
       if(!agentHealth.online||!agentHealth.authorized)return;
@@ -353,20 +371,22 @@
     }catch{}
   }
   function agentStatusCard(){
-    const cfg=agentConfig();
+    const cfg=agentConfig(),desktop=desktopPrintManaged();
     const status=!cfg.enabled?'disabled':agentHealth.online&&agentHealth.authorized?'ready':agentHealth.online?'pair':'offline';
     const label=status==='ready'?'Agente conectado':status==='pair'?'Agente encontrado':status==='disabled'?'Agente desativado':'Print Agent aguardando conexão';
     const badge=status==='ready'?'b-green':status==='pair'?'b-orange':'b-gray';
     const detail=status==='ready'
-      ?'Versão '+esc(agentHealth.version||cfg.lastVersion||'—')+' • fila '+Number(agentHealth.queue?.queued||0)
+      ?(desktop?'Conexão automática pelo aplicativo • ':'Versão '+esc(agentHealth.version||cfg.lastVersion||'—')+' • ')+'fila '+Number(agentHealth.queue?.queued||0)
       :status==='pair'?'Informe o código de pareamento para liberar a impressão silenciosa.'
       :status==='disabled'?'A impressão gerenciada está desativada.'
       :cfg.token?'O pareamento está salvo. Clique em Reconectar agente para reabrir a ponte local.':'Clique em Conectar agente para abrir a ponte local e autorizar este navegador.';
     const action=status==='ready'
-      ?'<button class="btn btn-outline btn-sm" onclick="showManagedPrintQueue()">Fila</button><button class="btn btn-outline btn-sm" onclick="unpairPrintAgent()">Desconectar</button>'
-      :cfg.token
-        ?'<button class="btn btn-primary btn-sm" onclick="reconnectPrintAgent({allowPair:true,silent:false})">Reconectar agente</button>'
-        :'<button class="btn btn-primary btn-sm" onclick="pairPrintAgent()">Conectar agente</button>';
+      ?'<button class="btn btn-outline btn-sm" onclick="showManagedPrintQueue()">Fila</button>'+(desktop?'':'<button class="btn btn-outline btn-sm" onclick="unpairPrintAgent()">Desconectar</button>')
+      :desktop
+        ?'<button class="btn btn-primary btn-sm" onclick="probePrintAgent({silent:false,userInitiated:false})">Verificar agente</button>'
+        :cfg.token
+          ?'<button class="btn btn-primary btn-sm" onclick="reconnectPrintAgent({allowPair:true,silent:false})">Reconectar agente</button>'
+          :'<button class="btn btn-primary btn-sm" onclick="pairPrintAgent()">Conectar agente</button>';
     return '<div class="print-agent-card" id="printAgentCard"><span class="print-agent-icon">'+icon(status==='ready'?'pc-display-horizontal':'printer')+'</span><div><b>'+label+'</b><span>'+detail+'</span></div><span class="badge '+badge+'">'+(status==='ready'?'Online':status==='pair'?'Parear':status==='disabled'?'Off':'Conectar')+'</span><div class="print-agent-actions">'+action+'<button class="icon-btn" onclick="probePrintAgent({silent:false,userInitiated:true})" title="Verificar agente">'+icon('arrow-clockwise')+'</button></div></div>';
   }
   function refreshAgentStatusCard(){
@@ -382,6 +402,7 @@
   }
 
   globalThis.agentConfig=agentConfig;
+  globalThis.desktopPrintManaged=desktopPrintManaged;
   globalThis.probePrintAgent=probePrintAgent;
   globalThis.pairPrintAgent=pairPrintAgent;
   globalThis.reconnectPrintAgent=reconnectPrintAgent;
