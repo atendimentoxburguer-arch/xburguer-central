@@ -7,7 +7,7 @@ import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { renderEscPosJob, validateJob } from './lib/agent-core.mjs';
 
-export const AGENT_VERSION='2.2.0';
+export const AGENT_VERSION='2.3.0';
 export const AGENT_HOST='127.0.0.1';
 export const AGENT_PORT=17871;
 
@@ -122,38 +122,65 @@ export function createPrintAgent(options={}){
     })).filter(p=>p.name&&!seen.has(p.name.toLowerCase())&&seen.add(p.name.toLowerCase()))
       .sort((a,b)=>Number(b.default)-Number(a.default)||a.name.localeCompare(b.name,'pt-BR'));
   }
-  async function powershellPrinters(){
-    const commands=[
-      "$ErrorActionPreference='Stop'; Get-Printer | Select-Object Name,DriverName,PortName,PrinterStatus,WorkOffline,Default | ConvertTo-Json -Compress",
-      "$ErrorActionPreference='Stop'; Get-CimInstance Win32_Printer | Select-Object Name,DriverName,PortName,PrinterStatus,WorkOffline,Default | ConvertTo-Json -Compress"
+  async function powershellPrinterSources(){
+    const sources=[
+      {
+        name:'Get-Printer',
+        command:"$ErrorActionPreference='Stop'; Get-Printer | Select-Object Name,DriverName,PortName,PrinterStatus,WorkOffline,Default | ConvertTo-Json -Compress"
+      },
+      {
+        name:'Win32_Printer',
+        command:"$ErrorActionPreference='Stop'; Get-CimInstance Win32_Printer | Select-Object Name,DriverName,PortName,PrinterStatus,WorkOffline,Default | ConvertTo-Json -Compress"
+      },
+      {
+        name:'.NET Printing',
+        command:"$ErrorActionPreference='Stop'; Add-Type -AssemblyName System.Drawing; $d=(New-Object System.Drawing.Printing.PrinterSettings).PrinterName; @([System.Drawing.Printing.PrinterSettings]::InstalledPrinters) | ForEach-Object { [pscustomobject]@{Name=[string]$_;DriverName='';PortName='';PrinterStatus='';WorkOffline=$false;Default=([string]$_ -eq $d)} } | ConvertTo-Json -Compress"
+      },
+      {
+        name:'Registro do Windows',
+        command:"$ErrorActionPreference='Stop'; $items=@(); $devices='HKCU:\\Software\\Microsoft\\Windows NT\\CurrentVersion\\Devices'; if(Test-Path $devices){ (Get-ItemProperty $devices).PSObject.Properties | Where-Object { $_.MemberType -eq 'NoteProperty' -and $_.Name -notmatch '^PS' } | ForEach-Object { $items += [pscustomobject]@{Name=$_.Name;DriverName='';PortName='';PrinterStatus='';WorkOffline=$false;Default=$false} } }; $machine='HKLM:\\SYSTEM\\CurrentControlSet\\Control\\Print\\Printers'; if(Test-Path $machine){ Get-ChildItem $machine | ForEach-Object { $items += [pscustomobject]@{Name=$_.PSChildName;DriverName='';PortName='';PrinterStatus='';WorkOffline=$false;Default=$false} } }; $items | Sort-Object Name -Unique | ConvertTo-Json -Compress"
+      }
     ];
-    let lastError=null;
-    for(const command of commands){
+    const attempts=[];
+    for(const source of sources){
       try{
-        const output=(await runPowerShell(['-Command',command])).trim();
-        if(!output)continue;
+        const output=(await runPowerShell(['-Command',source.command])).trim();
+        if(!output){attempts.push({source:source.name,count:0,error:''});continue}
         const parsed=JSON.parse(output),list=normalizePrinters(Array.isArray(parsed)?parsed:[parsed]);
-        if(list.length)return list;
-      }catch(error){lastError=error}
+        attempts.push({source:source.name,count:list.length,error:''});
+        if(list.length)return {list,source:source.name,attempts};
+      }catch(error){
+        attempts.push({source:source.name,count:0,error:String(error.message||error).slice(0,500)});
+      }
     }
-    if(lastError)throw lastError;
-    return [];
+    return {list:[],source:'',attempts};
   }
+  let lastPrinterDiagnostics={source:'',count:0,attempts:[],at:''};
   async function listPrinters(){
-    const errors=[];
+    const attempts=[];
     if(printerProvider){
       try{
         const nativeList=normalizePrinters(await printerProvider());
-        if(nativeList.length){log('info','Impressoras detectadas via Electron',{count:nativeList.length});return nativeList}
-      }catch(error){errors.push('Electron: '+String(error.message||error))}
+        attempts.push({source:'Electron',count:nativeList.length,error:''});
+        if(nativeList.length){
+          lastPrinterDiagnostics={source:'Electron',count:nativeList.length,attempts,at:iso()};
+          log('info','Impressoras detectadas via Electron',{count:nativeList.length});
+          return nativeList;
+        }
+      }catch(error){attempts.push({source:'Electron',count:0,error:String(error.message||error).slice(0,500)})}
     }
-    try{
-      const psList=await powershellPrinters();
-      if(psList.length){log('info','Impressoras detectadas via Windows',{count:psList.length});return psList}
-    }catch(error){errors.push('PowerShell/CIM: '+String(error.message||error))}
-    if(errors.length)log('warn','Falha ao detectar impressoras',{error:errors.join(' | ')});
+    const ps=await powershellPrinterSources();
+    attempts.push(...ps.attempts);
+    lastPrinterDiagnostics={source:ps.source,count:ps.list.length,attempts,at:iso()};
+    if(ps.list.length){
+      log('info','Impressoras detectadas via '+ps.source,{count:ps.list.length});
+      return ps.list;
+    }
+    log('warn','Nenhuma impressora detectada',{error:attempts.map(x=>x.source+': '+(x.error||x.count)).join(' | ')});
     return [];
   }
+  function getPrinterDiagnostics(){return JSON.parse(JSON.stringify(lastPrinterDiagnostics))}
+
   async function spoolRaw(job){
     const buffer=renderEscPosJob(job),temp=path.join(dataDir,'job-'+job.id+'.bin');
     fs.writeFileSync(temp,buffer);
@@ -336,7 +363,7 @@ export function createPrintAgent(options={}){
     log('info','Agente encerrado',{version});
   }
 
-  return {start,stop,getSnapshot,listPrinters,getJobs,retryJob,createTestJob,recentLogs,queueSummary,getLastJob,enqueueJob,getPairingCode:()=>pairingCode,dataDir,logPath,version};
+  return {start,stop,getSnapshot,listPrinters,getPrinterDiagnostics,getJobs,retryJob,createTestJob,recentLogs,queueSummary,getLastJob,enqueueJob,getPairingCode:()=>pairingCode,dataDir,logPath,version};
 }
 
 async function runStandalone(){

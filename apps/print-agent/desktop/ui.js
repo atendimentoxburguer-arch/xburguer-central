@@ -53,6 +53,11 @@ function renderPrinters(list){
 async function loadPrinters(){
   try{
     printers=await window.xbAgent.printers();renderPrinters(printers);
+    if(!printers.length){
+      const d=await window.xbAgent.printerDiagnostics();
+      const attempts=(d?.attempts||[]).map(x=>x.source+': '+(x.error?'erro':x.count+' encontrada(s)')).join(' • ');
+      $('printers').innerHTML='<div class="empty"><b>Nenhuma impressora retornada pelas APIs do Windows.</b><br><span>'+(attempts||'Sem diagnóstico disponível.')+'</span><br><small>Você ainda pode mapear manualmente pelo X Burguer Central usando o nome exato da impressora.</small></div>';
+    }
     const select=$('testPrinter'),current=select.value;clear(select);
     if(!printers.length){const o=document.createElement('option');o.value='';o.textContent='Nenhuma impressora';select.append(o)}
     for(const p of printers){const o=document.createElement('option');o.value=p.name;o.textContent=p.name+(p.offline?' — Offline':'');select.append(o)}

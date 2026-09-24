@@ -108,6 +108,20 @@ Esta etapa ainda não usa certificado de assinatura de código. O Windows pode e
 
 Antes de distribuição ampla, a próxima melhoria de segurança é assinar o instalador e o executável com certificado de code signing.
 
+## Detecção de impressoras 2.3.0
+
+A versão 2.3.0 amplia a descoberta para cinco caminhos:
+
+1. Electron/Windows (`getPrintersAsync`);
+2. `Get-Printer`;
+3. `Win32_Printer` via CIM;
+4. .NET `System.Drawing.Printing.PrinterSettings`;
+5. Registro do Windows (HKCU/HKLM).
+
+Se todos os mecanismos retornarem vazio, o painel permite **mapeamento manual pelo nome exato da impressora**. Esse modo é válido porque a impressão RAW abre a fila diretamente pelo nome via `OpenPrinter`, sem depender da enumeração prévia.
+
+O Print Agent também mostra um diagnóstico dos métodos tentados quando nenhuma impressora é listada.
+
 ## Detecção de impressoras 2.2.0
 
 A versão 2.2.0 deixa de depender exclusivamente do PowerShell `Get-Printer`.

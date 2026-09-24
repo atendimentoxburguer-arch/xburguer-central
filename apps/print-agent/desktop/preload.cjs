@@ -3,6 +3,7 @@ const { contextBridge, ipcRenderer }=require('electron');
 contextBridge.exposeInMainWorld('xbAgent',{
   snapshot:()=>ipcRenderer.invoke('agent:snapshot'),
   printers:()=>ipcRenderer.invoke('agent:printers'),
+  printerDiagnostics:()=>ipcRenderer.invoke('agent:printer-diagnostics'),
   jobs:(limit=50)=>ipcRenderer.invoke('agent:jobs',limit),
   logs:(limit=40)=>ipcRenderer.invoke('agent:logs',limit),
   retry:id=>ipcRenderer.invoke('agent:retry',id),
