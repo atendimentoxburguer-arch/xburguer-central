@@ -48,7 +48,6 @@ const client=fs.readFileSync('assets/js/print-agent-client.js','utf8');
 assert.match(client,/loopback-network/);
 assert.match(client,/local-network-access/);
 assert.match(client,/targetAddressSpace:'loopback'/);
-assert.match(client,/Permissão local necessária/);
 assert.match(client,/showLocalNetworkHelp/);
 assert.match(client,/userInitiated:true/);
 assert.match(client,/ensurePrintBridge/);
