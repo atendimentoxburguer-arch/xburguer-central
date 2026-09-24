@@ -6,7 +6,7 @@ import { createPrintAgent } from '../apps/print-agent/server.mjs';
 
 const dataDir=fs.mkdtempSync(path.join(os.tmpdir(),'xb-print-agent-'));
 const port=17879;
-const agent=createPrintAgent({port,dataDir,version:'2.4.0-test',printerProvider:async()=>[{name:'X Burguer Thermal',displayName:'X Burguer Thermal',description:'Driver térmico',status:0,isDefault:true,options:{'printer-location':'USB001'}}]});
+const agent=createPrintAgent({port,dataDir,version:'2.5.0-test',printerProvider:async()=>[{name:'X Burguer Thermal',displayName:'X Burguer Thermal',description:'Driver térmico',status:0,isDefault:true,options:{'printer-location':'USB001'}}]});
 await agent.start();
 
 try{
@@ -32,7 +32,7 @@ try{
 
   const health=await fetch('http://127.0.0.1:'+port+'/health').then(r=>r.json());
   assert.equal(health.ok,true);
-  assert.equal(health.version,'2.4.0-test');
+  assert.equal(health.version,'2.5.0-test');
   assert.match(health.pairingCode,/^\d{6}$/);
 
   const denied=await fetch('http://127.0.0.1:'+port+'/jobs?limit=1');
