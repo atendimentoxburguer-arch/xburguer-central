@@ -196,11 +196,24 @@
     const profile=(state.settings.printing.profiles||[]).find(p=>p.id===profileId);if(!profile)return;
     if(profile.paper==='a4'){toast('O aplicativo de impressão silenciosa é destinado a térmicas 58/80 mm. Para A4 use o modo do navegador.','warning');return}
     if(!agentConfig().token){const paired=await pairPrintAgent();if(!paired)return}
-    const printers=await fetchPhysicalPrinters();if(!printers.length){toast('Nenhuma impressora instalada foi encontrada pelo agente.','warning');return}
-    const options=[{value:'',label:'Sem impressora física'}].concat(printers.map(p=>({value:p.name,label:p.name+(p.offline?' — Offline':'')})));
-    const v=await formDialog({title:'Mapear impressora física',subtitle:profile.name,fields:[{key:'device',label:'Impressora do Windows',type:'select',value:profile.deviceName||'',options}]});
+    const printers=await fetchPhysicalPrinters();
+    let v=null;
+    if(printers.length){
+      const options=[{value:'',label:'Sem impressora física'}].concat(printers.map(p=>({value:p.name,label:p.name+(p.offline?' — Offline':'')})));
+      v=await formDialog({title:'Mapear impressora física',subtitle:profile.name,fields:[
+        {key:'device',label:'Impressora do Windows',type:'select',value:profile.deviceName||'',options}
+      ]});
+    }else{
+      v=await formDialog({
+        title:'Mapear impressora manualmente',
+        subtitle:'O Windows não devolveu a lista ao agente. Digite exatamente o mesmo nome exibido em Configurações > Impressoras e scanners.',
+        fields:[{key:'device',label:'Nome exato da impressora no Windows',value:profile.deviceName||'',placeholder:'Ex.: EPSON TM-T20X Receipt',required:true}]
+      });
+    }
     if(!v)return;
-    profile.deviceName=v.device||'';save({render:false});globalThis.printerCenter?.();toast(profile.deviceName?'Impressora física vinculada.':'Mapeamento removido.','success');
+    profile.deviceName=String(v.device||'').trim();
+    save({render:false});globalThis.printerCenter?.();
+    toast(profile.deviceName?(printers.length?'Impressora física vinculada.':'Impressora vinculada manualmente. Faça uma impressão de teste.'):'Mapeamento removido.','success');
   }
 
   function agentJob(profile,document,event='manual'){
@@ -288,7 +301,8 @@
   function printerDeviceState(name){
     if(!name)return {state:'unmapped',label:'Não mapeada'};
     const printer=physicalPrinters.find(p=>p.name===name);
-    if(!printer)return {state:'unknown',label:'Não encontrada no Windows'};
+    if(!printer&&!physicalPrinters.length)return {state:'manual',label:'Mapeada manualmente'};
+    if(!printer)return {state:'unknown',label:'Não encontrada na lista'};
     if(printer.offline)return {state:'offline',label:'Offline'};
     return {state:'online',label:'Online'};
   }
@@ -302,8 +316,8 @@
         const info=printerDeviceState(el.dataset.printerDevice||'');
         el.dataset.deviceState=info.state;
         el.textContent=(el.dataset.devicePrefix||'Windows')+': '+(el.dataset.printerDevice||'—')+' • '+info.label;
-        el.classList.toggle('device-mapped',info.state==='online');
-        el.classList.toggle('device-unmapped',info.state!=='online');
+        el.classList.toggle('device-mapped',info.state==='online'||info.state==='manual');
+        el.classList.toggle('device-unmapped',info.state!=='online'&&info.state!=='manual');
       });
     }catch{}
   }
