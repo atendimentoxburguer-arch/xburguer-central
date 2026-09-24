@@ -112,6 +112,8 @@ Antes de distribuição ampla, a próxima melhoria de segurança é assinar o in
 
 O painel web usa `http://127.0.0.1:17871` para falar com o aplicativo instalado no mesmo computador.
 
+Como `127.0.0.1` pertence ao espaço de endereços **loopback**, as requisições Fetch do painel declaram `targetAddressSpace: 'loopback'`. Declarar `local` para esse endereço faz o navegador rejeitar a conexão por incompatibilidade de espaço de endereço.
+
 Navegadores Chromium atuais podem exigir uma permissão explícita de **Rede local / Loopback** quando um site HTTPS acessa um serviço local. O X Burguer Central verifica essa permissão e diferencia três situações:
 
 1. **Permissão necessária** — o navegador ainda precisa autorizar o acesso local.
