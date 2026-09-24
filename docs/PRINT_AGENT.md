@@ -1,3 +1,23 @@
+## Inicialização zero clique — Print Agent 2.5.0
+
+A versão 2.5.0 completa o modo desktop automático.
+
+Por padrão:
+
+- o Print Agent inicia com o Windows;
+- o X Burguer Central integrado é aberto automaticamente assim que o agente fica pronto;
+- a conexão interna IPC já entra ativa;
+- não é necessário clicar em Conectar ou Reconectar;
+- não é necessário informar código de pareamento;
+- se a internet ainda não estiver disponível no momento da inicialização, a janela integrada tenta carregar novamente após alguns segundos.
+
+O Print Agent possui duas preferências independentes:
+
+1. **Iniciar com o Windows**
+2. **Abrir X Burguer Central automaticamente**
+
+Ambas ficam ativadas por padrão e podem ser desativadas na tela do agente ou pelo menu da bandeja.
+
 ## Modo Desktop Automático — V40 / Print Agent 2.4.0
 
 O modo recomendado para operação diária passa a ser abrir o **X Burguer Central pelo próprio Print Agent**.
