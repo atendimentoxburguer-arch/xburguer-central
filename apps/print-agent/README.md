@@ -1,3 +1,12 @@
+## Inicialização automática — 2.5.0
+
+O agente mantém `startWithWindows=true` e `openCentralAutomatically=true` por padrão.
+
+Depois que o serviço local inicia, a BrowserWindow integrada do X Burguer Central é aberta automaticamente, inclusive quando o agente é iniciado com `--hidden` pelo Windows. Se a primeira navegação falhar por falta temporária de rede, o app tenta carregar o painel novamente.
+
+As duas preferências podem ser alteradas separadamente na interface do Print Agent.
+
+
 ## X Burguer Central integrado — 2.4.0
 
 O botão **Abrir X Burguer Central • Automático** abre o painel dentro de uma BrowserWindow segura do Print Agent.
