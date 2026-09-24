@@ -51,6 +51,9 @@
     try{bridgeWindow.blur();window.focus()}catch{}
     return bridgeWindow;
   }
+  function showPrintBridgeHelp(){
+    openModal('<div class="modal-head"><div><h2>Ativar ponte de impressão</h2><p class="dialog-subtitle">O Print Agent 2.1.0 usa uma pequena janela local para manter a impressão silenciosa.</p></div><button class="icon-btn" onclick="closeModal()" aria-label="Fechar">'+icon('x-lg')+'</button></div><div class="print-agent-help"><b>1.</b><span>Permita pop-ups para o X Burguer Central.</span><b>2.</b><span>Clique em <strong>Conectar agente</strong>. Uma pequena janela local será aberta.</span><b>3.</b><span>Mantenha essa janela aberta ou minimizada enquanto estiver usando a impressão automática.</span></div><div class="modal-foot"><button class="btn btn-primary" onclick="closeModal();pairPrintAgent()">'+icon('link-45deg')+'<span>Conectar agente</span></button></div>');
+  }
   function ensurePrintBridge({interactive=false}={}){
     if(bridgeWindow&&!bridgeWindow.closed)return Promise.resolve(true);
     if(!interactive)return Promise.reject(new Error('Print Bridge ainda não foi iniciado.'));
@@ -153,23 +156,25 @@
     return agentHealth;
   }
   async function pairPrintAgent(){
-    const online=await probePrintAgent({silent:true,userInitiated:true});
-    if(!online.online){
-      openModal('<div class="modal-head"><div><h2>Print Agent não encontrado</h2><p class="dialog-subtitle">O sistema não conseguiu acessar o aplicativo local na porta 17871.</p></div><button class="icon-btn" onclick="closeModal()" aria-label="Fechar">'+icon('x-lg')+'</button></div><div class="print-agent-help"><b>1.</b><span>Abra o <strong>X Burguer Print Agent</strong> e confirme que aparece <strong>Agente online</strong>.</span><b>2.</b><span>Clique em <strong>Abrir agente local</strong>. Se a página local abrir, o aplicativo está funcionando.</span><b>3.</b><span>Se a página não abrir, reinicie o Print Agent. Se aparecer erro da porta 17871, feche versões antigas ou reinicie o Windows.</span></div><div class="modal-foot"><button class="btn btn-outline" onclick="openPrintAgentDownload()">'+icon('download')+'<span>Baixar aplicativo</span></button><button class="btn btn-outline" onclick="openLocalPrintAgentPage()">'+icon('box-arrow-up-right')+'<span>Abrir agente local</span></button><button class="btn btn-primary" onclick="closeModal();pairPrintAgent()">'+icon('arrow-repeat')+'<span>Tentar novamente</span></button></div>');
-      return false;
-    }
-    const v=await formDialog({title:'Parear agente local',subtitle:'Informe o código de 6 dígitos exibido pelo X Burguer Print Agent.',fields:[{key:'code',label:'Código de pareamento',placeholder:'000000',required:true}]});
+    try{openPrintBridgeWindow()}
+    catch(error){toast(String(error.message||error),'warning');return false}
+    const v=await formDialog({title:'Conectar Print Agent',subtitle:'A ponte local foi aberta. Informe o código de 6 dígitos exibido pelo X Burguer Print Agent.',fields:[{key:'code',label:'Código de pareamento',placeholder:'000000',required:true}]});
     if(!v)return false;
     const code=String(v.code||'').replace(/\D/g,'').slice(0,6);
     if(code.length!==6){toast('Informe os 6 dígitos do código.','warning');return false}
     try{
-      const result=await agentRequest('/pair',{method:'POST',body:{code},auth:false,timeout:4000});
-      const cfg=agentConfig();cfg.token=String(result.token||'');cfg.pairedAt=new Date().toISOString();cfg.lastVersion=result.version||'';save({render:false});
-      await probePrintAgent({silent:true});
+      const result=await agentRequest('/pair',{method:'POST',body:{code},auth:false,timeout:6500,interactive:true});
+      const cfg=agentConfig();cfg.token=String(result.token||'');cfg.pairedAt=new Date().toISOString();cfg.lastVersion=result.version||bridgeVersion||'';save({render:false});
+      await probePrintAgent({silent:true,userInitiated:false});
       toast('Agente de impressão conectado.','success');
       globalThis.printerCenter?.();
       return true;
-    }catch(error){toast('Não foi possível parear: '+String(error.message||error),'error');return false}
+    }catch(error){
+      const message=String(error.message||error);
+      toast('Não foi possível parear: '+message,'error');
+      if(message.includes('pop-ups'))showPrintBridgeHelp();
+      return false;
+    }
   }
   async function unpairPrintAgent(){
     const ok=await confirmDialog('Desconectar agente','Remover a autorização deste navegador? O agente continuará instalado no computador.',{confirmLabel:'Desconectar',danger:true});
@@ -303,21 +308,19 @@
     }catch{}
   }
   function agentStatusCard(){
-    const cfg=agentConfig(),needsPermission=!bridgeReady&&(agentHealth.permission==='denied'||agentHealth.permission==='prompt');
-    const status=!cfg.enabled?'disabled':agentHealth.online&&agentHealth.authorized?'ready':agentHealth.online?'pair':needsPermission?'permission':'offline';
-    const label=status==='ready'?'Agente conectado':status==='pair'?'Agente encontrado':status==='permission'?'Permissão local necessária':status==='disabled'?'Agente desativado':'Agente offline';
-    const badge=status==='ready'?'b-green':status==='pair'||status==='permission'?'b-orange':'b-gray';
+    const cfg=agentConfig();
+    const status=!cfg.enabled?'disabled':agentHealth.online&&agentHealth.authorized?'ready':agentHealth.online?'pair':'offline';
+    const label=status==='ready'?'Agente conectado':status==='pair'?'Agente encontrado':status==='disabled'?'Agente desativado':'Print Agent aguardando conexão';
+    const badge=status==='ready'?'b-green':status==='pair'?'b-orange':'b-gray';
     const detail=status==='ready'
       ?'Versão '+esc(agentHealth.version||cfg.lastVersion||'—')+' • fila '+Number(agentHealth.queue?.queued||0)
       :status==='pair'?'Informe o código de pareamento para liberar a impressão silenciosa.'
-      :status==='permission'?'Permita que este site acesse o aplicativo local neste computador.'
-      :(agentHealth.error||'Inicie o X Burguer Print Agent neste computador.');
+      :status==='disabled'?'A impressão gerenciada está desativada.'
+      :'Clique em Conectar agente para abrir a ponte local e autorizar este navegador.';
     const action=status==='ready'
       ?'<button class="btn btn-outline btn-sm" onclick="showManagedPrintQueue()">Fila</button><button class="btn btn-outline btn-sm" onclick="unpairPrintAgent()">Desconectar</button>'
-      :status==='permission'
-        ?'<button class="btn btn-primary btn-sm" onclick="showLocalNetworkHelp()">Liberar acesso</button>'
-        :'<button class="btn btn-primary btn-sm" onclick="pairPrintAgent()">Conectar agente</button>';
-    return '<div class="print-agent-card" id="printAgentCard"><span class="print-agent-icon">'+icon(status==='ready'?'pc-display-horizontal':status==='permission'?'shield-lock':'printer')+'</span><div><b>'+label+'</b><span>'+esc(detail)+'</span></div><span class="badge '+badge+'">'+(status==='ready'?'Online':status==='pair'?'Parear':status==='permission'?'Permissão':status==='disabled'?'Off':'Offline')+'</span><div class="print-agent-actions">'+action+'<button class="icon-btn" onclick="probePrintAgent({silent:false,userInitiated:true})" title="Verificar agente">'+icon('arrow-clockwise')+'</button></div></div>';
+      :'<button class="btn btn-primary btn-sm" onclick="pairPrintAgent()">Conectar agente</button>';
+    return '<div class="print-agent-card" id="printAgentCard"><span class="print-agent-icon">'+icon(status==='ready'?'pc-display-horizontal':'printer')+'</span><div><b>'+label+'</b><span>'+detail+'</span></div><span class="badge '+badge+'">'+(status==='ready'?'Online':status==='pair'?'Parear':status==='disabled'?'Off':'Conectar')+'</span><div class="print-agent-actions">'+action+'<button class="icon-btn" onclick="probePrintAgent({silent:false,userInitiated:true})" title="Verificar agente">'+icon('arrow-clockwise')+'</button></div></div>';
   }
   function refreshAgentStatusCard(){
     const current=document.getElementById('printAgentCard');if(!current)return;
@@ -340,6 +343,7 @@
   globalThis.localNetworkPermission=localNetworkPermission;
   globalThis.ensurePrintBridge=ensurePrintBridge;
   globalThis.openPrintBridgeWindow=openPrintBridgeWindow;
+  globalThis.showPrintBridgeHelp=showPrintBridgeHelp;
   globalThis.bridgeRequest=bridgeRequest;
   globalThis.openPrintAgentDownload=openPrintAgentDownload;
   globalThis.fetchPhysicalPrinters=fetchPhysicalPrinters;
