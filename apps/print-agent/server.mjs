@@ -7,7 +7,7 @@ import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { renderEscPosJob, validateJob } from './lib/agent-core.mjs';
 
-export const AGENT_VERSION='2.1.0';
+export const AGENT_VERSION='2.2.0';
 export const AGENT_HOST='127.0.0.1';
 export const AGENT_PORT=17871;
 
@@ -31,6 +31,7 @@ export function createPrintAgent(options={}){
   const port=Number(options.port)||AGENT_PORT;
   const dataDir=options.dataDir||defaultDataDir();
   const rawPrintScript=options.rawPrintScript||path.join(moduleDir,'scripts','raw-print.ps1');
+  const printerProvider=typeof options.printerProvider==='function'?options.printerProvider:null;
   const configPath=path.join(dataDir,'config.json');
   const queuePath=path.join(dataDir,'queue.json');
   const logPath=path.join(dataDir,'agent.log.jsonl');
@@ -109,15 +110,49 @@ export function createPrintAgent(options={}){
       child.on('close',code=>code===0?finish(resolve,stdout):finish(reject,new Error(stderr.trim()||('PowerShell terminou com codigo '+code))));
     });
   }
+  function normalizePrinters(list=[]){
+    const seen=new Set();
+    return (Array.isArray(list)?list:[]).map(p=>({
+      name:String(p.name||p.Name||p.displayName||'').trim(),
+      driver:String(p.driver||p.DriverName||p.description||'').trim(),
+      port:String(p.port||p.PortName||p.options?.['printer-location']||'').trim(),
+      status:String(p.status??p.PrinterStatus??''),
+      offline:Boolean(p.offline??p.WorkOffline??false),
+      default:Boolean(p.default??p.Default??p.isDefault??false)
+    })).filter(p=>p.name&&!seen.has(p.name.toLowerCase())&&seen.add(p.name.toLowerCase()))
+      .sort((a,b)=>Number(b.default)-Number(a.default)||a.name.localeCompare(b.name,'pt-BR'));
+  }
+  async function powershellPrinters(){
+    const commands=[
+      "$ErrorActionPreference='Stop'; Get-Printer | Select-Object Name,DriverName,PortName,PrinterStatus,WorkOffline,Default | ConvertTo-Json -Compress",
+      "$ErrorActionPreference='Stop'; Get-CimInstance Win32_Printer | Select-Object Name,DriverName,PortName,PrinterStatus,WorkOffline,Default | ConvertTo-Json -Compress"
+    ];
+    let lastError=null;
+    for(const command of commands){
+      try{
+        const output=(await runPowerShell(['-Command',command])).trim();
+        if(!output)continue;
+        const parsed=JSON.parse(output),list=normalizePrinters(Array.isArray(parsed)?parsed:[parsed]);
+        if(list.length)return list;
+      }catch(error){lastError=error}
+    }
+    if(lastError)throw lastError;
+    return [];
+  }
   async function listPrinters(){
-    const command="$ErrorActionPreference='Stop'; Get-Printer | Select-Object Name,DriverName,PortName,PrinterStatus,WorkOffline,Default | ConvertTo-Json -Compress";
-    const output=(await runPowerShell(['-Command',command])).trim();
-    if(!output)return [];
-    const parsed=JSON.parse(output),list=Array.isArray(parsed)?parsed:[parsed];
-    return list.map(p=>({
-      name:String(p.Name||''),driver:String(p.DriverName||''),port:String(p.PortName||''),
-      status:String(p.PrinterStatus??''),offline:Boolean(p.WorkOffline),default:Boolean(p.Default)
-    })).filter(p=>p.name).sort((a,b)=>Number(b.default)-Number(a.default)||a.name.localeCompare(b.name,'pt-BR'));
+    const errors=[];
+    if(printerProvider){
+      try{
+        const nativeList=normalizePrinters(await printerProvider());
+        if(nativeList.length){log('info','Impressoras detectadas via Electron',{count:nativeList.length});return nativeList}
+      }catch(error){errors.push('Electron: '+String(error.message||error))}
+    }
+    try{
+      const psList=await powershellPrinters();
+      if(psList.length){log('info','Impressoras detectadas via Windows',{count:psList.length});return psList}
+    }catch(error){errors.push('PowerShell/CIM: '+String(error.message||error))}
+    if(errors.length)log('warn','Falha ao detectar impressoras',{error:errors.join(' | ')});
+    return [];
   }
   async function spoolRaw(job){
     const buffer=renderEscPosJob(job),temp=path.join(dataDir,'job-'+job.id+'.bin');
