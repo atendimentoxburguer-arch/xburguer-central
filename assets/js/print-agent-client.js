@@ -38,7 +38,10 @@
     const pending=bridgePending.get(msg.id);if(!pending)return;
     bridgePending.delete(msg.id);clearTimeout(pending.timer);
     if(msg.ok)pending.resolve(msg.data||{});
-    else pending.reject(new Error(msg.error||('Bridge respondeu HTTP '+(msg.status||0))));
+    else{
+      const error=new Error(msg.error||('Bridge respondeu HTTP '+(msg.status||0)));
+      error.bridgeResponse=true;error.status=Number(msg.status)||0;pending.reject(error);
+    }
   }
   window.addEventListener('message',handleBridgeMessage);
   function ensurePrintBridge(timeout=2200){
@@ -57,6 +60,9 @@
       bridgeReadyWaiters.push(waiter);
       const timer=setTimeout(()=>{
         const idx=bridgeReadyWaiters.indexOf(waiter);if(idx>=0)bridgeReadyWaiters.splice(idx,1);
+        bridgeReady=false;
+        try{bridgeFrame?.remove()}catch{}
+        bridgeFrame=null;
         reject(new Error('Print Bridge indisponível. Atualize o X Burguer Print Agent para a versão 2.1.0 ou superior.'));
       },timeout);
       waiter.resolve=value=>{clearTimeout(timer);resolve(value)};
@@ -112,7 +118,7 @@
   async function agentRequest(path,options={}){
     let bridgeError=null;
     try{return await bridgeRequest(path,options)}
-    catch(error){bridgeError=error}
+    catch(error){if(error?.bridgeResponse)throw error;bridgeError=error}
     try{return await directAgentRequest(path,options)}
     catch(error){
       const combined=new Error((bridgeError?.message?bridgeError.message+' ':'')+String(error.message||error));
