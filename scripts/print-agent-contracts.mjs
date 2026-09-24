@@ -55,6 +55,16 @@ assert.match(server,/getPrinterDiagnostics/);
 assert.match(desktopMain,/getPrintersAsync/);
 assert.match(desktopMain,/printerProvider:nativePrinterProvider/);
 
+const centralPreload=fs.readFileSync('apps/print-agent/desktop/central-preload.cjs','utf8');
+assert.match(desktopMain,/createCentralWindow/);
+assert.match(desktopMain,/central:agent-request/);
+assert.match(desktopMain,/partition:'persist:xburguer-central'/);
+assert.match(desktopMain,/desktopManaged:true/);
+assert.match(centralPreload,/xbPrintDesktop/);
+assert.match(client,/function desktopPrintManaged/);
+assert.match(client,/desktopAgentRequest/);
+assert.match(client,/Conexão automática pelo aplicativo/);
+
 const client=fs.readFileSync('assets/js/print-agent-client.js','utf8');
 assert.match(client,/loopback-network/);
 assert.match(client,/local-network-access/);
