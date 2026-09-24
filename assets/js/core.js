@@ -25,7 +25,7 @@ function initThemeUI(){
   applyTheme(document.documentElement.getAttribute('data-bs-theme')||'light');
 }
 
-const APP_VERSION='33.0.0';
+const APP_VERSION='34.0.0';
 const SCHEMA_VERSION=11;
 const LOGO='assets/img/logo.png';
 const STORAGE='xburguer_gestor_pro_v3';
