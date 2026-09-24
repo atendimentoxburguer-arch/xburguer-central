@@ -52,4 +52,9 @@ assert.match(client,/Permissão local necessária/);
 assert.match(client,/showLocalNetworkHelp/);
 assert.match(client,/userInitiated:true/);
 
+const sw=fs.readFileSync('service-worker.js','utf8');
+assert.match(sw,/url\.hostname==='127\.0\.0\.1'/);
+assert.match(sw,/url\.hostname==='localhost'/);
+assert.match(sw,/url\.port==='17871'\)return/);
+
 console.log('Print agent contracts OK');
