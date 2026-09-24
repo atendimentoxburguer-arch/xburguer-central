@@ -140,6 +140,7 @@ async function checkUpdates(){
 function registerIpc(){
   ipcMain.handle('agent:snapshot',()=>agent.getSnapshot());
   ipcMain.handle('agent:printers',()=>agent.listPrinters());
+  ipcMain.handle('agent:printer-diagnostics',()=>agent.getPrinterDiagnostics());
   ipcMain.handle('agent:jobs',(_e,limit)=>agent.getJobs(limit));
   ipcMain.handle('agent:logs',(_e,limit)=>agent.recentLogs(limit));
   ipcMain.handle('agent:retry',(_e,id)=>agent.retryJob(String(id||'')));
