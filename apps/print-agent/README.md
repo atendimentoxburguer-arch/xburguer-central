@@ -1,3 +1,14 @@
+## X Burguer Central integrado — 2.4.0
+
+O botão **Abrir X Burguer Central • Automático** abre o painel dentro de uma BrowserWindow segura do Print Agent.
+
+A janela usa `central-preload.cjs` para expor um canal IPC mínimo. O painel detecta `window.xbPrintDesktop` e usa esse transporte antes de qualquer bridge HTTP.
+
+Resultado: impressão local automática sem popup, CORS, LNA ou pareamento recorrente.
+
+O modo navegador permanece disponível como fallback.
+
+
 # X Burguer Print Agent — V2
 
 Aplicativo Windows da ETAPA 2 de impressão gerenciada do X Burguer Central.
