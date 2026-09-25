@@ -29,10 +29,21 @@ test('connected browser: migration, customer sale, waiter, admin sync and confli
  await admin.locator('#cloudPassword').fill('password-testing-1234');
  await admin.locator('#platformLogin button').click();
  const state=demoState();state.orders=[];state.inventoryMovements=[];state.settings.printing.enabled=false;
+ state.settings.printing.agent.token='old-origin-token-must-not-travel';
+ state.settings.printing.profiles[0].deviceName='MP-4200 TH';
+ state.settings.printing.profiles[1].deviceName='EPSON COZINHA';
+ const importBodies=[];
+ admin.on('request',request=>{if(request.url().endsWith('/api/state/import'))importBodies.push(request.postData())});
  await admin.locator('#cloudImport').setInputFiles({name:'backup.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify({state}))});
  await admin.getByRole('button',{name:'Validar e migrar'}).click();
  await admin.locator('#inicio.active').waitFor();
  assert.equal(await admin.locator('#platformGate').count(),0);
+ assert.equal(await admin.evaluate(()=>state.settings.printing.profiles[0].deviceName),'MP-4200 TH');
+ assert.equal(await admin.evaluate(()=>state.settings.printing.profiles[1].deviceName),'EPSON COZINHA');
+ assert.notEqual(await admin.evaluate(()=>state.settings.printing.agent.token),'old-origin-token-must-not-travel');
+ assert.equal(JSON.stringify((await db.query('SELECT document FROM store_state')).rows).includes('old-origin-token'),false);
+ assert.equal(importBodies.length,1);
+ assert.equal(importBodies[0].includes('old-origin-token'),false);
  // Initial connected state never goes into the old business localStorage slot.
  assert.equal(await admin.evaluate(()=>localStorage.getItem('xburguer_gestor_pro_v3')),null);
  await admin.evaluate(()=>go('config'));

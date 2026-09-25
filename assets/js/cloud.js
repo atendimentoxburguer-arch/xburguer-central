@@ -37,7 +37,11 @@
   screen.querySelector('form').onsubmit=async event=>{
    event.preventDefault();const button=screen.querySelector('button');button.disabled=true;
    try{const file=screen.querySelector('input').files[0];if(file.size>5*1024*1024)throw new Error('Backup maior que 5 MB.');
-    await client.request('state/import',{method:'POST',data:JSON.parse(await file.text())});await start()}
+    const parsed=JSON.parse(await file.text()),candidate=parsed.state||parsed;
+    const printing=structuredClone(candidate.settings?.printing||state.settings.printing);
+    printing.agent=structuredClone(state.settings.printing.agent);
+    await client.request('state/import',{method:'POST',data:withoutLocal(candidate)});
+    state.settings.printing=printing;state.printOutbox=[];persistWorkstation();await start()}
    catch(error){screen.querySelector('[role=alert]').textContent=error.message;button.disabled=false}
   };
  }
