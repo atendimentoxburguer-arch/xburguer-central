@@ -25,7 +25,7 @@ function initThemeUI(){
   applyTheme(document.documentElement.getAttribute('data-bs-theme')||'light');
 }
 
-const APP_VERSION='40.0.0';
+const APP_VERSION='42.0.0';
 const SCHEMA_VERSION=11;
 const LOGO='assets/img/logo.png';
 const STORAGE='xburguer_gestor_pro_v3';
@@ -39,6 +39,9 @@ const now=()=>new Date();
 const isoAgo=m=>new Date(Date.now()-m*60000).toISOString();
 const money=v=>(Number(v)||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
 const esc=s=>String(s??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
+function normalizeSearchText(value){
+ return String(value||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+}
 function safeProductImageSrc(value){
  const src=String(value||'').trim();
  if(!src)return '';
@@ -113,7 +116,7 @@ function defaultState(){return {schemaVersion:SCHEMA_VERSION,
  printOutbox:[]
 }}
 let state;
-let currentPage='pedidos';
+let currentPage='inicio';
 let orderFilter='all';let orderSearch='';let selectedCat='cat1';let pdvCat='all';let pdvCart=[];let pdvType='Balcão';let pdvDraftTable='';let pdvEditingId='';let pdvCustomerDraft='';let pdvPayDraft='PIX';let salaoTab='mesas';let chatId='w1';let performanceRange='today';let kdsStation='all';
 function mergeDefaults(base,value){
  if(Array.isArray(base)) return Array.isArray(value)?value:base;
@@ -474,4 +477,4 @@ function orderItemsText(o){return o.items.map(i=>`${i.q}x ${esc(product(i.p)?.na
 function typeIcon(t){return t==='Delivery'?icon('scooter'):t==='Mesa'?icon('table'):t==='Balcão'?icon('shop-window'):icon('shop')}
 function syncTables(){state.tables.forEach(t=>{const open=state.orders.some(o=>o.table===t.name&&!['done','cancelled'].includes(o.status));if(!open){if(t.status!=='free'){t.guests=0;t.server=''}t.status='free'}else if(t.status!=='closing')t.status='busy'})}
 function toggleStore(){state.settings.storeOpen=!state.settings.storeOpen;save();toast(state.settings.storeOpen?'Loja aberta para pedidos.':'Loja pausada para novos pedidos.')}
-function setHeader(){const on=state.settings.storeOpen,toggle=document.getElementById('storeToggle');toggle?.classList.toggle('on',on);toggle?.setAttribute('aria-checked',String(on));const st=document.getElementById('storeText');if(st)st.textContent=on?'Loja aberta':'Loja fechada';const foot=document.getElementById('footStore');if(foot){foot.textContent=on?'ABERTO':'FECHADO';foot.style.background=on?'#20be6a':'#c74444'}const count=document.getElementById('sideNewCount');if(count)count.textContent=state.orders.filter(o=>o.status==='analysis').length;globalThis.updateConnectionStatus?.()}
+function setHeader(){const on=state.settings.storeOpen,toggle=document.getElementById('storeToggle');toggle?.classList.toggle('on',on);toggle?.setAttribute('aria-checked',String(on));const st=document.getElementById('storeText');if(st)st.textContent=on?'Loja aberta':'Loja fechada';const foot=document.getElementById('footStore');if(foot){foot.textContent=on?'ABERTO':'FECHADO';foot.style.background=on?'#2563eb':'#475569'}const count=document.getElementById('sideNewCount');if(count)count.textContent=state.orders.filter(o=>o.status==='analysis').length;globalThis.updateConnectionStatus?.()}

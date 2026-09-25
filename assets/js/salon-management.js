@@ -50,9 +50,9 @@
     else body=renderSalonSettingsV22();
     root.innerHTML=
       '<div class="page-head">'+
-        '<div><h1>Gestão do salão</h1><p>Mesas, comandas, garçons e regras de atendimento em uma operação única.</p></div>'+
+        '<div><h1>Mesas e comandas</h1><p>Escolha uma mesa para lançar pedidos ou acompanhe as comandas abertas.</p></div>'+
         '<div class="page-head-actions">'+
-          (salaoTab==='mesas'?'<button class="btn btn-outline" onclick="manageTableQrV22()">'+icon('qr-code')+'<span>QR das mesas</span></button><button class="btn btn-primary" onclick="createTableV14()">'+icon('plus-lg')+'<span>Nova mesa</span></button>':
+          (salaoTab==='mesas'?'<button class="btn btn-outline" onclick="manageTablesV14()">'+icon('sliders2')+'<span>Organizar mesas</span></button><button class="btn btn-primary" onclick="go(\'pdv\')">'+icon('plus-lg')+'<span>Novo pedido</span></button>':
            salaoTab==='garcons'?'<button class="btn btn-primary" onclick="createWaiterV22()">'+icon('person-plus')+'<span>Novo garçom</span></button>':
            salaoTab==='comandas'?'<button class="btn btn-primary" onclick="go(\'pdv\')">'+icon('plus-lg')+'<span>Novo pedido</span></button>':'')+
         '</div>'+
@@ -93,8 +93,6 @@
       '<div class="toolbar-right">'+
         '<span class="status-legend"><span><i class="legend-dot free"></i>Livre</span><span><i class="legend-dot busy"></i>Ocupada</span><span><i class="legend-dot closing"></i>Fechando</span></span>'+
         '<button class="btn btn-outline" onclick="manageTableQrV22()">'+icon('qr-code')+'<span>QR das mesas</span></button>'+
-        '<button class="btn btn-outline" onclick="bulkCreateTablesV14()">'+icon('files')+'<span>Criar várias</span></button>'+
-        '<button class="btn btn-primary" onclick="go(\'pdv\')">'+icon('plus-lg')+'<span>Novo pedido</span></button>'+
       '</div>'+
     '</div>'+
     '<div class="table-zones" id="tableZones">'+areas.map(function(area){return tableZoneV14(area)}).join('')+'</div>';

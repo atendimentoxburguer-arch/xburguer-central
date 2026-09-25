@@ -15,7 +15,9 @@ A impressão silenciosa já possui um agente Windows separado, com fila, retry, 
 - `assets/css/domain-management.css`: estilos específicos de salão e cardápio.
 - `assets/css/print.css`: documentos de impressão.
 - `assets/js/core.js`: estado, persistência, migração, cálculos e utilitários.
-- `assets/js/ui.js`: navegação, modais, diálogos e feedback.
+- `assets/js/ui.js`: troca de telas, modais, diálogos e feedback.
+- `assets/js/navigation.js`: catálogo de funções, busca global e página inicial.
+- `assets/vendor/`: Inter e Bootstrap Icons locais, com as licenças.
 - `assets/js/integrations.js`: adaptadores externos permitidos no frontend atual.
 - `assets/js/orders.js`: pedidos.
 - `assets/js/sales.js`: PDV e checkout.

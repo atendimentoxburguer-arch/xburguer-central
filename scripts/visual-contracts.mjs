@@ -86,7 +86,8 @@ for(const selector of ['.nav button.active{','.page-head{','.btn-primary,.btn-bl
   if(!visualCurrent.includes(selector))throw new Error('Componente visual não padronizado: '+selector);
 }
 if(!domain.includes('Acabamento visual dos módulos de gestão'))throw new Error('Acabamento dos módulos de gestão ausente.');
-if(!html.includes('family=Inter:wght@400;500;600;700;800&display=swap'))throw new Error('Fonte Inter esperada não está carregada.');
+if(!app.includes('inter-latin-wght-normal.woff2')||!fs.existsSync('assets/vendor/inter/inter-latin-wght-normal.woff2'))throw new Error('Fonte Inter local ausente.');
+if(!html.includes('assets/vendor/bootstrap-icons/bootstrap-icons.css')||!fs.existsSync('assets/vendor/bootstrap-icons/bootstrap-icons.woff2'))throw new Error('Ícones locais ausentes.');
 if(/family=Manrope|font-family:\"Manrope\"/.test(html+app+domain+printAgent))throw new Error('Manrope não deve voltar à interface atual.');
 
 const bannedInterfaceColors=[
