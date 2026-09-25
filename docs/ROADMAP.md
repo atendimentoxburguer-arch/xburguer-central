@@ -1,5 +1,7 @@
 # Roadmap
 
+> A evolução conectada agora tem código e testes em `apps/platform/`. O andamento detalhado, as limitações e as dependências externas estão em [MIGRACAO_PLATAFORMA.md](MIGRACAO_PLATAFORMA.md). Os itens abaixo descrevem a arquitetura final; implementar a ponte de migração não conclui automaticamente a operação de produção.
+
 ## Base atual — concluída
 
 - [x] Shell web/PWA estável.

@@ -18,6 +18,7 @@ function orderDateV21(value){
 }
 function advanceOrder(id){
  const o=state.orders.find(o=>o.id===id);if(!o)return;
+ if(o.scheduledAt&&Date.parse(o.scheduledAt)>Date.now()){toast('Pedido agendado para '+new Date(o.scheduledAt).toLocaleString('pt-BR'),'warning');return}
  if(['done','cancelled'].includes(o.status)){toast('Este pedido já está encerrado.','warning');return}
  let printEvent='';
  if(o.status==='analysis'){o.status='production';printEvent='production'}
@@ -65,6 +66,7 @@ async function cancelOrder(id){
  toast('Pedido cancelado e estoque restaurado.','warning');
 }
 async function deleteOrderV21(id){
+ if(globalThis.XB_RUNTIME?.connected){toast("O histórico da loja conectada é preservado. Use Cancelar para encerrar o pedido.","info");return}
  const o=state.orders.find(o=>o.id===id);if(!o)return;
  if(o.status!=='cancelled'){
   toast('Para proteger caixa e estoque, somente pedidos cancelados podem ser excluídos.','warning');
@@ -166,7 +168,8 @@ function renderPedidos(){
 function orderCard(o){
  const late=orderAge(o)>35&&o.status==='production';
  const readyDelivery=o.status==='ready'&&o.type==='Delivery';
- const action=readyDelivery&&!o.courier
+ const scheduled=o.scheduledAt&&Date.parse(o.scheduledAt)>Date.now();
+ const action=scheduled?'<span class="badge b-blue">Agendado: '+esc(new Date(o.scheduledAt).toLocaleString("pt-BR"))+"</span>":readyDelivery&&!o.courier
   ?`<button class="btn btn-outline btn-sm" onclick="go('entregas')">Definir entregador ${icon('person-plus')}</button>`
   :`<button class="btn ${o.status==='ready'?'btn-green':'btn-blue'} btn-sm" onclick="advanceOrder('${o.id}')">${o.status==='analysis'?'Aceitar pedido':o.status==='production'?'Marcar pronto':'Finalizar pedido'} ${icon('arrow-right-short')}</button>`;
  const search=esc([o.id,o.customer,o.table,o.address].filter(Boolean).join(' ').toLowerCase());

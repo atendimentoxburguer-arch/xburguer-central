@@ -36,7 +36,7 @@ if(localStorageOwners.join(',')!=='core.js'){
   throw new Error('Persistência local deve ficar exclusivamente em core.js. Encontrado em: '+localStorageOwners.join(', '));
 }
 
-if(fetchOwners.some(file=>file!=='print-agent-client.js')){
+if(fetchOwners.some(file=>!['print-agent-client.js','platform-client.js'].includes(file))){
   throw new Error('fetch() direto fora do cliente do agente local: '+fetchOwners.join(', '));
 }
 

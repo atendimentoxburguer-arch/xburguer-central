@@ -21,6 +21,7 @@
   <link rel="stylesheet" href="assets/css/app.css">
   <link rel="stylesheet" href="assets/css/domain-management.css">
   <script>
+    globalThis.XB_RUNTIME=Object.freeze({connected:!!document.querySelector('meta[name="xb-platform"]')});
     (function(){
       try{
         var saved=localStorage.getItem('xburguer_theme');
@@ -29,6 +30,7 @@
       }catch(e){}
     })();
   </script>
+<link rel="stylesheet" href="assets/css/platform.css">
 </head>
 <body>
 <a class="skip-link" href="#appContent">Pular para o conteúdo</a>
@@ -77,6 +79,8 @@
 </div>
 <div class="modal" id="modal" role="dialog" aria-modal="true" aria-hidden="true"><div class="modal-card" id="modalCard" tabindex="-1"></div></div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script src="assets/js/runtime.js" defer></script>
+<script src="assets/js/platform-client.js" defer></script>
 <script src="assets/js/core.js" defer></script>
 <script src="assets/js/ui.js" defer></script>
 <script src="assets/js/navigation.js" defer></script>
@@ -91,6 +95,7 @@
 <script src="assets/js/reports.js" defer></script>
 <script src="assets/js/salon-management.js" defer></script>
 <script src="assets/js/menu-management.js" defer></script>
+<script src="assets/js/cloud.js" defer></script>
 <script src="assets/js/app.js" defer></script>
 <script src="assets/js/pwa.js" defer></script>
 </body>

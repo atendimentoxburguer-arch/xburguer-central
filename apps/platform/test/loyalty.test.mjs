@@ -1,0 +1,41 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { PGlite } from '@electric-sql/pglite';
+import { migrate } from '../src/db.mjs';
+import { demoState,cleanState } from '../src/state.mjs';
+import { reconcileLoyalty,redeemLoyalty,balance } from '../src/loyalty.mjs';
+
+test('cashback credits once, holds original rate, redeems once and reverses cancelled redemption',async t=>{
+ const engine=new PGlite();
+ const db={query:(sql,p)=>sql.includes('CREATE TABLE')?engine.exec(sql):engine.query(sql,p),transaction:fn=>engine.transaction(fn)};
+ t.after(()=>engine.close());await migrate(db);
+ const before=cleanState(demoState()),customerId=before.customers[0].id;
+ before.orders=[];
+ const order={id:'loyalty-order',customerId,type:'Balcão',items:[{p:'p1',q:1,price:100}],status:'done',
+  discount:0,surcharge:0,settlements:[{amountCents:10000,method:'PIX'}]};
+ let after=structuredClone(before);after.settings.cashback=3;after.orders.push(order);
+ await db.transaction(tx=>reconcileLoyalty(tx,before,after));
+ assert.equal(await balance(db,customerId),300);
+ await db.transaction(tx=>reconcileLoyalty(tx,after,after));
+ assert.equal(await balance(db,customerId),300);
+ const changed=structuredClone(after);changed.settings.cashback=10;
+ await db.transaction(tx=>reconcileLoyalty(tx,after,changed));
+ assert.equal(await balance(db,customerId),300);
+ after=changed;
+ after.orders.push({...structuredClone(order),id:'redeem-order',status:'analysis',settlements:[]});
+ await db.query('INSERT INTO store_state(id,document) VALUES(1,$1)',[JSON.stringify(after)]);
+ await redeemLoyalty(db,null,{orderId:'redeem-order',amountCents:200});
+ await redeemLoyalty(db,null,{orderId:'redeem-order',amountCents:200});
+ assert.equal(await balance(db,customerId),100);
+ const current=(await db.query('SELECT document FROM store_state')).rows[0].document;
+ const changedPrice=structuredClone(current);changedPrice.orders[1].items[0].price=1;
+ await assert.rejects(db.transaction(tx=>reconcileLoyalty(tx,current,changedPrice)),{status:409});
+ const cancelled=structuredClone(current);cancelled.orders[1].status='cancelled';
+ await db.transaction(tx=>reconcileLoyalty(tx,current,cancelled));
+ assert.equal(await balance(db,customerId),300);
+ await db.transaction(tx=>reconcileLoyalty(tx,cancelled,cancelled));
+ assert.equal(await balance(db,customerId),300);
+ const refunded=structuredClone(cancelled);refunded.orders[0].settlements=[];
+ await db.transaction(tx=>reconcileLoyalty(tx,cancelled,refunded));
+ assert.equal(await balance(db,customerId),0);
+});
