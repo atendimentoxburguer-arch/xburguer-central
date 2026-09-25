@@ -346,6 +346,7 @@ function normalize(){
  state.schemaVersion=SCHEMA_VERSION;
 }
 function load(){
+ if(globalThis.XB_RUNTIME?.connected){state=defaultState();try{const local=JSON.parse(localStorage.getItem("xburguer_workstation")||"null");if(local?.printing)state.settings.printing=local.printing;if(local?.printOutbox)state.printOutbox=local.printOutbox}catch{}normalize();return}
  const defaults=defaultState();
  let migrated=false;
  try{
@@ -373,6 +374,7 @@ function load(){
  }
 }
 function replaceState(nextState,options={}){
+ if(globalThis.XB_RUNTIME?.connected)throw new Error("A restauração conectada exige procedimento no servidor.");
  state=nextState;
  normalize();
  try{localStorage.setItem(STORAGE,JSON.stringify(state))}catch(e){console.warn('Falha ao persistir estado substituído',e)}
@@ -380,6 +382,7 @@ function replaceState(nextState,options={}){
  return state;
 }
 function save(options={}){
+ if(globalThis.XB_RUNTIME?.connected)return globalThis.XBCloud.save(options);
  try{
   state.schemaVersion=SCHEMA_VERSION;
   localStorage.setItem(STORAGE,JSON.stringify(state));
@@ -402,6 +405,7 @@ function exportBackup(){
  setTimeout(()=>URL.revokeObjectURL(url),1000);toast('Backup exportado.','success');
 }
 function importBackup(){
+ if(globalThis.XB_RUNTIME?.connected){toast("A loja já está conectada. A restauração deve ser feita no servidor.","warning");return}
  const input=document.createElement('input');input.type='file';input.accept='application/json,.json';
  input.onchange=async()=>{
   const file=input.files?.[0];if(!file)return;
@@ -478,3 +482,13 @@ function typeIcon(t){return t==='Delivery'?icon('scooter'):t==='Mesa'?icon('tabl
 function syncTables(){state.tables.forEach(t=>{const open=state.orders.some(o=>o.table===t.name&&!['done','cancelled'].includes(o.status));if(!open){if(t.status!=='free'){t.guests=0;t.server=''}t.status='free'}else if(t.status!=='closing')t.status='busy'})}
 function toggleStore(){state.settings.storeOpen=!state.settings.storeOpen;save();toast(state.settings.storeOpen?'Loja aberta para pedidos.':'Loja pausada para novos pedidos.')}
 function setHeader(){const on=state.settings.storeOpen,toggle=document.getElementById('storeToggle');toggle?.classList.toggle('on',on);toggle?.setAttribute('aria-checked',String(on));const st=document.getElementById('storeText');if(st)st.textContent=on?'Loja aberta':'Loja fechada';const foot=document.getElementById('footStore');if(foot){foot.textContent=on?'ABERTO':'FECHADO';foot.style.background=on?'#2563eb':'#475569'}const count=document.getElementById('sideNewCount');if(count)count.textContent=state.orders.filter(o=>o.status==='analysis').length;globalThis.updateConnectionStatus?.()}
+
+function persistWorkstation(){try{localStorage.setItem("xburguer_workstation",JSON.stringify({printing:state.settings.printing,printOutbox:state.printOutbox}))}catch(e){console.warn("Falha ao salvar configuração local",e)}}
+function stashRejectedChange(candidate){try{const copy=structuredClone(candidate);if(copy.settings?.printing)delete copy.settings.printing;copy.printOutbox=[];localStorage.setItem(BACKUP_PREFIX+"alteracao_pendente",JSON.stringify(copy))}catch(e){console.warn("Falha ao preservar alteração",e)}}
+function exportRejectedChange(){
+ const raw=localStorage.getItem(BACKUP_PREFIX+'alteracao_pendente');
+ if(!raw){toast('Não há alteração pendente preservada neste aparelho.','info');return}
+ const url=URL.createObjectURL(new Blob([raw],{type:'application/json'})),link=document.createElement('a');
+ link.href=url;link.download='xburguer-alteracao-nao-confirmada.json';link.click();
+ setTimeout(()=>URL.revokeObjectURL(url),1000);
+}

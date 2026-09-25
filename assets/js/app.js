@@ -1,6 +1,7 @@
 /* Bootstrap da aplicação */
 function enhanceTables(){document.querySelectorAll('.page.active .table:not([data-enhanced])').forEach(table=>{table.dataset.enhanced='1';if(table.parentElement?.classList.contains('table-shell'))return;const wrap=document.createElement('div');wrap.className='table-shell';table.parentNode.insertBefore(wrap,table);wrap.appendChild(table)})}
 function renderPage(id){
+ if(globalThis.XB_RUNTIME?.connected&&!globalThis.XBCloud.isActive())return;
  updatePageTitle(id);
  const renderer={inicio:renderHome,pedidos:renderPedidos,pdv:()=>renderPdv(),salao:renderSalao,cardapio:renderCardapio,entregas:renderEntregas,performance:renderPerformance,kds:renderKds,clientes:renderClientes,marketing:renderMarketing,atendimento:renderAtendimento,caixa:renderCaixa,estoque:renderEstoque,financeiro:renderFinanceiro,equipe:renderEquipe,relatorios:renderRelatorios,config:renderConfig}[id];
  if(!renderer)return;
@@ -12,7 +13,7 @@ function renderPage(id){
  }
 }
 function renderAll(){syncTables();setHeader();renderPage(currentPage)}
-function updateConnectionStatus(){const el=document.getElementById('connectionStatus');if(!el)return;const online=navigator.onLine;el.classList.toggle('is-offline',!online);el.innerHTML=`<i class="bi ${online?'bi-cloud-check':'bi-cloud-slash'}" aria-hidden="true"></i> ${online?'Dados locais':'Sem internet'}`;el.title=online?'Aplicação disponível; dados continuam locais neste navegador.':'Sem internet; funções locais continuam disponíveis.'}
+function updateConnectionStatus(){const el=document.getElementById('connectionStatus');if(!el)return;const online=navigator.onLine;if(globalThis.XB_RUNTIME?.connected){el.textContent=globalThis.XBCloud.status();el.title='Dados compartilhados com confirmação do servidor.';return}el.classList.toggle('is-offline',!online);el.innerHTML=`<i class="bi ${online?'bi-cloud-check':'bi-cloud-slash'}" aria-hidden="true"></i> ${online?'Dados locais':'Sem internet'}`;el.title=online?'Aplicação disponível; dados continuam locais neste navegador.':'Sem internet; funções locais continuam disponíveis.'}
 function operationalAlerts(){
  const alerts=[];
  const analysis=state.orders.filter(o=>o.status==='analysis').length;
@@ -48,4 +49,6 @@ let shownGlobalError=false;
 function reportGlobalError(error){console.error('Erro de interface:',error);if(!shownGlobalError){shownGlobalError=true;toast('Ocorreu um erro inesperado. A área afetada pode ser recarregada sem perder os dados locais.','error')}}
 window.addEventListener('error',event=>reportGlobalError(event.error||event.message));
 window.addEventListener('unhandledrejection',event=>reportGlobalError(event.reason));
-initThemeUI();load();globalThis.initPrintAgentClient?.();const initial=location.hash.slice(1);if(initial&&document.getElementById(initial))currentPage=initial;syncTables();setHeader();go(currentPage,{historyMode:'replace'});updateConnectionStatus();
+initThemeUI();if(globalThis.XB_RUNTIME?.connected){globalThis.XBCloud.start()}else{load();globalThis.initPrintAgentClient?.();const initial=location.hash.slice(1);if(initial&&document.getElementById(initial))currentPage=initial;syncTables();setHeader();go(currentPage,{historyMode:'replace'});updateConnectionStatus();
+
+}

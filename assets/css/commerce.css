@@ -1,0 +1,24 @@
+/* Fluxos externos — cardápio público e atendimento da equipe */
+body{margin:0;background:var(--bg,#f1f5f9);color:var(--text,#0f172a)}
+.commerce{max-width:1240px;margin:auto;padding:24px}
+.commerce-header{display:flex;gap:20px;align-items:center;margin-bottom:28px}
+.commerce-header img{width:64px;height:64px;object-fit:contain}
+.commerce-header h1{margin:0;font-size:28px}.commerce-header p{margin:8px 0}
+.commerce-layout{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:24px;align-items:start}
+.commerce-products{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.commerce-product{display:flex;flex-direction:column;gap:12px;min-width:0}
+.commerce-product h3{font-size:17px;margin:0;overflow-wrap:anywhere}
+.commerce-product .btn{margin-top:auto}
+.commerce-product img{height:128px;object-fit:contain;width:100%;border-radius:12px}
+.commerce-product .emoji{font-size:44px}
+.commerce-cart{position:sticky;top:16px}
+.commerce .field{margin:14px 0}.commerce .field input,.commerce .field select,.commerce .field textarea{width:100%;box-sizing:border-box}
+.cart-line{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid #e2e8f0}
+.cart-line>span{min-width:0;overflow-wrap:anywhere}.cart-line button{flex-shrink:0}
+.staff-orders{display:grid;gap:16px}.staff-orders article p{overflow-wrap:anywhere}
+.staff-product{display:flex;gap:12px;align-items:center;margin:12px 0}.staff-product label{flex:1}.staff-product input{width:70px;border:1px solid #cbd5e1;border-radius:8px;padding:10px;font:inherit}
+#shopMessage,#staffMessage{white-space:pre-wrap;overflow-wrap:anywhere}
+.commerce [hidden]{display:none!important}
+.cart-jump{display:none}
+@media(max-width:800px){.commerce{padding:16px 16px 88px}.commerce-layout{grid-template-columns:1fr}.commerce-cart{position:static}.commerce-header h1{font-size:23px}.cart-jump{display:block;position:fixed;bottom:16px;left:16px;right:16px;z-index:20;width:calc(100% - 32px);box-shadow:0 8px 24px #0f172a30}.cart-jump[hidden]{display:none}}
+@media(max-width:480px){.commerce-products{grid-template-columns:1fr}.commerce-product{display:grid;grid-template-columns:56px minmax(0,1fr);gap:8px 12px}.commerce-product .emoji,.commerce-product img{grid-row:1 / 4;grid-column:1;width:56px;height:64px;align-self:center}.commerce-product h3{font-size:15px}.commerce-product .btn{grid-column:2;justify-self:start;font-size:13px;padding:8px 12px}.commerce-product strong{font-size:14px}}

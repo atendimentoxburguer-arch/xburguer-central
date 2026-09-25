@@ -6,6 +6,8 @@ O sistema deve evoluir por substituição controlada, não por acúmulo. Uma cam
 
 ## Arquitetura atual
 
+O servidor opcional em `apps/platform/` hospeda o mesmo shell e fornece a fonte de dados PostgreSQL. A ponte de migração mantém o estado legado em JSONB revisionado, com tabelas próprias para autenticação, auditoria, idempotência, cupons, cashback e mensagens. Isso antecede a separação relacional por domínio descrita abaixo. O modo local continua no GitHub Pages; o modo conectado nunca grava dados de negócio na antiga chave local nem usa a demonstração como fallback. Ver `docs/MIGRACAO_PLATAFORMA.md`.
+
 ```text
 Browser / PWA
 ├── UI e módulos por domínio
@@ -48,7 +50,7 @@ Nenhum módulo de feature deve gravar diretamente no `localStorage`.
 
 `integrations.js` concentra adaptadores externos estritamente necessários enquanto a aplicação ainda é estática. Os módulos de tela recebem apenas funções estáveis e não conhecem URL ou fornecedor.
 
-`print-agent-client.js` é o adaptador autorizado a usar `fetch()` para o agente local de impressão em loopback. Quando o backend entrar, integrações de pagamento, fiscal e mensagens permanecerão fora do navegador.
+`print-agent-client.js` é o adaptador autorizado a usar `fetch()` para o agente local de impressão em loopback. `platform-client.js` centraliza HTTP para a API de mesma origem. Integrações de pagamento, fiscal e mensagens permanecem fora do navegador.
 
 ## Arquitetura alvo de produção
 

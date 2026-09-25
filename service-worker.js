@@ -1,5 +1,5 @@
-const CACHE='xburguer-central-ui-42-2';
-const APP_SHELL=['./assets/vendor/bootstrap-icons/bootstrap-icons.css','./assets/vendor/bootstrap-icons/bootstrap-icons.woff2','./assets/vendor/inter/inter-latin-wght-normal.woff2','./','./index.html','./manifest.webmanifest','./assets/css/app.css','./assets/css/domain-management.css','./assets/css/print.css','./assets/img/logo.png','./assets/img/icon.svg','./assets/img/icon-maskable.svg','./assets/js/core.js','./assets/js/ui.js','./assets/js/navigation.js','./assets/js/integrations.js','./assets/js/print-agent-client.js','./assets/js/printing.js','./assets/js/orders.js','./assets/js/sales.js','./assets/js/operations.js','./assets/js/crm.js','./assets/js/management.js','./assets/js/reports.js','./assets/js/salon-management.js','./assets/js/menu-management.js','./assets/js/app.js','./assets/js/pwa.js'];
+const CACHE='xburguer-central-platform-43-1';
+const APP_SHELL=['./assets/css/platform.css','./assets/js/runtime.js','./assets/js/platform-client.js','./assets/js/cloud.js','./assets/vendor/bootstrap-icons/bootstrap-icons.css','./assets/vendor/bootstrap-icons/bootstrap-icons.woff2','./assets/vendor/inter/inter-latin-wght-normal.woff2','./','./index.html','./manifest.webmanifest','./assets/css/app.css','./assets/css/domain-management.css','./assets/css/print.css','./assets/img/logo.png','./assets/img/icon.svg','./assets/img/icon-maskable.svg','./assets/js/core.js','./assets/js/ui.js','./assets/js/navigation.js','./assets/js/integrations.js','./assets/js/print-agent-client.js','./assets/js/printing.js','./assets/js/orders.js','./assets/js/sales.js','./assets/js/operations.js','./assets/js/crm.js','./assets/js/management.js','./assets/js/reports.js','./assets/js/salon-management.js','./assets/js/menu-management.js','./assets/js/app.js','./assets/js/pwa.js'];
 
 async function put(cacheName,request,response){
   if(!response||(!response.ok&&response.type!=='opaque'))return response;
@@ -32,6 +32,7 @@ self.addEventListener('activate',event=>{
 self.addEventListener('fetch',event=>{
   if(event.request.method!=='GET')return;
   const url=new URL(event.request.url);
+  if(url.pathname.startsWith('/api/')||url.pathname.endsWith('/runtime.js'))return;
   if((url.hostname==='127.0.0.1'||url.hostname==='localhost')&&url.port==='17871')return;
   if(event.request.mode==='navigate'){
     event.respondWith(networkFirst(event.request,'./index.html'));

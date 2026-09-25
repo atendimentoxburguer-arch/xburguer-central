@@ -119,6 +119,7 @@
   }
 
   async function printOrderWithProfile(orderId,purpose,profileId='',station='all',event='manual'){
+    if(globalThis.XB_RUNTIME?.connected&&!await globalThis.XBCloud.flush())return false;
     const order=state.orders.find(o=>o.id===orderId);
     if(!order){toast('Pedido não encontrado.','error');return false}
     if(!printSettings()?.enabled){toast('A impressão está desativada nas configurações.','warning');return false}
@@ -156,6 +157,7 @@
     return (printSettings()?.profiles||[]).filter(p=>profileMatchesEvent(p,event,order));
   }
   async function dispatchAutoPrintEvent(event,order){
+    if(globalThis.XB_RUNTIME?.connected&&!await globalThis.XBCloud.flush())return 0;
     if(!printSettings()?.enabled||!order)return 0;
     const targets=autoProfilesForEvent(event,order);
     if(!targets.length)return 0;

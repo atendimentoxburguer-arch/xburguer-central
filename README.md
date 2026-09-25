@@ -4,6 +4,8 @@ Sistema operacional da X Burguer para pedidos, PDV, salão/mesas, cardápio, coz
 
 ## Estado atual
 
+A migração conectada está em desenvolvimento em `apps/platform/`: PostgreSQL, login, cardápio público, equipe no celular, cupons, cashback e adaptador oficial de mensagens. Ela só é ativada quando hospedada junto ao servidor. Consulte [o estado real da migração](docs/MIGRACAO_PLATAFORMA.md) e [a instalação do servidor](apps/platform/README.md). Pagamentos online, fiscal, IA e demais integrações ainda não estão concluídos.
+
 A aplicação web continua funcionando como protótipo operacional instalável (PWA), publicada pelo GitHub Pages. Os dados de negócio ainda são persistidos localmente no navegador e, por isso, esta versão não deve ser tratada como backend transacional de produção.
 
 A impressão silenciosa já possui um agente Windows separado, com fila, retry, mapeamento de impressoras e suporte ao fluxo térmico.

@@ -62,3 +62,38 @@ jobs:
           npx playwright install --with-deps chromium
       - name: Check screens and critical interactions
         run: node scripts/browser-check.cjs
+      - name: Install connected platform dependencies
+        run: npm ci --prefix apps/platform
+      - name: Check migration, connected POS and public ordering in browser
+        run: node scripts/platform-browser-check.cjs
+
+  platform-checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: xburguer
+          POSTGRES_PASSWORD: ci-only-password
+          POSTGRES_DB: xburguer_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U xburguer -d xburguer_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: apps/platform/package-lock.json
+      - run: npm ci --prefix apps/platform
+      - name: Test platform against PostgreSQL
+        working-directory: apps/platform
+        env:
+          TEST_DATABASE_URL: postgres://xburguer:ci-only-password@localhost:5432/xburguer_test
+        run: npm test

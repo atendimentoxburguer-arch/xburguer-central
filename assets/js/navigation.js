@@ -24,6 +24,16 @@ const QUICK_COMMANDS=[
  {id:'commands',label:'Fechar uma mesa',icon:'receipt-cutoff',group:'Ação',description:'Escolher uma comanda aberta para conferir e pagar',keywords:'fechar conta mesa receber pagamento comanda',run:()=>{salaoTab='comandas';go('salao')}},
  {id:'times',label:'Tempos de atendimento',icon:'clock',group:'Ação',description:'Ajustar os prazos de balcão e delivery',keywords:'tempo espera prazo minutos',run:()=>settingsTimes()}
 ];
+if(globalThis.XB_RUNTIME?.connected){
+ [
+  ['shop','Abrir cardápio online','shop','Compartilhar o cardápio com clientes','link loja comprar público'],
+  ['coupon','Criar cupom online','ticket','Desconto com validade e limite de usos','promoção codigo cupom'],
+  ['loyalty','Consultar e resgatar cashback','gift','Saldos dos clientes e resgate em pedidos','fidelidade saldo pontos'],
+  ['user','Criar acesso da equipe','person-plus','Login e permissões no servidor','senha garçom cozinha usuario'],
+  ['table','Criar link da mesa','qr-code','Pedido do cliente vinculado à mesa','qr code mesa autoatendimento'],
+  ['audit','Consultar auditoria','clock-history','Últimas alterações registradas no servidor','histórico alterações']
+ ].forEach(([id,label,icon,description,keywords])=>QUICK_COMMANDS.push({id:'cloud-'+id,label,icon,description,keywords,group:'Conectado',run:()=>XBCloud.manage(id)}));
+}
 function buildNavigation(){
  const root=document.getElementById('navigation');if(!root)return;
  root.innerHTML=['Central','Atendimento','Gestão','Relacionamento','Sistema'].map(group=>
