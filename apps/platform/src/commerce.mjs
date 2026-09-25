@@ -37,7 +37,7 @@ export async function quoteCart(tx,state,input,lock=false) {
     requireThat(coupon && coupon.active && new Date(coupon.expires_at).getTime() > Date.now() &&
       coupon.uses < coupon.max_uses && subtotal >= coupon.minimum_cents, 'Cupom inválido, vencido ou indisponível.');
     discount = Math.round(subtotal*coupon.percent/100);
-    
+
   }
   const fee = input.type === 'Delivery' ? cents(state.settings.deliveryFee) :
     input.type === 'Mesa' ? Math.round(subtotal*Number(state.settings.serviceFee || 0)/100) : 0;
