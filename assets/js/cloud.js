@@ -83,11 +83,21 @@
  }
  async function manage(action){
   const actions=action?{action}:await formDialog({title:'Plataforma conectada',fields:[{key:'action',label:'O que deseja fazer?',type:'select',
-   options:[{value:'shop',label:'Abrir cardápio público'},{value:'user',label:'Criar acesso da equipe'},{value:'coupon',label:'Criar cupom online'},{value:'loyalty',label:'Saldos e resgate de cashback'},{value:'table',label:'Criar link de pedido da mesa'},{value:'audit',label:'Consultar auditoria'},{value:'recovery',label:'Exportar alteração que não foi confirmada'},{value:'logout',label:'Sair da conta'}]}]});
+   options:[{value:'shop',label:'Abrir cardápio público'},{value:'user',label:'Criar acesso da equipe'},{value:'users',label:'Consultar e desativar acessos'},{value:'coupon',label:'Criar cupom online'},{value:'loyalty',label:'Saldos e resgate de cashback'},{value:'table',label:'Criar link de pedido da mesa'},{value:'audit',label:'Consultar auditoria'},{value:'recovery',label:'Exportar alteração que não foi confirmada'},{value:'logout',label:'Sair da conta'}]}]});
   if(!actions)return;
   try{
    if(actions.action==='shop'){window.open('loja.html','_blank','noopener');return}
    if(actions.action==='recovery'){exportRejectedChange();return}
+   if(actions.action==='users'){
+    const users=await client.request('users');
+    openModal('<div class="modal-head"><h2>Acessos ao sistema</h2><button class="icon-btn" onclick="closeModal()">×</button></div><p>Desativar um acesso encerra suas sessões. O cadastro operacional do colaborador é preservado.</p><div id="cloudUsers" class="table-shell"><table class="table"><thead><tr><th>Nome</th><th>Perfil</th><th>Status</th><th>Ação</th></tr></thead><tbody>'+users.map(u=>'<tr><td>'+esc(u.name)+'<br><small>'+esc(u.email)+'</small></td><td>'+esc({admin:'Administrador',cashier:'Atendimento',waiter:'Garçom',kitchen:'Cozinha'}[u.role])+'</td><td>'+(u.active?'Ativo':'Desativado')+'</td><td>'+(u.active?'<button class="btn btn-outline btn-sm" data-user="'+esc(u.id)+'">Desativar</button>':'—')+'</td></tr>').join('')+'</tbody></table></div>');
+    document.getElementById('cloudUsers').onclick=async event=>{
+     const id=event.target.closest('[data-user]')?.dataset.user;if(!id)return;
+     if(!await confirmDialog('Desativar acesso?','As sessões deste usuário serão encerradas.'))return;
+     try{await client.request('users/deactivate',{method:'POST',data:{id}});await manage('users')}
+     catch(error){toast(error.message,'error')}
+    };return;
+   }
    if(actions.action==='loyalty'){
     const customers=await client.request('loyalty');
     const orders=state.orders.filter(o=>!['done','cancelled'].includes(o.status)&&o.customerId&&!(o.settlements||[]).length);
