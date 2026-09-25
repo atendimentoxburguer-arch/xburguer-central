@@ -30,7 +30,7 @@ A interface deve evitar textos pequenos demais e não deve usar mais de uma fam�
 
 - Sidebar fixa entre 228 e 248 px.
 - A largura da sidebar acompanha a coluna do shell, sem medidas conflitantes.
-- Navegação agrupada em Operação, Relacionamento e Gestão, com rótulos curtos.
+- Navegação agrupada em Atendimento, Gestão, Relacionamento e Sistema, com rótulos curtos e uma página inicial que descreve todas as funções.
 - Topbar próxima de 64 px.
 - Conteúdo com largura fluida até 1920 px.
 - Espaçamentos principais entre 8 e 24 px.
@@ -42,10 +42,10 @@ A interface deve evitar textos pequenos demais e não deve usar mais de uma fam�
 ## Componentes
 
 ### Sidebar
-- Azul-marinho muito escuro.
-- Ícones em azul claro.
-- Item ativo em azul principal.
-- Hover discreto, sem deslocamento.
+- Superfície clara, adaptada ao tema escuro.
+- Ícones neutros e seleção com fundo azul suave e marcador lateral.
+- Busca sempre disponível; apenas a lista de funções tem rolagem própria.
+- Diretório, navegação, contexto da barra superior e busca usam o mesmo catálogo.
 
 ### Cards
 - Fundo branco.
@@ -119,6 +119,16 @@ Princípios aplicados à implementação existente, sem introduzir uma bibliotec
 
 ## Verificação no navegador
 
-O workflow Quality executa `scripts/browser-check.cjs` com Playwright em Chromium. Verifica as 16 áreas em seis larguras (390, 768, 1024, 1366, 1440 e 1920 px), nos dois temas, além de rascunho no PDV, diálogo de ajuste, checkout de mesa e menu móvel. O teste usa apenas dados demonstrativos em um contexto isolado.
+O workflow Quality executa `scripts/browser-check.cjs` com Playwright em Chromium. Verifica as 16 áreas e o início em seis larguras (390, 768, 1024, 1366, 1440 e 1920 px), nos dois temas (204 combinações), além de busca global, busca de produtos, proteção do rascunho, criação de pedido com verificação de estoque, diálogo de ajuste, checkout de mesa e menu móvel. O teste usa apenas dados demonstrativos em um contexto isolado.
 
 Execução local: instalar Playwright 1.62.1 e seu Chromium e executar `node scripts/browser-check.cjs`. `BROWSER_CHANNEL=msedge` permite testar com Edge instalado; `UI_SCREENSHOTS` define uma pasta opcional de capturas. `PLAYWRIGHT_MODULE` permite usar uma instalação externa das ferramentas de teste.
+
+## Encontrar e executar tarefas
+
+O início apresenta a situação da operação, atalhos e um diretório com descrições claras. A busca por botão, Ctrl K ou / reconhece termos sem acentos e sinônimos: “impressora” encontra a central de impressão; “fechar mesa” abre as comandas. Ela navega ou abre formulários, sem executar operações financeiras automaticamente e sem substituir formulários já abertos.
+
+Pedidos mostram itens e ações explícitas, com preferências fora da fila. No PDV, catálogo e busca ficam à esquerda; pedido, identificação, total e criação ficam à direita. Pagamento, desconto, acréscimo e divisão ficam em um grupo expansível que preserva seu estado durante a edição. Limpar um rascunho exige confirmação; navegar entre áreas mantém os itens em memória.
+
+## Recursos locais
+
+Inter variável (Fontsource 5.2.5, SIL OFL) e Bootstrap Icons 1.11.3 (MIT) são distribuídos em assets/vendor, com licenças e inclusão no cache do aplicativo. São os mesmos recursos visuais já utilizados, agora sem depender de CDNs para renderizar a interface. O teste de navegador bloqueia serviços externos.

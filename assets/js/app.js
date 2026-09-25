@@ -2,7 +2,7 @@
 function enhanceTables(){document.querySelectorAll('.page.active .table:not([data-enhanced])').forEach(table=>{table.dataset.enhanced='1';if(table.parentElement?.classList.contains('table-shell'))return;const wrap=document.createElement('div');wrap.className='table-shell';table.parentNode.insertBefore(wrap,table);wrap.appendChild(table)})}
 function renderPage(id){
  updatePageTitle(id);
- const renderer={pedidos:renderPedidos,pdv:()=>renderPdv(),salao:renderSalao,cardapio:renderCardapio,entregas:renderEntregas,performance:renderPerformance,kds:renderKds,clientes:renderClientes,marketing:renderMarketing,atendimento:renderAtendimento,caixa:renderCaixa,estoque:renderEstoque,financeiro:renderFinanceiro,equipe:renderEquipe,relatorios:renderRelatorios,config:renderConfig}[id];
+ const renderer={inicio:renderHome,pedidos:renderPedidos,pdv:()=>renderPdv(),salao:renderSalao,cardapio:renderCardapio,entregas:renderEntregas,performance:renderPerformance,kds:renderKds,clientes:renderClientes,marketing:renderMarketing,atendimento:renderAtendimento,caixa:renderCaixa,estoque:renderEstoque,financeiro:renderFinanceiro,equipe:renderEquipe,relatorios:renderRelatorios,config:renderConfig}[id];
  if(!renderer)return;
  try{renderer();enhanceTables()}
  catch(error){
@@ -33,18 +33,17 @@ function showNotifications(){
  openModal(`<div class="modal-head"><div><h2>Central de alertas</h2><p class="dialog-subtitle">Pendências calculadas a partir dos dados locais deste navegador.</p></div><button class="icon-btn" onclick="closeModal()" aria-label="Fechar">${icon('x-lg')}</button></div><div class="notification-list">${alerts.map(a=>`<button type="button" class="notification-item ${a.type}" onclick="closeModal();go('${a.page}')"><span class="n-icon">${icon(a.icon)}</span><div><b>${esc(a.title)}</b><span>${esc(a.text)}</span></div><span class="badge ${a.type==='danger'?'b-red':a.type==='warning'?'b-orange':a.type==='success'?'b-green':'b-blue'}">Abrir</span></button>`).join('')}</div>`);
 }
 function updatePageTitle(id){
- const names={pedidos:'Pedidos',pdv:'PDV',salao:'Salão',cardapio:'Cardápio',entregas:'Entregas',performance:'Desempenho',kds:'Cozinha KDS',clientes:'Clientes',marketing:'Promoções',atendimento:'Atendimento',caixa:'Caixa',estoque:'Estoque',financeiro:'Financeiro',equipe:'Equipe',relatorios:'Relatórios',config:'Configurações'};
- document.title=(names[id]?names[id]+' — ':'')+'X Burguer Central';
+ const item=NAV_ITEMS.find(x=>x.id===id);
+ document.title=(item?item.label+' — ':'')+'X Burguer Central';
+ const area=document.getElementById('currentArea'),group=document.getElementById('currentGroup');
+ if(area)area.textContent=item?.label||'Início';
+ if(group)group.textContent=item?.group||'Central';
 }
-function filterNavigation(query=''){const q=query.trim().toLowerCase();document.querySelectorAll('.nav button').forEach(btn=>btn.classList.toggle('is-filtered-out',!!q&&!btn.textContent.toLowerCase().includes(q)))}
-const sideSearch=document.getElementById('sideSearch');
-sideSearch?.addEventListener('input',e=>filterNavigation(e.target.value));
-sideSearch?.addEventListener('keydown',e=>{if(e.key!=='Enter')return;const hit=[...document.querySelectorAll('.nav button:not(.is-filtered-out)')][0];if(hit){go(hit.dataset.page);e.target.value='';filterNavigation('')}});
 window.addEventListener('online',updateConnectionStatus);window.addEventListener('offline',updateConnectionStatus);
 document.getElementById('storeToggle')?.addEventListener('keydown',event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleStore()}});
 
 window.addEventListener('popstate',()=>{const id=location.hash.slice(1);if(document.getElementById(id))go(id,{historyMode:'none'})});
-document.addEventListener('keydown',event=>{const tag=document.activeElement?.tagName?.toLowerCase(),typing=['input','textarea','select'].includes(tag);if(event.key==='Escape'){if(document.getElementById('modal')?.classList.contains('open'))closeModal(null);else toggleSide(false)}if((event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==='k'){event.preventDefault();sideSearch?.focus();sideSearch?.select()}if(!typing&&event.key==='/'){event.preventDefault();sideSearch?.focus()}});
+document.addEventListener('keydown',event=>{const tag=document.activeElement?.tagName?.toLowerCase(),typing=['input','textarea','select'].includes(tag);if(event.key==='Escape'){if(document.getElementById('modal')?.classList.contains('open'))closeModal(null);else toggleSide(false)}if((event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==='k'){event.preventDefault();if(!document.getElementById('modal')?.classList.contains('open'))openCommandCenter()}if(!typing&&event.key==='/'){event.preventDefault();if(!document.getElementById('modal')?.classList.contains('open'))openCommandCenter()}});
 let shownGlobalError=false;
 function reportGlobalError(error){console.error('Erro de interface:',error);if(!shownGlobalError){shownGlobalError=true;toast('Ocorreu um erro inesperado. A área afetada pode ser recarregada sem perder os dados locais.','error')}}
 window.addEventListener('error',event=>reportGlobalError(event.error||event.message));

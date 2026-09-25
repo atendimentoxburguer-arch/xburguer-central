@@ -13,14 +13,11 @@
   <meta name="robots" content="noindex,nofollow">
   <meta name="description" content="Central operacional da X Burguer para pedidos, PDV, salão, cozinha, delivery, estoque, caixa e gestão.">
   <title>X Burguer Central</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" type="image/svg+xml" href="assets/img/icon.svg">
   <link rel="apple-touch-icon" href="assets/img/logo.png">
   <link rel="preload" href="assets/img/logo.png" as="image">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <link href="assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
   <link rel="stylesheet" href="assets/css/app.css">
   <link rel="stylesheet" href="assets/css/domain-management.css">
   <script>
@@ -38,40 +35,16 @@
 <div class="app">
   <aside class="sidebar" id="sidebar" aria-label="Navegação principal">
     <div class="brand-foot"><img src="assets/img/logo.png" alt="Logo X Burguer"><div class="txt"><b>X Burguer Central</b><span class="store-pill" id="footStore">ABERTO</span></div></div>
-    <div class="side-search"><input id="sideSearch" type="search" placeholder="Buscar módulo..." aria-label="Buscar módulo"></div>
-    <div class="side-title">Operação</div>
-    <nav class="nav">
-      <button type="button" data-page="pedidos" class="active" aria-current="page"><span class="ico"><i class="bi bi-bag-check" aria-hidden="true"></i></span><span>Pedidos</span><span class="count" id="sideNewCount">0</span></button>
-      <button type="button" data-page="pdv"><span class="ico"><i class="bi bi-cash-coin" aria-hidden="true"></i></span><span>Balcão / PDV</span></button>
-      <button type="button" data-page="salao"><span class="ico"><i class="bi bi-grid-3x3-gap" aria-hidden="true"></i></span><span>Salão e mesas</span></button>
-      <button type="button" data-page="cardapio"><span class="ico"><i class="bi bi-journal-richtext" aria-hidden="true"></i></span><span>Cardápio</span></button>
-      <button type="button" data-page="entregas"><span class="ico"><i class="bi bi-truck" aria-hidden="true"></i></span><span>Entregas</span></button>
-      <button type="button" data-page="performance"><span class="ico"><i class="bi bi-bar-chart-line" aria-hidden="true"></i></span><span>Desempenho</span></button>
-      <button type="button" data-page="kds"><span class="ico"><i class="bi bi-fire" aria-hidden="true"></i></span><span>Cozinha / KDS</span></button>
-      <button type="button" data-page="clientes"><span class="ico"><i class="bi bi-people" aria-hidden="true"></i></span><span>Clientes</span></button>
-    </nav>
-    <div class="side-title">Relacionamento</div>
-    <nav class="nav">
-      <button type="button" data-page="marketing"><span class="ico"><i class="bi bi-megaphone" aria-hidden="true"></i></span><span>Fidelidade e promoções</span></button>
-      <button type="button" data-page="atendimento"><span class="ico"><i class="bi bi-chat-square-dots" aria-hidden="true"></i></span><span>Atendimento</span></button>
-    </nav>
-    <div class="side-title">Gestão</div>
-    <nav class="nav">
-      <button type="button" data-page="relatorios"><span class="ico"><i class="bi bi-file-earmark-bar-graph" aria-hidden="true"></i></span><span>Relatórios</span></button>
-
-      <button type="button" data-page="caixa"><span class="ico"><i class="bi bi-wallet2" aria-hidden="true"></i></span><span>Caixa</span></button>
-      <button type="button" data-page="estoque"><span class="ico"><i class="bi bi-box2" aria-hidden="true"></i></span><span>Estoque</span></button>
-      <button type="button" data-page="financeiro"><span class="ico"><i class="bi bi-graph-up-arrow" aria-hidden="true"></i></span><span>Financeiro</span></button>
-      <button type="button" data-page="equipe"><span class="ico"><i class="bi bi-person-badge" aria-hidden="true"></i></span><span>Equipe</span></button>
-      <button type="button" data-page="config"><span class="ico"><i class="bi bi-sliders2" aria-hidden="true"></i></span><span>Configurações</span></button>
-    </nav>
+    <button type="button" class="nav-search" onclick="openCommandCenter()"><i class="bi bi-search" aria-hidden="true"></i><span>Buscar uma função</span><kbd>Ctrl K</kbd></button>
+    <div id="navigation"></div>
+    <div class="sidebar-help"><i class="bi bi-compass" aria-hidden="true"></i><span>Não encontrou?<br><button type="button" onclick="go('inicio')">Ver todas as funções</button></span></div>
   </aside>
   <button type="button" class="sidebar-backdrop" id="sidebarBackdrop" aria-label="Fechar menu" aria-hidden="true" tabindex="-1"></button>
   <main class="main">
     <header class="topbar">
       <div class="brandname">
         <button type="button" class="icon-btn mobile-menu" onclick="toggleSide()" aria-label="Abrir menu" aria-expanded="false" aria-controls="sidebar"><i class="bi bi-list" aria-hidden="true"></i></button>
-        <b>Central operacional</b><span class="badge b-blue connection-status" id="connectionStatus" role="status" aria-live="polite">Dados locais</span>
+        <div class="breadcrumb"><span id="currentGroup">Central</span><b id="currentArea">Início</b></div><span class="badge b-blue connection-status" id="connectionStatus" role="status" aria-live="polite">Dados locais</span>
       </div>
       <div class="topbar-right">
         <div class="store-switch"><span id="storeText">Loja aberta</span><span id="storeToggle" class="toggle on" onclick="toggleStore()" role="switch" aria-label="Abrir ou fechar loja" aria-checked="true" tabindex="0"></span></div>
@@ -82,7 +55,8 @@
       </div>
     </header>
     <div class="content" id="appContent" tabindex="-1">
-      <section class="page active" id="pedidos" aria-label="Pedidos"></section>
+      <section class="page active" id="inicio" aria-label="Início"></section>
+      <section class="page" id="pedidos" aria-label="Pedidos"></section>
       <section class="page" id="pdv" aria-label="PDV"></section>
       <section class="page" id="salao" aria-label="Salão"></section>
       <section class="page" id="cardapio" aria-label="Cardápio"></section>
@@ -101,15 +75,11 @@
     </div>
   </main>
 </div>
-<div class="right-rail" aria-label="Atalhos">
-  <button type="button" onclick="go('clientes')" title="Clientes" aria-label="Clientes"><i class="bi bi-people" aria-hidden="true"></i></button>
-  <button type="button" onclick="go('entregas')" title="Entregas" aria-label="Entregas"><i class="bi bi-truck" aria-hidden="true"></i></button>
-  <button type="button" onclick="go('salao')" title="Salão" aria-label="Salão"><i class="bi bi-grid-3x3-gap" aria-hidden="true"></i></button>
-</div>
 <div class="modal" id="modal" role="dialog" aria-modal="true" aria-hidden="true"><div class="modal-card" id="modalCard" tabindex="-1"></div></div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 <script src="assets/js/core.js" defer></script>
 <script src="assets/js/ui.js" defer></script>
+<script src="assets/js/navigation.js" defer></script>
 <script src="assets/js/integrations.js" defer></script>
 <script src="assets/js/print-agent-client.js" defer></script>
 <script src="assets/js/printing.js" defer></script>

@@ -18,10 +18,14 @@ async function run(){
  const browser=await chromium.launch({headless:true,...(process.env.BROWSER_CHANNEL?{channel:process.env.BROWSER_CHANNEL}:{})});
  try{
   const page=await browser.newPage({viewport:{width:1440,height:1000},colorScheme:'light',reducedMotion:'reduce'});
+  await page.route('**/*',route=>new URL(route.request().url()).hostname==='127.0.0.1'?route.continue():route.abort());
   const errors=[];page.on('pageerror',e=>errors.push(e.message));
   await page.goto(`http://127.0.0.1:${server.address().port}`,{waitUntil:'networkidle'});
+  await page.evaluate(()=>document.fonts.ready);
+  assert.ok(await page.evaluate(()=>document.fonts.check('16px Inter')&&document.fonts.check('16px bootstrap-icons')),'Fonts and icons load without external services');
   const ids=await page.locator('.nav button[data-page]').evaluateAll(es=>es.map(e=>e.dataset.page));
-  assert.equal(ids.length,16,'All modules remain reachable');
+  assert.equal(ids.length,17,'All modules plus the task directory remain reachable');
+  assert.ok(await page.locator('#inicio.active').isVisible(),'First launch opens the task directory');
   if(output)fs.mkdirSync(output,{recursive:true});
   let cases=0;
   for(const width of [1920,1440,1366,1024,768,390]){
@@ -44,6 +48,10 @@ async function run(){
      const label=`${id}, ${width}px, ${theme}`;
      assert.ok(result.heading,label+': missing title');assert.ok(!result.error,label+': render failed');
      assert.equal(result.nav,id,label+': navigation state');assert.deepEqual(result.overflow,[],label+': overflow');
+     if(id==='pdv'){
+      const clipped=await page.locator('.product-tile').evaluateAll(tiles=>tiles.some(tile=>tile.querySelector('.price').getBoundingClientRect().bottom>tile.getBoundingClientRect().bottom));
+      assert.ok(!clipped,label+': product price is clipped');
+     }
      if(id==='cardapio'){
       const overlapping=await page.locator('.menu-item-row').evaluateAll(rows=>rows.some(row=>{
        const badge=row.querySelector('.badge'),actions=row.querySelector('.menu-item-actions');
@@ -52,8 +60,11 @@ async function run(){
        return a.left<b.right&&a.right>b.left&&a.top<b.bottom&&a.bottom>b.top;
       }));
       assert.ok(!overlapping,label+': status overlaps actions');
+      assert.ok(await page.locator('.menu-price').first().isVisible(),label+': prices remain accessible');
+      assert.ok(await page.locator('.menu-stock').first().isVisible(),label+': stock remains accessible');
      }
      if(output&&width===1440)await page.screenshot({path:path.join(output,`${theme}-${id}.png`),fullPage:true});
+     if(output&&width===390&&theme==='light'&&['inicio','pdv','salao','cardapio','relatorios','config'].includes(id))await page.screenshot({path:path.join(output,`mobile-${id}.png`),fullPage:true});
      cases++;
     }
    }
@@ -62,8 +73,11 @@ async function run(){
   const first=page.locator('.product-tile:not([disabled])').first();
   await first.click();assert.equal(await page.locator('.pdv-order-line').count(),1,'Product added to draft');
   assert.ok(await page.locator('.pdv-save-main').isEnabled(),'Draft can be saved');
+  await page.locator('.pdv-options summary').click();
   await page.locator('.pdv-adjust-tabs button').first().click();
   assert.ok(await page.locator('#modal.open').isVisible(),'Adjustment form opens');
+  await page.keyboard.press('Control+k');
+  assert.equal(await page.locator('#commandInput').count(),0,'Global search does not replace an active form');
   await page.keyboard.press('Escape');assert.equal(await page.locator('#modal.open').count(),0,'Modal closes');
   // Inspect checkout without receiving payment or sending print jobs.
   for(const theme of ['light','dark']){
@@ -72,12 +86,49 @@ async function run(){
    if(output)await page.screenshot({path:path.join(output,`${theme}-checkout.png`),fullPage:true});
    await page.keyboard.press('Escape');
   }
+  // Search works by intent, without accents, and opens the requested destination.
+  await page.keyboard.press('Control+k');
+  await page.locator('#commandInput').fill('impressora');
+  assert.ok(await page.locator('[data-command="print"]').isVisible(),'Printer action discoverable');
+  if(output)await page.screenshot({path:path.join(output,'global-search.png'),fullPage:true});
+  await page.locator('#commandInput').fill('relatorios');
+  await page.keyboard.press('Enter');
+  await page.waitForSelector('#relatorios.active');
+  await page.keyboard.press('Control+k');
+  await page.locator('#commandInput').fill('fechar mesa');
+  await page.keyboard.press('Enter');
+  await page.waitForSelector('#salao.active');
+  assert.equal(await page.evaluate(()=>salaoTab),'comandas','Intent opens the correct salon tab');
+  await page.keyboard.press('Control+k');
+  await page.locator('#commandInput').fill('funcao inexistente xyz');
+  assert.equal(await page.locator('#commandResults button').count(),0,'Search empty state');
+  await page.keyboard.press('Escape');
+  await page.evaluate(()=>go('pdv'));
+  await page.locator('#pdvSearch').fill('zzzz-inexistente');
+  assert.equal(await page.locator('.product-tile:visible').count(),0,'Product search hides unmatched items');
+  assert.ok(await page.locator('#pdvSearchEmpty').isVisible(),'Product empty state visible');
+  await page.locator('#pdvSearch').fill('');
+  await page.getByRole('button',{name:'Limpar pedido',exact:true}).click();
+  assert.ok(await page.locator('#modal.open').isVisible(),'Clearing draft requires confirmation');
+  await page.keyboard.press('Escape');
+  assert.equal(await page.locator('.pdv-order-line').count(),1,'Cancel preserves draft');
+  // Save a real demo order through the revised UI; physical printing stays disabled.
+  const before=await page.evaluate(()=>{state.settings.printing.enabled=false;const line=pdvCart[0];return {id:line.p,stock:product(line.p).stock,price:line.price,orders:state.orders.length}});
+  await page.locator('#pdvCustomer').fill('Teste de navegação');
+  if(!await page.locator('.pdv-options').evaluate(e=>e.open))await page.locator('.pdv-options summary').click();
+  await page.locator('.pdv-pay-card').filter({hasText:'Dinheiro'}).click();
+  assert.ok(await page.locator('.pdv-options').evaluate(e=>e.open),'Payment options remain open after selection');
+  await page.locator('.pdv-save-main').click();await page.waitForSelector('#pedidos.active');
+  const saved=await page.evaluate(id=>({orders:state.orders.length,stock:product(id).stock,order:state.orders.at(-1)}),before.id);
+  assert.equal(saved.orders,before.orders+1);assert.equal(saved.stock,before.stock-1);
+  assert.equal(saved.order.customer,'Teste de navegação');assert.equal(saved.order.payment,'Dinheiro');
+  assert.equal(saved.order.items[0].price,before.price);assert.equal(saved.order.items[0].q,1);
   await page.setViewportSize({width:390,height:844});
   await page.locator('.mobile-menu').click();
   await page.locator('.nav button[data-page="pedidos"]').click();
   assert.equal(await page.locator('#sidebar.open').count(),0,'Mobile navigation closes');
   assert.deepEqual(errors,[],'No uncaught browser errors');
-  console.log(`Browser checks OK: ${cases} module/viewport/theme combinations, PDV draft, modal, checkout and mobile navigation`);
+  console.log(`Browser checks OK: ${cases} module/viewport/theme combinations, global search, PDV search/draft protection, modal, checkout and mobile navigation`);
  }finally{await browser.close()}
 }
 run().catch(error=>{console.error(error);process.exitCode=1}).finally(()=>server.close());

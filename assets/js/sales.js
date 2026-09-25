@@ -1,4 +1,6 @@
 /* Vendas — PDV e fechamento de conta */
+let pdvSearchDraft='';
+let pdvOptionsOpen=false;
 let pdvDiscountDraft=0;
 let pdvSurchargeDraft=0;
 let pdvSplitDraft=1;
@@ -46,7 +48,7 @@ function renderPdv(editOrder=null){
   <div><h1>${editOrder?'Pedido #'+esc(editOrder.id):'Novo pedido'}</h1><p>Monte o pedido e finalize valores, pagamento e divisão da conta no mesmo fluxo.</p></div>
   <div class="page-head-actions">
    ${editOrder?`<button class="btn btn-outline" onclick="printOrderMenu('${editOrder.id}')">${icon('printer')}<span>Imprimir conferência</span></button><button class="btn btn-outline" onclick="detailsOrder('${editOrder.id}')">${icon('three-dots')}<span>Ações</span></button>`:''}
-   <button class="btn btn-primary" onclick="resetPdvV22()">${icon('plus-lg')}<span>Novo pedido</span></button>
+   <button class="btn btn-outline" onclick="resetPdvV22()">${icon('arrow-counterclockwise')}<span>Limpar pedido</span></button>
   </div>
  </div>
  <div class="pdv-reference-bar">
@@ -55,28 +57,24 @@ function renderPdv(editOrder=null){
  </div>
  <div class="pdv-shell-v22">
   <section class="pdv-main-v22">
+   <div class="searchbox pdv-search"><span class="search-icon">${icon('search')}</span><input type="search" id="pdvSearch" aria-label="Buscar produto" value="${esc(pdvSearchDraft)}" placeholder="Buscar produto pelo nome…" oninput="filterPdvProducts(this.value)"></div>
    <div class="pdv-categories">${cats.map(c=>`<button class="chip ${pdvCat===c.id?'active':''}" onclick="pdvCat='${c.id}';renderPdv(state.orders.find(o=>o.id===pdvEditingId)||null)">${esc(c.name)}</button>`).join('')}</div>
-   <div class="pdv-products">${list.map(p=>`<button type="button" class="product-tile ${p.sold?'sold':''}" ${p.sold?'disabled':''} onclick="addCart('${p.id}')"><div class="photo">${productMedia(p,'pdv-product-image')}</div><b>${esc(p.name)}</b><div class="price">${money(p.price)}</div></button>`).join('')||'<div class="empty">Nenhum produto nesta categoria.</div>'}</div>
-   <div class="pdv-order-card">
-    <div class="pdv-order-head"><div><span class="customer-icon">${icon('person')}</span><b id="pdvCustomerTitle">${esc(pdvCustomerDraft||'Cliente não identificado')}</b></div><span>${pdvCart.reduce((s,i)=>s+(Number(i.q)||0),0)} item(ns)</span></div>
-    <div id="cartRows" class="pdv-order-lines">${pdvCart.map((i,n)=>{const p=product(i.p);return `<div class="pdv-order-line"><div class="pdv-order-product">${productMedia(p,'pdv-line-photo')}<div><b>${i.q}x ${esc(p?.name||'Item')}</b><span>${money(i.price)} un.</span></div></div><div class="qty"><button onclick="cartQty(${n},-1)">−</button><b>${i.q}</b><button onclick="cartQty(${n},1)">+</button></div><strong>${money(i.q*i.price)}</strong></div>`}).join('')||'<div class="empty">Clique nos produtos acima para adicionar itens ao pedido.</div>'}</div>
-    <div class="pdv-order-total"><span>Total dos itens</span><b>${money(subtotal)}</b></div>
-   </div>
+   <div class="pdv-products">${list.map(p=>`<button type="button" data-product-search="${esc(p.name)}" class="product-tile ${p.sold?'sold':''}" ${p.sold?'disabled':''} onclick="addCart('${p.id}')"><div class="photo">${productMedia(p,'pdv-product-image')}</div><b>${esc(p.name)}</b><div class="price">${money(p.price)}</div></button>`).join('')||'<div class="empty">Nenhum produto nesta categoria.</div>'}</div><div class="empty" id="pdvSearchEmpty" hidden>Nenhum produto encontrado. Tente outro nome ou categoria.</div>
   </section>
   <aside class="pdv-settlement-v22">
+   <div class="pdv-order-card">
+    <div class="pdv-order-head"><div><span class="customer-icon">${icon('person')}</span><b id="pdvCustomerTitle">${esc(pdvCustomerDraft||'Cliente não identificado')}</b></div><span>${pdvCart.reduce((s,i)=>s+(Number(i.q)||0),0)} item(ns)</span></div>
+    <div id="cartRows" class="pdv-order-lines">${pdvCart.map((i,n)=>{const p=product(i.p);return `<div class="pdv-order-line"><div class="pdv-order-product">${productMedia(p,'pdv-line-photo')}<div><b>${i.q}x ${esc(p?.name||'Item')}</b><span>${money(i.price)} un.</span></div></div><div class="qty"><button onclick="cartQty(${n},-1)">−</button><b>${i.q}</b><button onclick="cartQty(${n},1)">+</button></div><strong>${money(i.q*i.price)}</strong></div>`}).join('')||'<div class="empty">Seu pedido está vazio. Escolha um produto ao lado para começar.</div>'}</div>
+    <div class="pdv-order-total"><span>Total dos itens</span><b>${money(subtotal)}</b></div>
+   </div>
+
+   <div class="pdv-customer-panel">
+    <div class="field"><label for="pdvCustomer">Cliente / identificador</label><input id="pdvCustomer" value="${esc(pdvCustomerDraft)}" oninput="pdvCustomerDraft=this.value;document.getElementById('pdvCustomerTitle').textContent=this.value.trim()||'Cliente não identificado'" placeholder="Nome do cliente"></div>
+   </div>
+   <details class="pdv-options" ${pdvOptionsOpen?'open':''} ontoggle="if(this.isConnected)pdvOptionsOpen=this.open"><summary>Pagamento e ajustes <span>${esc(pdvPayDraft)} · ${pdvSplitDraft} pessoa(s)</span></summary>
    <div class="pdv-adjust-tabs">
     <button onclick="setPdvAdjustmentV22('discount')">${icon('dash-circle')}<span>Desconto</span><b>${pdvDiscountDraft?'- '+money(pdvDiscountDraft):'Adicionar'}</b></button>
     <button onclick="setPdvAdjustmentV22('surcharge')">${icon('plus-circle')}<span>Acréscimo</span><b>${pdvSurchargeDraft?'+ '+money(pdvSurchargeDraft):'Adicionar'}</b></button>
-   </div>
-   <div class="pdv-totals-box">
-    <div><span>Subtotal</span><b id="pdvSubtotal">${money(subtotal)}</b></div>
-    <div id="pdvFeeLine" ${fee.value<=0?'hidden':''}><span id="pdvFeeLabel">${esc(fee.label)}</span><b id="pdvFeeValue">${money(fee.value)}</b></div>
-    <div ${pdvDiscountDraft<=0?'hidden':''}><span>Desconto</span><b>− ${money(pdvDiscountDraft)}</b></div>
-    <div ${pdvSurchargeDraft<=0?'hidden':''}><span>Acréscimo</span><b>+ ${money(pdvSurchargeDraft)}</b></div>
-    <div class="grand"><span>Valor total</span><b id="pdvGrandTotal">${money(total)}</b></div>
-   </div>
-   <div class="pdv-customer-panel">
-    <div class="field"><label>Cliente / identificador</label><input id="pdvCustomer" value="${esc(pdvCustomerDraft)}" oninput="pdvCustomerDraft=this.value;document.getElementById('pdvCustomerTitle').textContent=this.value.trim()||'Cliente não identificado'" placeholder="Nome do cliente"></div>
    </div>
    <div class="pdv-payment-panel">
     <b>Escolha a forma de pagamento</b>
@@ -91,11 +89,19 @@ function renderPdv(editOrder=null){
     <div class="pdv-balance-head"><span>Valor da conta</span><b id="pdvBalanceTotal">${money(total)}</b></div>
     <div class="pdv-split-row"><span>Dividir por</span><div class="pdv-stepper"><button onclick="changePdvSplitV22(-1)">−</button><b>${pdvSplitDraft}</b><button onclick="changePdvSplitV22(1)">+</button></div><strong id="pdvPerPerson">${money(remainingPerPerson)} / pessoa</strong></div>
    </div>
+   </details>
+   <div class="pdv-totals-box">
+    <div><span>Subtotal</span><b id="pdvSubtotal">${money(subtotal)}</b></div>
+    <div id="pdvFeeLine" ${fee.value<=0?'hidden':''}><span id="pdvFeeLabel">${esc(fee.label)}</span><b id="pdvFeeValue">${money(fee.value)}</b></div>
+    <div ${pdvDiscountDraft<=0?'hidden':''}><span>Desconto</span><b>− ${money(pdvDiscountDraft)}</b></div>
+    <div ${pdvSurchargeDraft<=0?'hidden':''}><span>Acréscimo</span><b>+ ${money(pdvSurchargeDraft)}</b></div>
+    <div class="grand"><span>Valor total</span><b id="pdvGrandTotal">${money(total)}</b></div>
+   </div>
    <button class="btn btn-primary btn-block pdv-save-main" ${pdvCart.length?'':'disabled'} onclick="finishPdv('${editOrder?.id||''}')">${editOrder?'Salvar alterações':'Criar pedido'}</button>
    ${editOrder?.status==='ready'&&editOrder.type!=='Delivery'?'<button class="btn btn-green btn-block" onclick="finishPdv(\''+editOrder.id+'\',true)">'+icon('check2-circle')+'<span>Salvar e fechar conta</span></button>':''}
   </aside>
  </div>`;
- updatePdvTotals();
+ updatePdvTotals();filterPdvProducts(pdvSearchDraft);
 }
 function updatePdvTotals(){
  const subtotal=pdvBaseSubtotalV22(),type=document.getElementById('pdvType')?.value||pdvType;
@@ -116,7 +122,7 @@ async function setPdvAdjustmentV22(kind){
  renderPdv(state.orders.find(o=>o.id===pdvEditingId)||null);
 }
 function changePdvSplitV22(delta){pdvSplitDraft=Math.min(20,Math.max(1,pdvSplitDraft+delta));renderPdv(state.orders.find(o=>o.id===pdvEditingId)||null)}
-function resetPdvV22(){pdvCart=[];pdvCustomerDraft='';pdvPayDraft='PIX';pdvEditingId='';pdvDraftTable='';pdvDiscountDraft=0;pdvSurchargeDraft=0;pdvSplitDraft=1;renderPdv()}
+async function resetPdvV22(){if(pdvCart.length&&!await confirmDialog('Limpar pedido?','Os itens deste rascunho serão removidos. Pedidos já salvos não serão alterados.',{confirmLabel:'Limpar rascunho'}))return;pdvSearchDraft='';pdvCart=[];pdvCustomerDraft='';pdvPayDraft='PIX';pdvEditingId='';pdvDraftTable='';pdvDiscountDraft=0;pdvSurchargeDraft=0;pdvSplitDraft=1;renderPdv()}
 function addCart(id){
  const p=product(id);if(!p||p.sold||p.stock<=0){toast('Produto esgotado.','warning');return}
  const e=pdvCart.find(i=>i.p===id);
@@ -548,4 +554,10 @@ function checkoutHasPaymentV22(orders){
  }
  if(orders.some(o=>!o.payment||o.payment==='Não registrado')){toast('Registre o pagamento antes de concluir a conta.','warning');return false}
  return true;
+}
+
+function filterPdvProducts(query=''){
+ pdvSearchDraft=query;const terms=normalizeSearchText(query).trim();let visible=0;
+ document.querySelectorAll('#pdv [data-product-search]').forEach(tile=>{tile.hidden=!!terms&&!normalizeSearchText(tile.dataset.productSearch).includes(terms);if(!tile.hidden)visible++});
+ const empty=document.getElementById('pdvSearchEmpty');if(empty)empty.hidden=visible>0||!terms;
 }

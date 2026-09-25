@@ -39,6 +39,9 @@ const now=()=>new Date();
 const isoAgo=m=>new Date(Date.now()-m*60000).toISOString();
 const money=v=>(Number(v)||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
 const esc=s=>String(s??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
+function normalizeSearchText(value){
+ return String(value||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+}
 function safeProductImageSrc(value){
  const src=String(value||'').trim();
  if(!src)return '';
@@ -113,7 +116,7 @@ function defaultState(){return {schemaVersion:SCHEMA_VERSION,
  printOutbox:[]
 }}
 let state;
-let currentPage='pedidos';
+let currentPage='inicio';
 let orderFilter='all';let orderSearch='';let selectedCat='cat1';let pdvCat='all';let pdvCart=[];let pdvType='Balcão';let pdvDraftTable='';let pdvEditingId='';let pdvCustomerDraft='';let pdvPayDraft='PIX';let salaoTab='mesas';let chatId='w1';let performanceRange='today';let kdsStation='all';
 function mergeDefaults(base,value){
  if(Array.isArray(base)) return Array.isArray(value)?value:base;
