@@ -59,20 +59,21 @@
  }
  async function refresh(){
   if(!connected||inflight||document.getElementById('modal')?.classList.contains('open')||document.visibilityState==='hidden')return;
-  try{const result=await client.request('state');if(result.revision!==revision){revision=result.revision;apply(result.document);renderAll()}failed=false;updateConnectionStatus()}
+  const requestedRevision=revision;
+  try{const result=await client.request('state');if(inflight||requestedRevision!==revision||document.getElementById('modal')?.classList.contains('open'))return;if(result.revision>revision){revision=result.revision;apply(result.document);renderAll()}failed=false;updateConnectionStatus()}
   catch(error){failed=true;updateConnectionStatus();if(error.status===401){connected=false;login()}}
  }
  function save(options={}){
+  persistWorkstation();
   if(!connected||inflight){toast('Aguarde a conexão com o servidor antes de alterar os dados.','warning');return false}
   const proposed=structuredClone(state);
-  persistWorkstation();
   if(JSON.stringify(withoutLocal(proposed))===JSON.stringify(withoutLocal(committed))){
    committed=proposed;if(options.render!==false)renderAll();return true;
   }
   const panel=document.createElement('div');panel.className='platform-saving';panel.setAttribute('role','status');panel.textContent='Salvando no servidor…';document.body.append(panel);
   document.querySelector('.app')?.setAttribute('inert','');
   inflight=client.request('state',{method:'PUT',headers:{'If-Match':String(revision)},data:withoutLocal(proposed)})
-   .then(result=>{revision=result.revision;committed=structuredClone(proposed);failed=false;return true})
+   .then(result=>{revision=result.revision;apply(structuredClone(proposed));failed=false;return true})
    .catch(async error=>{
     failed=true;stashRejectedChange(proposed);apply(structuredClone(committed));
     toast(error.message+' A alteração não foi confirmada; uma cópia foi preservada neste aparelho.','error');
@@ -155,4 +156,7 @@
  }
  globalThis.XBCloud={start,save,manage,refresh,sendMessage,renderMarketing,isActive:()=>connected,isPending:()=>!!inflight,
   flush:async()=>inflight?await inflight:!failed,status:()=>failed?'Conexão pendente':inflight?'Salvando…':'Dados compartilhados'};
+ for(const type of ['click','keydown','submit','change'])document.addEventListener(type,event=>{
+  if(inflight||(runtime()&&!connected&&!event.target.closest?.('#platformGate'))){event.preventDefault();event.stopImmediatePropagation()}
+ },true);
 })();

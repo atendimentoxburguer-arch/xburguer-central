@@ -29,8 +29,11 @@ async function rawBody(req) {
 }
 async function body(req) {
   const raw=await rawBody(req);
-  try { return JSON.parse(raw.toString('utf8')); }
+  let parsed;
+  try { parsed=JSON.parse(raw.toString('utf8')); }
   catch { throw new HttpError(400,'JSON inválido.'); }
+  requireThat(parsed&&typeof parsed==='object'&&!Array.isArray(parsed),'Envie um objeto JSON.');
+  return parsed;
 }
 export async function bootstrapAdmin(db, email, password) {
   if ((await db.query('SELECT id FROM users LIMIT 1')).rows.length) return;
@@ -185,8 +188,9 @@ export function application(db, {origin, logger = console, whatsapp = {}} = {}) 
           const revision = await db.transaction(async tx => {
             const current = await readState(tx,true);
             requireThat(current.revision===expected,'Outro aparelho alterou os dados. Atualize antes de tentar novamente.',409);
+            const nextOrders=new Map(document.orders.map(order=>[order.id,order]));
             for (const previous of current.document.orders) {
-              const next=document.orders.find(order=>order.id===previous.id);
+              const next=nextOrders.get(previous.id);
               requireThat(next,'A loja conectada preserva o histórico. Cancele o pedido em vez de excluí-lo.',409);
               if (previous.scheduledAt && Date.parse(previous.scheduledAt)>Date.now() && next &&
                   previous.status==='analysis') {

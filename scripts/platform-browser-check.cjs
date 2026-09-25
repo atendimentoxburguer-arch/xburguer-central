@@ -67,6 +67,21 @@ test('connected browser: migration, customer sale, waiter, admin sync and confli
  await admin.waitForFunction(()=>!XBCloud.isPending());
  assert.equal(await admin.locator('#cfgName').inputValue(),'Alteração de outro aparelho');
  assert.ok(await admin.evaluate(()=>localStorage.getItem('xburguer_backup_alteracao_pendente')));
+ // A delayed poll must not roll back a newer confirmed save.
+ const oldSnapshot=(await db.query('SELECT revision,document FROM store_state WHERE id=1')).rows[0];
+ let signalEntered,releaseResponse,holdOnce=true;
+ const entered=new Promise(resolve=>signalEntered=resolve),release=new Promise(resolve=>releaseResponse=resolve);
+ await admin.route('**/api/state',async route=>{
+  if(route.request().method()==='GET'&&holdOnce){holdOnce=false;signalEntered();await release;await route.fulfill({json:oldSnapshot});return}
+  await route.continue();
+ });
+ const polling=admin.evaluate(()=>XBCloud.refresh());
+ await entered;
+ await admin.evaluate(()=>{state.settings.storeName='Gravação mais recente';save()});
+ await admin.waitForFunction(()=>!XBCloud.isPending());
+ releaseResponse();await polling;
+ assert.equal(await admin.evaluate(()=>state.settings.storeName),'Gravação mais recente');
+ await admin.unroute('**/api/state');
  // Staff account has a dedicated minimal view and can submit a table order.
  await admin.evaluate(async()=>XBPlatform.request('users',{method:'POST',data:{name:'Garçom teste',email:'waiter@example.test',password:'password-testing-1234',role:'waiter'}}));
  const waiter=await browser.newPage({viewport:{width:390,height:844}});

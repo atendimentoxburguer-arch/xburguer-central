@@ -19,9 +19,17 @@ export async function balance(tx,customerId) {
   return Number(result.rows[0].balance);
 }
 export async function reconcileLoyalty(tx,before,after) {
-  const redemptions=(await tx.query('SELECT * FROM loyalty_redemptions WHERE refunded=false')).rows;
+  const previousOrders=new Map(before.orders.map(order=>[order.id,order]));
+  const nextOrders=new Map(after.orders.map(order=>[order.id,order]));
+  const signature=order=>order?JSON.stringify([order.customerId,order.status,order.type,
+    order.items.map(item=>[item.p,item.q,item.price]),order.discount,order.surcharge,
+    order.deliveryFee,order.serviceFeePct,order.settlements]):'';
+  const changed=after.orders.filter(order=>signature(previousOrders.get(order.id))!==signature(order));
+  if(!changed.length)return;
+  const redemptions=(await tx.query('SELECT * FROM loyalty_redemptions WHERE refunded=false AND order_id=ANY($1::text[])',
+    [changed.map(order=>order.id)])).rows;
   for(const redemption of redemptions) {
-    const old=before.orders.find(o=>o.id===redemption.order_id),next=after.orders.find(o=>o.id===redemption.order_id);
+    const old=previousOrders.get(redemption.order_id),next=nextOrders.get(redemption.order_id);
     requireThat(next,'Cancele o pedido antes de remover um resgate de cashback.',409);
     if(next.status==='cancelled') {
       await ledger(tx,redemption.customer_id,next.id,redemption.amount_cents,'Resgate devolvido por cancelamento');
@@ -31,8 +39,9 @@ export async function reconcileLoyalty(tx,before,after) {
       requireThat(old&&pricing(old)===pricing(next),'Pedido com cashback resgatado não pode ter preços ou cliente alterados. Cancele e refaça.',409);
     }
   }
-  for(const next of after.orders) {
-    const previous=before.orders.find(o=>o.id===next.id);
+  for(const next of changed) {
+    const previous=previousOrders.get(next.id);
+    if(next.status!=='done'&&previous?.status!=='done')continue;
     const recorded=(await tx.query('SELECT * FROM loyalty_accruals WHERE order_id=$1',[next.id])).rows[0];
     // Historical imports do not manufacture a cashback liability retroactively.
     if(!recorded && previous?.status==='done')continue;
