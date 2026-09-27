@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 
-const app=fs.readFileSync('assets/css/app.css','utf8');
+const app=fs.readFileSync('assets/css/app.css','utf8').replace(/\r\n/g,'\n');
 const domain=fs.readFileSync('assets/css/domain-management.css','utf8');
 const html=fs.readFileSync('index.html','utf8');
 const printAgent=fs.readFileSync('apps/print-agent/desktop/ui.css','utf8');

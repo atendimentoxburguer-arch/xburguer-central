@@ -101,4 +101,15 @@ context.__delivery={type:'Delivery',items:[{p:'p1',q:1,price:100}]};
 assert.equal(vm.runInContext('orderTotal(__mesa)',context),110);
 assert.equal(vm.runInContext('orderTotal(__delivery)',context),107);
 
+// Valores exibidos e cobrados não podem conservar frações de centavo.
+context.__fractional={type:'Mesa',serviceFeePct:10,items:[{q:1,price:0.10},{q:1,price:0.20}],discount:0.01,surcharge:0.02};
+assert.equal(vm.runInContext('orderSubtotal(__fractional)',context),0.30);
+assert.equal(vm.runInContext('orderFeeTotal(__fractional)',context),0.03);
+assert.equal(vm.runInContext('orderTotal(__fractional)',context),0.34);
+context.__fractional={type:'Mesa',serviceFeePct:10,items:[{q:1,price:10.05}]};
+assert.equal(vm.runInContext('orderFeeTotal(__fractional)',context),1.01);
+assert.equal(vm.runInContext('orderTotal(__fractional)',context),11.06);
+context.__fractional={type:'Delivery',deliveryFee:0,items:[{q:3,price:0.10}],discount:10};
+assert.equal(vm.runInContext('orderFeeTotal(__fractional)',context),0);
+assert.equal(vm.runInContext('orderTotal(__fractional)',context),0);
 console.log('Business contracts OK');
