@@ -39,6 +39,8 @@ jobs:
         run: node scripts/reports-contracts.mjs
       - name: Business contract tests
         run: node scripts/business-contracts.mjs
+      - name: Order alert contract tests
+        run: node scripts/order-alerts-contracts.mjs
       - name: Salon and checkout contract tests
         run: node scripts/salon-checkout-contracts.mjs
       - name: Printing contract tests

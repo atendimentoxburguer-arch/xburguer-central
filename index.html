@@ -55,6 +55,7 @@
       </div>
     </header>
     <div class="content" id="appContent" tabindex="-1">
+      <div id="orderAlerts" class="orders-overview" hidden><span id="orderAlertsCount" role="status" aria-live="polite"></span><button type="button" onclick="go('pedidos')">Ver pedidos</button><button type="button" onclick="acknowledgeOrderAlerts()">Ciente</button></div>
       <section class="page active" id="inicio" aria-label="Início"></section>
       <section class="page" id="pedidos" aria-label="Pedidos"></section>
       <section class="page" id="pdv" aria-label="PDV"></section>
@@ -84,6 +85,7 @@
 <script src="assets/js/print-agent-client.js" defer></script>
 <script src="assets/js/printing.js" defer></script>
 <script src="assets/js/orders.js" defer></script>
+<script src="assets/js/order-alerts.js" defer></script>
 <script src="assets/js/sales.js" defer></script>
 <script src="assets/js/operations.js" defer></script>
 <script src="assets/js/crm.js" defer></script>

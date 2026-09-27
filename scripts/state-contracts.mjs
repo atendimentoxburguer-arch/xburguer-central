@@ -117,4 +117,21 @@ assert.equal(vm.runInContext('orderTotal(__mesa)',context),110);
 context.__adjusted={type:'Balcão',items:[{p:'p1',q:1,price:100}],discount:10,surcharge:5};
 assert.equal(vm.runInContext('orderTotal(__adjusted)',context),95);
 
+// Avisos só observam gravações confirmadas e nunca transformam sucesso em falha.
+let notifications=0,resets=0;
+context.toast=()=>{};
+context.syncOrderAlerts=()=>{notifications++};
+context.resetOrderAlerts=()=>{resets++};
+assert.equal(vm.runInContext('save({render:false})',context),true);
+assert.equal(notifications,1);
+assert.equal(vm.runInContext('save({render:false,notifyOrders:false})',context),true);
+assert.equal(notifications,1);assert.equal(resets,1);
+const originalConsole=context.console;context.console={error(){},warn(){}};
+context.localStorage.setItem=()=>{throw new Error('Quota exceeded')};
+assert.equal(vm.runInContext('save({render:false})',context),false);
+assert.equal(notifications,1);
+context.localStorage.setItem=()=>{};
+context.syncOrderAlerts=()=>{throw new Error('UI failed')};
+assert.equal(vm.runInContext('save({render:false})',context),true);
+context.console=originalConsole;
 console.log('State contracts OK');

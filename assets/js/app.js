@@ -48,4 +48,4 @@ let shownGlobalError=false;
 function reportGlobalError(error){console.error('Erro de interface:',error);if(!shownGlobalError){shownGlobalError=true;toast('Ocorreu um erro inesperado. A área afetada pode ser recarregada sem perder os dados locais.','error')}}
 window.addEventListener('error',event=>reportGlobalError(event.error||event.message));
 window.addEventListener('unhandledrejection',event=>reportGlobalError(event.reason));
-initThemeUI();load();globalThis.initPrintAgentClient?.();const initial=location.hash.slice(1);if(initial&&document.getElementById(initial))currentPage=initial;syncTables();setHeader();go(currentPage,{historyMode:'replace'});updateConnectionStatus();
+initThemeUI();load();globalThis.initOrderAlerts?.();globalThis.initPrintAgentClient?.();const initial=location.hash.slice(1);if(initial&&document.getElementById(initial))currentPage=initial;syncTables();setHeader();go(currentPage,{historyMode:'replace'});updateConnectionStatus();
