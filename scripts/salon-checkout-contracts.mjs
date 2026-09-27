@@ -34,6 +34,29 @@ for(const file of ['assets/js/core.js','assets/js/orders.js','assets/js/sales.js
 }
 vm.runInContext('state=defaultState();normalize();save=function(){return true};renderSalao=function(){}',context);
 
+// PDV e pedido persistido compartilham subtotal, taxas e total em centavos.
+vm.runInContext("pdvCart=[{p:'p1',q:1,price:10.05}];pdvType='Mesa';pdvDiscountDraft=0.01;pdvSurchargeDraft=0.02",context);
+assert.equal(vm.runInContext('pdvGrandV22()',context),11.07);
+assert.equal(vm.runInContext("pdvFeeV22('Mesa',pdvBaseSubtotalV22()).value",context),1.01);
+assert.equal(vm.runInContext('pdvGrandV22()===orderTotal(pdvDraftOrder())',context),true);
+vm.runInContext('resetPdvDraftV22()',context);
+
+// Duplo clique enquanto o endereço está aberto cria um único pedido.
+let resolveAddress;
+context.formDialog=()=>new Promise(resolve=>{resolveAddress=resolve});
+vm.runInContext("pdvType='Delivery';pdvCart=[{p:'p1',q:1,price:10.05}];renderAll=function(){}",context);
+const beforeSubmit=vm.runInContext('state.orders.length',context);
+const beforeStock=vm.runInContext("product('p1').stock",context);
+const firstSubmit=vm.runInContext('finishPdv()',context);
+await vm.runInContext('finishPdv()',context);
+resolveAddress({address:'Rua de teste, 1',phone:''});
+await firstSubmit;
+assert.equal(vm.runInContext('state.orders.length',context),beforeSubmit+1);
+assert.equal(vm.runInContext("product('p1').stock",context),beforeStock-1);
+assert.equal(vm.runInContext('pdvSaving',context),false);
+context.formDialog=async()=>null;
+vm.runInContext('state=defaultState();normalize();resetPdvDraftV22()',context);
+
 // Configurações do salão.
 assert.equal(vm.runInContext("state.settings.salon.operationModel",context),'a-la-carte');
 vm.runInContext("setSalonModelV22('rodizio')",context);

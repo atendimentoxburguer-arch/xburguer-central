@@ -6,6 +6,9 @@
   let agentHealth={online:false,authorized:false,version:'',queue:null,error:'',permission:'unknown',checkedAt:''};
   let physicalPrinters=[];
   let flushBusy=false;
+  let pollingStarted=false;
+  let pollingBusy=false;
+  let pollingTimer=null;
   let bridgeWindow=null;
   let bridgeReady=false;
   let bridgeVersion='';
@@ -316,11 +319,11 @@
     const result=await submitAgentJob(agentJob(profile,document,event),{queueOnFailure:true,silent});
     return result.ok;
   }
-  async function flushPrintOutbox(){
+  async function flushPrintOutbox({healthChecked=false}={}){
     if(flushBusy||!agentConfig().enabled||(!desktopPrintManaged()&&!agentConfig().token)||!state.printOutbox?.length)return;
     flushBusy=true;
     try{
-      await probePrintAgent({silent:true});
+      if(!healthChecked)await probePrintAgent({silent:true});
       if(!agentHealth.online||!agentHealth.authorized)return;
       const pending=[...state.printOutbox].slice(0,8);
       for(const job of pending){
@@ -393,12 +396,23 @@
     const current=document.getElementById('printAgentCard');if(!current)return;
     const wrap=document.createElement('div');wrap.innerHTML=agentStatusCard();current.replaceWith(wrap.firstElementChild);
   }
+  async function pollPrintAgent(){
+    if(pollingBusy)return;
+    clearTimeout(pollingTimer);
+    pollingBusy=true;
+    try{
+      if(agentConfig().enabled){
+        await probePrintAgent({silent:true,userInitiated:false});
+        await flushPrintOutbox({healthChecked:true});
+      }
+    }catch(error){console.warn('Falha ao atualizar agente de impressão',error)}
+    finally{pollingBusy=false;pollingTimer=setTimeout(pollPrintAgent,15000)}
+  }
   function initPrintAgentClient(){
-    if(agentConfig().enabled){
-      probePrintAgent({silent:true,userInitiated:false}).then(()=>flushPrintOutbox());
-      setInterval(()=>{probePrintAgent({silent:true,userInitiated:false});flushPrintOutbox()},15000);
-      document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'){probePrintAgent({silent:true,userInitiated:false});flushPrintOutbox()}});
-    }
+    if(pollingStarted)return;
+    pollingStarted=true;
+    pollPrintAgent();
+    document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')pollPrintAgent()});
   }
 
   globalThis.agentConfig=agentConfig;
