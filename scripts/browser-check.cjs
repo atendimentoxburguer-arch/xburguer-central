@@ -123,12 +123,41 @@ async function run(){
   assert.equal(saved.orders,before.orders+1);assert.equal(saved.stock,before.stock-1);
   assert.equal(saved.order.customer,'Teste de navegação');assert.equal(saved.order.payment,'Dinheiro');
   assert.equal(saved.order.items[0].price,before.price);assert.equal(saved.order.items[0].q,1);
+  // New local orders remain visible until acknowledged, independently of sound.
+  assert.ok(await page.locator('#orderAlerts').isVisible(),'New order banner appears after save');
+  assert.equal(await page.locator('[data-new-order]:visible').count(),1,'Only the new order is marked');
+  await page.locator('[data-order-sound]').click();
+  await page.waitForFunction(()=>document.querySelector('[data-order-sound]')?.getAttribute('aria-pressed')==='true');
+  assert.equal(await page.locator('[data-order-sound]').getAttribute('aria-pressed'),'true');
+  await page.locator('[data-order-sound]').click();
+  assert.equal(await page.locator('[data-order-sound]').getAttribute('aria-pressed'),'false');
+  await page.getByRole('button',{name:'Ciente',exact:true}).click();
+  assert.ok(await page.locator('#orderAlerts').isHidden());
+  await page.evaluate(()=>save({render:false}));
+  assert.ok(await page.locator('#orderAlerts').isHidden(),'Background saves do not repeat an acknowledged alert');
+  await page.evaluate(id=>{
+   const o=state.orders.find(o=>o.id===id);o.status='production';o.createdAt=new Date(Date.now()-34*60000).toISOString();renderPedidos();
+  },saved.order.id);
+  await page.locator('#orderSearchInput').fill('Teste de navegação');
+  await page.evaluate(id=>{
+   state.orders.find(o=>o.id===id).createdAt=new Date(Date.now()-36*60000).toISOString();refreshOrderTimes();
+  },saved.order.id);
+  assert.equal(await page.locator('#orderSearchInput').inputValue(),'Teste de navegação');
+  assert.ok(await page.locator('#orderSearchInput').evaluate(e=>e===document.activeElement),'Clock preserves input focus');
+  assert.equal(await page.locator('.order-card.late:visible').count(),1);
+  await page.evaluate(()=>go('kds'));
+  const ticket=page.locator('[data-order-clock="'+saved.order.id+'"]');
+  assert.equal(await ticket.locator('[data-order-minutes]').textContent(),'36 min');
+  await page.evaluate(id=>{
+   state.orders.find(o=>o.id===id).createdAt=new Date(Date.now()-37*60000).toISOString();refreshOrderTimes();
+  },saved.order.id);
+  assert.equal(await ticket.locator('[data-order-minutes]').textContent(),'37 min');
   await page.setViewportSize({width:390,height:844});
   await page.locator('.mobile-menu').click();
   await page.locator('.nav button[data-page="pedidos"]').click();
   assert.equal(await page.locator('#sidebar.open').count(),0,'Mobile navigation closes');
   assert.deepEqual(errors,[],'No uncaught browser errors');
-  console.log(`Browser checks OK: ${cases} module/viewport/theme combinations, global search, PDV search/draft protection, modal, checkout and mobile navigation`);
+  console.log(`Browser checks OK: ${cases} module/viewport/theme combinations, search, PDV, checkout, mobile navigation, order alerts and live clocks`);
  }finally{await browser.close()}
 }
 run().catch(error=>{console.error(error);process.exitCode=1}).finally(()=>server.close());

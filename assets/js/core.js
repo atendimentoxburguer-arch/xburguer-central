@@ -375,6 +375,7 @@ function load(){
 function replaceState(nextState,options={}){
  state=nextState;
  normalize();
+ globalThis.resetOrderAlerts?.();
  try{localStorage.setItem(STORAGE,JSON.stringify(state))}catch(e){console.warn('Falha ao persistir estado substituído',e)}
  if(options.render!==false)renderAll();
  return state;
@@ -383,6 +384,8 @@ function save(options={}){
  try{
   state.schemaVersion=SCHEMA_VERSION;
   localStorage.setItem(STORAGE,JSON.stringify(state));
+  try{if(options.notifyOrders===false)globalThis.resetOrderAlerts?.();else globalThis.syncOrderAlerts?.()}
+  catch(error){console.warn('Falha ao atualizar os avisos de pedidos',error)}
   if(options.render!==false)renderAll();
   return true;
  }catch(e){
@@ -419,7 +422,7 @@ function importBackup(){
    }
    const issue=validateState(state);if(issue)throw new Error(issue);
    snapshotLocal('antes_importacao');
-   save();
+   save({notifyOrders:false});
    toast('Backup importado com sucesso.','success');
   }catch(e){
    state=previous;
