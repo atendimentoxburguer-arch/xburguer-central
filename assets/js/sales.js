@@ -4,6 +4,7 @@ let pdvOptionsOpen=false;
 let pdvDiscountDraft=0;
 let pdvSurchargeDraft=0;
 let pdvSplitDraft=1;
+let pdvSaving=false;
 let checkoutModeV23='total';
 let checkoutPaymentV23='PIX';
 let checkoutSelectedUnitsV23=new Set();
@@ -11,16 +12,20 @@ let checkoutOpenKeyV23='';
 let checkoutActionOrderV24='';
 const CHECKOUT_METHODS_V23=['Dinheiro','PIX','Cartão (Débito)','Cartão (Crédito)'];
 
-function pdvBaseSubtotalV22(){return pdvCart.reduce((s,i)=>s+(Number(i.q)||0)*(Number(i.price)||0),0)}
+function pdvDraftOrder(type=pdvType){
+ const existing=state.orders.find(o=>o.id===pdvEditingId&&o.type===type);
+ return {type,items:pdvCart,discount:pdvDiscountDraft,surcharge:pdvSurchargeDraft,deliveryFee:existing?.deliveryFee??state.settings.deliveryFee,serviceFeePct:existing?.serviceFeePct??state.settings.serviceFee};
+}
+function pdvBaseSubtotalV22(){return orderSubtotal(pdvDraftOrder())}
 function pdvFeeV22(type,subtotal){
  const existing=state.orders.find(o=>o.id===pdvEditingId&&o.type===type);
- if(type==='Delivery')return {label:'Taxa de entrega',value:Math.max(0,Number(existing?.deliveryFee??state.settings.deliveryFee)||0)};
- if(type==='Mesa'){const pct=Math.max(0,Number(existing?.serviceFeePct??state.settings.serviceFee)||0);return {label:'Serviço ('+pct+'%)',value:subtotal*pct/100}}
+ if(type==='Delivery')return {label:'Taxa de entrega',value:orderFeeTotal(pdvDraftOrder(type))};
+ if(type==='Mesa'){const pct=Math.max(0,Number(existing?.serviceFeePct??state.settings.serviceFee)||0);return {label:'Serviço ('+pct+'%)',value:orderFeeTotal({...pdvDraftOrder(type),items:[{q:1,price:subtotal}]})}}
  return {label:'Taxas',value:0};
 }
 function pdvGrandV22(){
- const subtotal=pdvBaseSubtotalV22(),type=document.getElementById('pdvType')?.value||pdvType,fee=pdvFeeV22(type,subtotal);
- return Math.max(0,subtotal+fee.value+Math.max(0,pdvSurchargeDraft)-Math.max(0,pdvDiscountDraft));
+ const type=document.getElementById('pdvType')?.value||pdvType;
+ return orderTotal(pdvDraftOrder(type));
 }
 function pdvPaymentButtonV22(label,iconName,value){
  return `<button type="button" class="pdv-pay-card ${pdvPayDraft===value?'active':''}" onclick="setPdvPaymentV22('${value.replaceAll("'","\\'")}')">${icon(iconName)}<span>${esc(label)}</span></button>`;
@@ -41,7 +46,7 @@ function renderPdv(editOrder=null){
  const root=document.getElementById('pdv');
  const cats=[{id:'all',name:'Todos'},...state.categories];
  const list=state.products.filter(p=>(pdvCat==='all'||p.cat===pdvCat)&&p.active);
- const subtotal=pdvBaseSubtotalV22(),fee=pdvFeeV22(pdvType,subtotal),total=Math.max(0,subtotal+fee.value+pdvSurchargeDraft-pdvDiscountDraft);
+ const subtotal=pdvBaseSubtotalV22(),fee=pdvFeeV22(pdvType,subtotal),total=orderTotal(pdvDraftOrder());
  const remainingPerPerson=total/Math.max(1,pdvSplitDraft);
  root.innerHTML=`
  <div class="page-head pdv-page-head">
@@ -106,7 +111,7 @@ function renderPdv(editOrder=null){
 function updatePdvTotals(){
  const subtotal=pdvBaseSubtotalV22(),type=document.getElementById('pdvType')?.value||pdvType;
  pdvType=type;
- const fee=pdvFeeV22(type,subtotal),total=Math.max(0,subtotal+fee.value+pdvSurchargeDraft-pdvDiscountDraft);
+ const fee=pdvFeeV22(type,subtotal),total=orderTotal(pdvDraftOrder(type));
  const labelEl=document.getElementById('pdvFeeLabel'),feeEl=document.getElementById('pdvFeeValue'),totalEl=document.getElementById('pdvGrandTotal'),line=document.getElementById('pdvFeeLine');
  if(labelEl)labelEl.textContent=fee.label;if(feeEl)feeEl.textContent=money(fee.value);if(totalEl)totalEl.textContent=money(total);if(line)line.hidden=fee.value<=0;
  const balance=document.getElementById('pdvBalanceTotal'),person=document.getElementById('pdvPerPerson');
@@ -138,6 +143,12 @@ function cartQty(n,d){
  renderPdv(state.orders.find(o=>o.id===pdvEditingId)||null);
 }
 async function finishPdv(editId='',checkoutAfter=false){
+ if(pdvSaving)return;
+ pdvSaving=true;
+ try{return await savePdvOrder(editId,checkoutAfter)}
+ finally{pdvSaving=false}
+}
+async function savePdvOrder(editId='',checkoutAfter=false){
  if(!pdvCart.length){toast('Adicione pelo menos um item.','warning');return}
  const type=document.getElementById('pdvType')?.value||pdvType||'Balcão',customer=(document.getElementById('pdvCustomer')?.value||pdvCustomerDraft).trim()||'Não identificado',pay=pdvPayDraft||'Não registrado';
  const existing=editId?state.orders.find(o=>o.id===editId):null;

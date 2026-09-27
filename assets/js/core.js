@@ -462,16 +462,20 @@ function orderPaymentAmount(o,method){
 function orderCashAmount(o){
  return Object.entries(orderPaymentBreakdown(o)).reduce((sum,[key,value])=>sum+(paymentIsCash(key)?Number(value)||0:0),0);
 }
-function orderSubtotal(o){return o.items.reduce((s,i)=>s+(Number(i.price)||0)*(Number(i.q)||0),0)}
+function moneyCents(value){
+ const amount=Number(value);
+ return Number.isFinite(amount)?Math.max(0,Math.round((amount+Number.EPSILON)*100)):0;
+}
+function orderSubtotal(o){return o.items.reduce((s,i)=>s+moneyCents((Number(i.price)||0)*(Number(i.q)||0)),0)/100}
 function orderFeeTotal(o){
  const subtotal=orderSubtotal(o);
  const delivery=o.type==='Delivery'?Math.max(0,Number(o.deliveryFee ?? state.settings.deliveryFee)||0):0;
  const service=o.type==='Mesa'?subtotal*Math.max(0,Number(o.serviceFeePct ?? state.settings.serviceFee)||0)/100:0;
- return delivery+service;
+ return (moneyCents(delivery)+moneyCents(service))/100;
 }
 function orderTotal(o){
- const gross=orderSubtotal(o)+orderFeeTotal(o)+Math.max(0,Number(o.surcharge)||0);
- return Math.max(0,gross-Math.max(0,Number(o.discount)||0));
+ const gross=moneyCents(orderSubtotal(o))+moneyCents(orderFeeTotal(o))+moneyCents(o.surcharge);
+ return Math.max(0,gross-moneyCents(o.discount))/100;
 }
 function orderCost(o){return o.items.reduce((s,i)=>s+(Number(i.cost ?? product(i.p)?.cost)||0)*(Number(i.q)||0),0)}
 function orderAge(o){const ts=new Date(o.createdAt).getTime();return Number.isFinite(ts)?Math.max(0,Math.floor((Date.now()-ts)/60000)):0}

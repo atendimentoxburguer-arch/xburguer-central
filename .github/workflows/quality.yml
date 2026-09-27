@@ -47,6 +47,8 @@ jobs:
         run: node scripts/printing-contracts.mjs
       - name: Print agent contract tests
         run: node scripts/print-agent-contracts.mjs
+      - name: Print polling contract tests
+        run: node scripts/print-polling-contracts.mjs
       - name: Print agent service contract tests
         run: node scripts/print-agent-service-contracts.mjs
 
